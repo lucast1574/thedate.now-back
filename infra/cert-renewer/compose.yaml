@@ -1,0 +1,16 @@
+services:
+  wildcard-renewer:
+    build: .
+    restart: unless-stopped
+    environment:
+      CF_DNS_API_TOKEN: ${CF_DNS_API_TOKEN}
+      DOKPLOY_API_KEY: ${DOKPLOY_API_KEY}
+      DOKPLOY_URL: https://cloud.rangel.pro
+      CERTIFICATE_ID: PCkL_jFC4ySv9JnKWjYo3
+      WEDDING_APP_ID: E8bitdMBZtZ6RpeNpckfg
+      ACME_EMAIL: admin@thedate.now
+    volumes:
+      - acme_state:/acme
+
+volumes:
+  acme_state:
