@@ -65,6 +65,9 @@ func main() {
 	mux.HandleFunc("POST /events/{id}/guests", s.addGuest)
 	mux.HandleFunc("POST /events/{id}/photos", s.uploadPhoto)
 	mux.HandleFunc("POST /events/{id}/send-invitations", s.sendInvitations)
+	mux.HandleFunc("POST /events/{id}/couple-invitations", s.inviteCouple)
+	mux.HandleFunc("GET /couple-invites/{token}", s.coupleInviteDetails)
+	mux.HandleFunc("POST /couple-invites/{token}/accept", s.acceptCouple)
 	mux.HandleFunc("GET /public/events/{kind}/{slug}", s.publicEvent)
 	mux.HandleFunc("GET /public/events/{kind}/{slug}/photos/{key}", s.publicPhoto)
 	mux.HandleFunc("POST /public/rsvp/{token}", s.rsvp)
@@ -145,7 +148,7 @@ func (s *server) register(w http.ResponseWriter, r *http.Request) {
 	}
 	in.Email = strings.ToLower(strings.TrimSpace(in.Email))
 	in.Name = strings.TrimSpace(in.Name)
-	if !strings.Contains(in.Email, "@") || len(in.Password) < 10 || len(in.Name) < 2 || (in.Role != "planner" && in.Role != "organizer") {
+	if !strings.Contains(in.Email, "@") || len(in.Password) < 10 || len(in.Name) < 2 || (in.Role != "planner" && in.Role != "organizer" && in.Role != "couple") {
 		bad(w, 400, "Name, email, role and password of at least 10 characters required")
 		return
 	}
