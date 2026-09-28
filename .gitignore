@@ -3,3 +3,6 @@
 !.env.example
 *.exe
 
+
+__pycache__/
+*.pyc
