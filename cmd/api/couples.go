@@ -70,7 +70,7 @@ func (s *server) inviteCouple(w http.ResponseWriter, r *http.Request) {
 		bad(w, 500, "Could not create invitation")
 		return
 	}
-	reply(w, 201, map[string]any{"email": in.Email, "expiresAt": invite.ExpiresAt, "url": "https://backoffice.thedate.now/join/" + token})
+	reply(w, 201, map[string]any{"email": in.Email, "expiresAt": invite.ExpiresAt, "url": "https://studio.save.thedate.now/join/" + token})
 }
 
 func (s *server) coupleInviteDetails(w http.ResponseWriter, r *http.Request) {

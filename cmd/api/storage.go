@@ -119,6 +119,35 @@ func (s *server) publicPhoto(w http.ResponseWriter, r *http.Request) {
 		bad(w, 404, "Image not found")
 		return
 	}
+	s.servePhoto(w, r, kind, key, true)
+}
+
+func (s *server) ownerPhoto(w http.ResponseWriter, r *http.Request) {
+	if s.storage == nil {
+		bad(w, 404, "Image not found")
+		return
+	}
+	e, err := s.ownedEvent(r)
+	if err != nil {
+		bad(w, 404, "Event not found")
+		return
+	}
+	key := r.PathValue("key")
+	found := false
+	for _, item := range e.PhotoKeys {
+		if item == key {
+			found = true
+			break
+		}
+	}
+	if !found {
+		bad(w, 404, "Image not found")
+		return
+	}
+	s.servePhoto(w, r, e.Kind, key, false)
+}
+
+func (s *server) servePhoto(w http.ResponseWriter, r *http.Request, kind, key string, public bool) {
 	object, err := s.storage.client.GetObject(r.Context(), s.storage.bucket(kind), key, minio.GetObjectOptions{})
 	if err != nil {
 		bad(w, 404, "Image not found")
@@ -131,6 +160,10 @@ func (s *server) publicPhoto(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", info.ContentType)
-	w.Header().Set("Cache-Control", "public, max-age=300")
+	if public {
+		w.Header().Set("Cache-Control", "public, max-age=300")
+	} else {
+		w.Header().Set("Cache-Control", "private, no-store")
+	}
 	_, _ = io.Copy(w, object)
 }

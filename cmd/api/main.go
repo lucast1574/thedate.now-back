@@ -64,6 +64,7 @@ func main() {
 	mux.HandleFunc("GET /events/{id}/guests", s.listGuests)
 	mux.HandleFunc("POST /events/{id}/guests", s.addGuest)
 	mux.HandleFunc("POST /events/{id}/photos", s.uploadPhoto)
+	mux.HandleFunc("GET /events/{id}/photos/{key}", s.ownerPhoto)
 	mux.HandleFunc("POST /events/{id}/send-invitations", s.sendInvitations)
 	mux.HandleFunc("POST /events/{id}/couple-invitations", s.inviteCouple)
 	mux.HandleFunc("GET /couple-invites/{token}", s.coupleInviteDetails)
@@ -104,7 +105,7 @@ func decode(r *http.Request, dst any) error {
 
 func cors(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		allow := map[string]bool{"https://thedate.now": true, "https://save.thedate.now": true, "https://backoffice.thedate.now": true}
+		allow := map[string]bool{"https://thedate.now": true, "https://save.thedate.now": true, "https://backoffice.thedate.now": true, "https://crea.thedate.now": true, "https://studio.save.thedate.now": true}
 		origin := r.Header.Get("Origin")
 		if allow[origin] {
 			w.Header().Set("Access-Control-Allow-Origin", origin)

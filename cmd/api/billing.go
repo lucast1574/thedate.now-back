@@ -46,7 +46,11 @@ func (s *server) checkout(w http.ResponseWriter, r *http.Request) {
 	if e.Kind == "wedding" {
 		price = os.Getenv("STRIPE_WEDDING_PRICE_ID")
 	}
-	base := strings.TrimSuffix(env("BACKOFFICE_URL", "https://backoffice.thedate.now"), "/")
+	base := env("EVENT_STUDIO_URL", "https://crea.thedate.now")
+	if e.Kind == "wedding" {
+		base = env("WEDDING_STUDIO_URL", "https://studio.save.thedate.now")
+	}
+	base = strings.TrimSuffix(base, "/")
 	params := &stripe.CheckoutSessionParams{
 		Mode:              stripe.String("payment"),
 		LineItems:         []*stripe.CheckoutSessionLineItemParams{{Price: stripe.String(price), Quantity: stripe.Int64(1)}},
