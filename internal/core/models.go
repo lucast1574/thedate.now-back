@@ -18,7 +18,12 @@ type Event struct {
 	Title          string     `bson:"title" json:"title"`
 	Description    string     `bson:"description" json:"description"`
 	StartAt        time.Time  `bson:"startAt" json:"startAt"`
+	TimeZone       string     `bson:"timeZone" json:"timeZone"`
+	Organizer      string     `bson:"organizer" json:"organizer"`
 	Location       string     `bson:"location" json:"location"`
+	IsVirtual      bool       `bson:"isVirtual" json:"isVirtual"`
+	MapURL         string     `bson:"mapUrl" json:"mapUrl"`
+	VirtualURL     string     `bson:"virtualUrl" json:"virtualUrl"`
 	Capacity       int        `bson:"capacity" json:"capacity"`
 	MaybeHoldHours int        `bson:"maybeHoldHours" json:"maybeHoldHours"`
 	Template       string     `bson:"template" json:"template"`

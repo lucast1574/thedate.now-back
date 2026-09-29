@@ -61,6 +61,7 @@ func main() {
 	mux.HandleFunc("GET /events", s.listEvents)
 	mux.HandleFunc("POST /events", s.createEvent)
 	mux.HandleFunc("PATCH /events/{id}", s.updateEvent)
+	mux.HandleFunc("POST /maps/resolve", s.resolveMapsURL)
 	mux.HandleFunc("GET /events/{id}/guests", s.listGuests)
 	mux.HandleFunc("POST /events/{id}/guests", s.addGuest)
 	mux.HandleFunc("POST /events/{id}/photos", s.uploadPhoto)
@@ -234,7 +235,12 @@ type eventInput struct {
 	Title          string    `json:"title"`
 	Description    string    `json:"description"`
 	StartAt        time.Time `json:"startAt"`
+	TimeZone       string    `json:"timeZone"`
+	Organizer      string    `json:"organizer"`
 	Location       string    `json:"location"`
+	IsVirtual      bool      `json:"isVirtual"`
+	MapURL         string    `json:"mapUrl"`
+	VirtualURL     string    `json:"virtualUrl"`
 	Capacity       int       `json:"capacity"`
 	MaybeHoldHours int       `json:"maybeHoldHours"`
 	Template       string    `json:"template"`
@@ -252,7 +258,7 @@ func (s *server) createEvent(w http.ResponseWriter, r *http.Request) {
 		bad(w, 400, "Invalid request")
 		return
 	}
-	if (in.Kind != "wedding" && in.Kind != "general") || core.ValidateSlug(in.Slug) != nil || len(strings.TrimSpace(in.Title)) < 2 || in.Capacity < 1 || in.StartAt.IsZero() {
+	if (in.Kind != "wedding" && in.Kind != "general") || core.ValidateSlug(in.Slug) != nil || len(strings.TrimSpace(in.Title)) < 2 || in.Capacity < 1 || in.StartAt.IsZero() || !validEventPlace(in) {
 		bad(w, 400, "Invalid event details")
 		return
 	}
@@ -272,7 +278,7 @@ func (s *server) createEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	now := time.Now().UTC()
-	e := core.Event{ID: uuid.NewString(), Kind: in.Kind, Slug: in.Slug, Title: strings.TrimSpace(in.Title), Description: in.Description, StartAt: in.StartAt, Location: in.Location, Capacity: in.Capacity, MaybeHoldHours: in.MaybeHoldHours, Template: in.Template, AccentColor: in.AccentColor, OwnerID: u.ID, PaymentStatus: "unpaid", CreatedAt: now, UpdatedAt: now, PhotoKeys: []string{}, CoupleUserIDs: []string{}}
+	e := core.Event{ID: uuid.NewString(), Kind: in.Kind, Slug: in.Slug, Title: strings.TrimSpace(in.Title), Description: in.Description, StartAt: in.StartAt, TimeZone: in.TimeZone, Organizer: strings.TrimSpace(in.Organizer), Location: eventLocation(in), IsVirtual: in.IsVirtual, MapURL: physicalMapURL(in), VirtualURL: virtualEventURL(in), Capacity: in.Capacity, MaybeHoldHours: in.MaybeHoldHours, Template: in.Template, AccentColor: in.AccentColor, OwnerID: u.ID, PaymentStatus: "unpaid", CreatedAt: now, UpdatedAt: now, PhotoKeys: []string{}, CoupleUserIDs: []string{}}
 	if _, err = s.db.Collection("events").InsertOne(r.Context(), e); err != nil {
 		if mongo.IsDuplicateKeyError(err) {
 			bad(w, 409, "That invitation address is already taken")
@@ -300,6 +306,9 @@ func (s *server) listEvents(w http.ResponseWriter, r *http.Request) {
 		bad(w, 500, "Could not list events")
 		return
 	}
+	for i := range events {
+		s.completeLegacyEvent(r.Context(), &events[i])
+	}
 	reply(w, 200, events)
 }
 func (s *server) ownedEvent(r *http.Request) (core.Event, error) {
@@ -322,7 +331,7 @@ func (s *server) updateEvent(w http.ResponseWriter, r *http.Request) {
 		bad(w, 400, "Invalid request")
 		return
 	}
-	if in.Capacity < 1 || len(strings.TrimSpace(in.Title)) < 2 || in.StartAt.IsZero() {
+	if in.Kind != e.Kind || in.Capacity < 1 || len(strings.TrimSpace(in.Title)) < 2 || in.StartAt.IsZero() || !validEventPlace(in) {
 		bad(w, 400, "Invalid event details")
 		return
 	}
@@ -334,7 +343,7 @@ func (s *server) updateEvent(w http.ResponseWriter, r *http.Request) {
 		bad(w, 400, "Invalid hold period")
 		return
 	}
-	changes := bson.M{"title": strings.TrimSpace(in.Title), "description": in.Description, "startAt": in.StartAt, "location": in.Location, "capacity": in.Capacity, "maybeHoldHours": hold, "template": in.Template, "accentColor": in.AccentColor, "updatedAt": time.Now().UTC()}
+	changes := bson.M{"title": strings.TrimSpace(in.Title), "description": in.Description, "startAt": in.StartAt, "timeZone": in.TimeZone, "organizer": strings.TrimSpace(in.Organizer), "location": eventLocation(in), "isVirtual": in.IsVirtual, "mapUrl": physicalMapURL(in), "virtualUrl": virtualEventURL(in), "capacity": in.Capacity, "maybeHoldHours": hold, "template": in.Template, "accentColor": in.AccentColor, "updatedAt": time.Now().UTC()}
 	_, err = s.db.Collection("events").UpdateByID(r.Context(), e.ID, bson.M{"$set": changes})
 	if err != nil {
 		bad(w, 500, "Could not update event")
@@ -354,6 +363,7 @@ func (s *server) publicEvent(w http.ResponseWriter, r *http.Request) {
 		bad(w, 404, "Invitation not found")
 		return
 	}
+	s.completeLegacyEvent(r.Context(), &e)
 	reply(w, 200, e)
 }
 func randomToken() (string, error) {
