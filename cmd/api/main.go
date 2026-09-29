@@ -448,7 +448,8 @@ func (s *server) rsvpDetails(w http.ResponseWriter, r *http.Request) {
 		bad(w, 404, "Invitation not found")
 		return
 	}
-	reply(w, 200, map[string]any{"guestName": g.Name, "seats": g.Seats, "response": g.Response, "eventTitle": e.Title, "kind": e.Kind, "slug": e.Slug})
+	s.completeLegacyEvent(r.Context(), &e)
+	reply(w, 200, map[string]any{"guestName": g.Name, "seats": g.Seats, "response": g.Response, "eventTitle": e.Title, "kind": e.Kind, "slug": e.Slug, "startAt": e.StartAt, "timeZone": e.TimeZone, "organizer": e.Organizer, "location": e.Location, "isVirtual": e.IsVirtual, "mapUrl": e.MapURL, "virtualUrl": e.VirtualURL})
 }
 
 func (s *server) rsvp(w http.ResponseWriter, r *http.Request) {
