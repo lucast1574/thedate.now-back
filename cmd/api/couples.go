@@ -10,6 +10,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/lucast1574/thedate.now-back/internal/core"
 	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type coupleEmail struct {
@@ -32,7 +34,7 @@ func (s *server) inviteCouple(w http.ResponseWriter, r *http.Request) {
 		bad(w, 404, "Event not found")
 		return
 	}
-	if e.Kind != "wedding" || e.PaymentStatus != "paid" || e.OwnerID != u.ID {
+	if e.Kind != "wedding" || e.PaymentStatus != "paid" || (e.OwnerID != u.ID && u.Role != "admin") {
 		bad(w, 403, "Only the planner can invite couples after payment")
 		return
 	}
@@ -102,6 +104,10 @@ func (s *server) acceptCouple(w http.ResponseWriter, r *http.Request) {
 		bad(w, 403, "Sign in with the invited email address")
 		return
 	}
+	if u.Role != "couple" {
+		bad(w, 403, "Couple account required")
+		return
+	}
 	var e core.Event
 	if err := s.db.Collection("events").FindOne(r.Context(), bson.M{"_id": invite.EventID, "kind": "wedding", "paymentStatus": "paid"}).Decode(&e); err != nil {
 		bad(w, 404, "Wedding not found")
@@ -111,7 +117,8 @@ func (s *server) acceptCouple(w http.ResponseWriter, r *http.Request) {
 		bad(w, 409, "This wedding already has two couple accounts")
 		return
 	}
-	if _, err = s.db.Collection("events").UpdateByID(r.Context(), e.ID, bson.M{"$addToSet": bson.M{"coupleUserIds": u.ID}}); err != nil {
+	result, err := s.db.Collection("events").UpdateOne(r.Context(), bson.M{"_id": e.ID, "coupleUserIds.1": bson.M{"$exists": false}}, bson.M{"$addToSet": bson.M{"coupleUserIds": u.ID}})
+	if err != nil || result.MatchedCount == 0 {
 		bad(w, 500, "Could not grant access")
 		return
 	}
@@ -120,4 +127,63 @@ func (s *server) acceptCouple(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	reply(w, 200, map[string]string{"status": "accepted", "eventId": e.ID})
+}
+
+type coupleAccountInput struct {
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+func (s *server) createCoupleAccount(w http.ResponseWriter, r *http.Request) {
+	u, err := s.user(r)
+	if err != nil {
+		bad(w, 401, "Sign in required")
+		return
+	}
+	e, err := s.managedEvent(r)
+	if err != nil {
+		bad(w, 404, "Wedding not found")
+		return
+	}
+	if e.Kind != "wedding" || e.IsDemo || e.PaymentStatus != "paid" || (u.Role != "planner" && u.Role != "admin") {
+		bad(w, 403, "Paid wedding and planner access required")
+		return
+	}
+	var in coupleAccountInput
+	if decode(r, &in) != nil {
+		bad(w, 400, "Invalid account")
+		return
+	}
+	in.Name = strings.TrimSpace(in.Name)
+	in.Email = strings.ToLower(strings.TrimSpace(in.Email))
+	if len(in.Name) < 2 || len(in.Name) > 120 || !strings.Contains(in.Email, "@") || len(in.Password) < 10 || len(in.Password) > 72 {
+		bad(w, 400, "Name, email and password of 10-72 characters required")
+		return
+	}
+	if len(e.CoupleUserIDs) >= 2 {
+		bad(w, 409, "This wedding already has two couple accounts")
+		return
+	}
+	hash, err := bcrypt.GenerateFromPassword([]byte(in.Password), bcrypt.DefaultCost)
+	if err != nil {
+		bad(w, 500, "Could not create account")
+		return
+	}
+	couple := core.User{ID: uuid.NewString(), Email: in.Email, Name: in.Name, PasswordHash: string(hash), Role: "couple", CreatedAt: time.Now().UTC()}
+	if _, err = s.db.Collection("users").InsertOne(r.Context(), couple); err != nil {
+		if mongo.IsDuplicateKeyError(err) {
+			bad(w, 409, "This email already has an account")
+			return
+		}
+		bad(w, 500, "Could not create account")
+		return
+	}
+	result, err := s.db.Collection("events").UpdateOne(r.Context(), bson.M{"_id": e.ID, "coupleUserIds.1": bson.M{"$exists": false}}, bson.M{"$addToSet": bson.M{"coupleUserIds": couple.ID}, "$set": bson.M{"updatedAt": time.Now().UTC()}})
+	if err != nil || result.MatchedCount == 0 {
+		_, _ = s.db.Collection("users").DeleteOne(r.Context(), bson.M{"_id": couple.ID})
+		bad(w, 409, "This wedding already has two couple accounts")
+		return
+	}
+	reply(w, 201, map[string]any{"user": couple, "eventId": e.ID})
 }

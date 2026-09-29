@@ -7,7 +7,8 @@ type User struct {
 	Email        string    `bson:"email" json:"email"`
 	Name         string    `bson:"name" json:"name"`
 	PasswordHash string    `bson:"passwordHash" json:"-"`
-	Role         string    `bson:"role" json:"role"` // planner or organizer
+	Role         string    `bson:"role" json:"role"` // admin, planner, organizer or couple
+	GoogleSub    string    `bson:"googleSub,omitempty" json:"-"`
 	CreatedAt    time.Time `bson:"createdAt" json:"createdAt"`
 }
 
@@ -28,6 +29,8 @@ type Event struct {
 	MaybeHoldHours int        `bson:"maybeHoldHours" json:"maybeHoldHours"`
 	Template       string     `bson:"template" json:"template"`
 	AccentColor    string     `bson:"accentColor" json:"accentColor"`
+	IsDemo         bool       `bson:"isDemo,omitempty" json:"isDemo"`
+	Sections       []Section  `bson:"sections,omitempty" json:"sections"`
 	PhotoKeys      []string   `bson:"photoKeys" json:"photoKeys"`
 	OwnerID        string     `bson:"ownerId" json:"ownerId"`
 	CoupleUserIDs  []string   `bson:"coupleUserIds" json:"coupleUserIds"`
@@ -36,6 +39,14 @@ type Event struct {
 	PublishedAt    *time.Time `bson:"publishedAt" json:"publishedAt"`
 	CreatedAt      time.Time  `bson:"createdAt" json:"createdAt"`
 	UpdatedAt      time.Time  `bson:"updatedAt" json:"updatedAt"`
+}
+
+type Section struct {
+	ID       string `bson:"id" json:"id"`
+	Icon     string `bson:"icon" json:"icon"`
+	Heading  string `bson:"heading" json:"heading"`
+	Body     string `bson:"body" json:"body"`
+	PhotoKey string `bson:"photoKey,omitempty" json:"photoKey,omitempty"`
 }
 
 type Guest struct {

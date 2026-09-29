@@ -15,7 +15,7 @@ import (
 )
 
 func stripeConfigured() bool {
-	return strings.HasPrefix(os.Getenv("STRIPE_SECRET_KEY"), "sk_test_") && strings.HasPrefix(os.Getenv("STRIPE_WEDDING_PRICE_ID"), "price_") && strings.HasPrefix(os.Getenv("STRIPE_EVENT_PRICE_ID"), "price_") && strings.HasPrefix(os.Getenv("STRIPE_WEBHOOK_SECRET"), "whsec_")
+	return strings.HasPrefix(os.Getenv("STRIPE_SECRET_KEY"), "sk_test_") && strings.HasPrefix(os.Getenv("STRIPE_WEBHOOK_SECRET"), "whsec_")
 }
 
 func (s *server) checkout(w http.ResponseWriter, r *http.Request) {
@@ -24,16 +24,16 @@ func (s *server) checkout(w http.ResponseWriter, r *http.Request) {
 		bad(w, 401, "Sign in required")
 		return
 	}
-	e, err := s.ownedEvent(r)
+	e, err := s.managedEvent(r)
 	if err != nil {
 		bad(w, 404, "Event not found")
 		return
 	}
-	if e.OwnerID != u.ID {
+	if e.OwnerID != u.ID && u.Role != "admin" {
 		bad(w, 403, "Only the event owner can pay")
 		return
 	}
-	if e.PaymentStatus == "paid" {
+	if e.IsDemo || e.PaymentStatus == "paid" {
 		bad(w, 409, "Event already paid")
 		return
 	}
@@ -42,9 +42,11 @@ func (s *server) checkout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	stripe.Key = os.Getenv("STRIPE_SECRET_KEY")
-	price := os.Getenv("STRIPE_EVENT_PRICE_ID")
+	amount := int64(500)
+	label := "The Date - evento"
 	if e.Kind == "wedding" {
-		price = os.Getenv("STRIPE_WEDDING_PRICE_ID")
+		amount = 2500
+		label = "Save the Date - boda"
 	}
 	base := env("EVENT_STUDIO_URL", "https://crea.thedate.now")
 	if e.Kind == "wedding" {
@@ -53,7 +55,7 @@ func (s *server) checkout(w http.ResponseWriter, r *http.Request) {
 	base = strings.TrimSuffix(base, "/")
 	params := &stripe.CheckoutSessionParams{
 		Mode:              stripe.String("payment"),
-		LineItems:         []*stripe.CheckoutSessionLineItemParams{{Price: stripe.String(price), Quantity: stripe.Int64(1)}},
+		LineItems:         []*stripe.CheckoutSessionLineItemParams{{PriceData: &stripe.CheckoutSessionLineItemPriceDataParams{Currency: stripe.String("usd"), UnitAmount: stripe.Int64(amount), ProductData: &stripe.CheckoutSessionLineItemPriceDataProductDataParams{Name: stripe.String(label)}}, Quantity: stripe.Int64(1)}},
 		SuccessURL:        stripe.String(base + "/?payment=success&event=" + e.ID),
 		CancelURL:         stripe.String(base + "/?payment=cancelled&event=" + e.ID),
 		ClientReferenceID: stripe.String(e.ID),
@@ -121,12 +123,12 @@ func (s *server) stripeWebhook(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *server) publish(w http.ResponseWriter, r *http.Request) {
-	e, err := s.ownedEvent(r)
+	e, err := s.managedEvent(r)
 	if err != nil {
 		bad(w, 404, "Event not found")
 		return
 	}
-	if e.PaymentStatus != "paid" {
+	if e.IsDemo || e.PaymentStatus != "paid" {
 		bad(w, 403, "Complete test checkout before publishing")
 		return
 	}

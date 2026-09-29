@@ -57,10 +57,12 @@ func main() {
 	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) { reply(w, 200, map[string]string{"status": "ok"}) })
 	mux.HandleFunc("POST /auth/register", s.register)
 	mux.HandleFunc("POST /auth/login", s.login)
+	mux.HandleFunc("POST /auth/google", s.googleLogin)
 	mux.HandleFunc("GET /auth/me", s.me)
 	mux.HandleFunc("GET /events", s.listEvents)
 	mux.HandleFunc("POST /events", s.createEvent)
 	mux.HandleFunc("PATCH /events/{id}", s.updateEvent)
+	mux.HandleFunc("PATCH /events/{id}/design", s.updateDesign)
 	mux.HandleFunc("POST /maps/resolve", s.resolveMapsURL)
 	mux.HandleFunc("GET /events/{id}/guests", s.listGuests)
 	mux.HandleFunc("POST /events/{id}/guests", s.addGuest)
@@ -68,6 +70,7 @@ func main() {
 	mux.HandleFunc("GET /events/{id}/photos/{key}", s.ownerPhoto)
 	mux.HandleFunc("POST /events/{id}/send-invitations", s.sendInvitations)
 	mux.HandleFunc("POST /events/{id}/couple-invitations", s.inviteCouple)
+	mux.HandleFunc("POST /events/{id}/couple-accounts", s.createCoupleAccount)
 	mux.HandleFunc("GET /couple-invites/{token}", s.coupleInviteDetails)
 	mux.HandleFunc("POST /couple-invites/{token}/accept", s.acceptCouple)
 	mux.HandleFunc("GET /public/events/{kind}/{slug}", s.publicEvent)
@@ -127,6 +130,10 @@ func (s *server) indexes(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	_, err = s.db.Collection("users").Indexes().CreateOne(ctx, mongo.IndexModel{Keys: bson.D{{Key: "googleSub", Value: 1}}, Options: options.Index().SetUnique(true).SetPartialFilterExpression(bson.M{"googleSub": bson.M{"$exists": true}})})
+	if err != nil {
+		return err
+	}
 	_, err = s.db.Collection("events").Indexes().CreateOne(ctx, mongo.IndexModel{Keys: bson.D{{Key: "kind", Value: 1}, {Key: "slug", Value: 1}}, Options: options.Index().SetUnique(true)})
 	if err != nil {
 		return err
@@ -150,7 +157,7 @@ func (s *server) register(w http.ResponseWriter, r *http.Request) {
 	}
 	in.Email = strings.ToLower(strings.TrimSpace(in.Email))
 	in.Name = strings.TrimSpace(in.Name)
-	if !strings.Contains(in.Email, "@") || len(in.Password) < 10 || len(in.Name) < 2 || (in.Role != "planner" && in.Role != "organizer" && in.Role != "couple") {
+	if !strings.Contains(in.Email, "@") || len(in.Password) < 10 || len(in.Name) < 2 || (in.Role != "planner" && in.Role != "organizer") {
 		bad(w, 400, "Name, email, role and password of at least 10 characters required")
 		return
 	}
@@ -262,11 +269,11 @@ func (s *server) createEvent(w http.ResponseWriter, r *http.Request) {
 		bad(w, 400, "Invalid event details")
 		return
 	}
-	if in.Kind == "wedding" && u.Role != "planner" {
+	if in.Kind == "wedding" && u.Role != "planner" && u.Role != "admin" {
 		bad(w, 403, "Wedding events require a planner account")
 		return
 	}
-	if in.Kind == "general" && u.Role != "organizer" {
+	if in.Kind == "general" && u.Role != "organizer" && u.Role != "admin" {
 		bad(w, 403, "General events require an organizer account")
 		return
 	}
@@ -278,7 +285,11 @@ func (s *server) createEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	now := time.Now().UTC()
-	e := core.Event{ID: uuid.NewString(), Kind: in.Kind, Slug: in.Slug, Title: strings.TrimSpace(in.Title), Description: in.Description, StartAt: in.StartAt, TimeZone: in.TimeZone, Organizer: strings.TrimSpace(in.Organizer), Location: eventLocation(in), IsVirtual: in.IsVirtual, MapURL: physicalMapURL(in), VirtualURL: virtualEventURL(in), Capacity: in.Capacity, MaybeHoldHours: in.MaybeHoldHours, Template: in.Template, AccentColor: in.AccentColor, OwnerID: u.ID, PaymentStatus: "unpaid", CreatedAt: now, UpdatedAt: now, PhotoKeys: []string{}, CoupleUserIDs: []string{}}
+	status := "unpaid"
+	if u.Role == "admin" {
+		status = "paid"
+	}
+	e := core.Event{ID: uuid.NewString(), Kind: in.Kind, Slug: in.Slug, Title: strings.TrimSpace(in.Title), Description: in.Description, StartAt: in.StartAt, TimeZone: in.TimeZone, Organizer: strings.TrimSpace(in.Organizer), Location: eventLocation(in), IsVirtual: in.IsVirtual, MapURL: physicalMapURL(in), VirtualURL: virtualEventURL(in), Capacity: in.Capacity, MaybeHoldHours: in.MaybeHoldHours, Template: in.Template, AccentColor: in.AccentColor, OwnerID: u.ID, PaymentStatus: status, CreatedAt: now, UpdatedAt: now, PhotoKeys: []string{}, Sections: []core.Section{}, CoupleUserIDs: []string{}}
 	if _, err = s.db.Collection("events").InsertOne(r.Context(), e); err != nil {
 		if mongo.IsDuplicateKeyError(err) {
 			bad(w, 409, "That invitation address is already taken")
@@ -295,7 +306,15 @@ func (s *server) listEvents(w http.ResponseWriter, r *http.Request) {
 		bad(w, 401, "Sign in required")
 		return
 	}
-	cur, err := s.db.Collection("events").Find(r.Context(), bson.M{"$or": bson.A{bson.M{"ownerId": u.ID}, bson.M{"coupleUserIds": u.ID}}})
+	if err := s.ensureDemos(r.Context(), u); err != nil {
+		bad(w, 500, "Could not prepare demo invitation")
+		return
+	}
+	filter := bson.M{"$or": bson.A{bson.M{"ownerId": u.ID}, bson.M{"coupleUserIds": u.ID}}}
+	if u.Role == "admin" {
+		filter = bson.M{}
+	}
+	cur, err := s.db.Collection("events").Find(r.Context(), filter)
 	if err != nil {
 		bad(w, 500, "Could not list events")
 		return
@@ -317,13 +336,36 @@ func (s *server) ownedEvent(r *http.Request) (core.Event, error) {
 	if err != nil {
 		return e, err
 	}
-	err = s.db.Collection("events").FindOne(r.Context(), bson.M{"_id": r.PathValue("id"), "$or": bson.A{bson.M{"ownerId": u.ID}, bson.M{"coupleUserIds": u.ID}}}).Decode(&e)
+	filter := bson.M{"_id": r.PathValue("id"), "$or": bson.A{bson.M{"ownerId": u.ID}, bson.M{"coupleUserIds": u.ID}}}
+	if u.Role == "admin" {
+		filter = bson.M{"_id": r.PathValue("id")}
+	}
+	err = s.db.Collection("events").FindOne(r.Context(), filter).Decode(&e)
 	return e, err
 }
-func (s *server) updateEvent(w http.ResponseWriter, r *http.Request) {
+
+func (s *server) managedEvent(r *http.Request) (core.Event, error) {
 	e, err := s.ownedEvent(r)
 	if err != nil {
+		return e, err
+	}
+	u, err := s.user(r)
+	if err != nil {
+		return e, err
+	}
+	if u.Role != "admin" && e.OwnerID != u.ID {
+		return e, errors.New("manager access required")
+	}
+	return e, nil
+}
+func (s *server) updateEvent(w http.ResponseWriter, r *http.Request) {
+	e, err := s.managedEvent(r)
+	if err != nil {
 		bad(w, 404, "Event not found")
+		return
+	}
+	if e.IsDemo {
+		bad(w, 403, "Use the design editor for demo invitations")
 		return
 	}
 	var in eventInput
@@ -381,9 +423,13 @@ type guestInput struct {
 }
 
 func (s *server) addGuest(w http.ResponseWriter, r *http.Request) {
-	e, err := s.ownedEvent(r)
+	e, err := s.managedEvent(r)
 	if err != nil {
 		bad(w, 404, "Event not found")
+		return
+	}
+	if e.IsDemo {
+		bad(w, 403, "Demo invitations cannot have guests")
 		return
 	}
 	var in guestInput
@@ -404,9 +450,13 @@ func (s *server) addGuest(w http.ResponseWriter, r *http.Request) {
 	reply(w, 201, g)
 }
 func (s *server) listGuests(w http.ResponseWriter, r *http.Request) {
-	e, err := s.ownedEvent(r)
+	e, err := s.managedEvent(r)
 	if err != nil {
 		bad(w, 404, "Event not found")
+		return
+	}
+	if e.IsDemo {
+		reply(w, 200, []core.Guest{})
 		return
 	}
 	cur, err := s.db.Collection("guests").Find(r.Context(), bson.M{"eventId": e.ID})

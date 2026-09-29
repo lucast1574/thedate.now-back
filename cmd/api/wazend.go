@@ -61,7 +61,7 @@ func extractMessageID(raw []byte) string {
 }
 
 func (s *server) sendInvitations(w http.ResponseWriter, r *http.Request) {
-	e, err := s.ownedEvent(r)
+	e, err := s.managedEvent(r)
 	if err != nil {
 		bad(w, 404, "Event not found")
 		return
