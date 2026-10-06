@@ -38,7 +38,7 @@ func (s *server) publish(w http.ResponseWriter, r *http.Request) {
 		bad(w, 500, "Could not queue deployment")
 		return
 	}
-	reply(w, http.StatusAccepted, d)
+	reply(w, http.StatusAccepted, s.publicationView(r.Context(), e, d))
 }
 func (s *server) deploymentStatus(w http.ResponseWriter, r *http.Request) {
 	e, err := s.managedEvent(r)
@@ -51,7 +51,7 @@ func (s *server) deploymentStatus(w http.ResponseWriter, r *http.Request) {
 		bad(w, 404, "Deployment not found")
 		return
 	}
-	reply(w, 200, d)
+	reply(w, 200, s.publicationView(r.Context(), e, d))
 }
 func (s *server) deploymentWorker(ctx context.Context) {
 	ticker := time.NewTicker(3 * time.Second)
