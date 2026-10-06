@@ -43,6 +43,12 @@ func ValidDesign(in DesignInput, photos []string) bool {
 			return false
 		}
 		seen[section.ID] = true
+		if section.GuestText != nil {
+			text := section.GuestText
+			if text.Type != "text" || text.Binding != "guest_name" || !ValidCanvas(&FlyerCanvas{Width: 720, Height: 240, Background: "#ffffff", Elements: []FlyerElement{*text}}, nil) {
+				return false
+			}
+		}
 		if !ValidCanvas(section.Canvas, photos) || (in.DesignMode == "flyer" && section.Canvas == nil) {
 			return false
 		}

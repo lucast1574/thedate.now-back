@@ -23,7 +23,7 @@ func (s Deployments) Queue(ctx context.Context, e core.Event, image string) (cor
 		return d, err
 	}
 	// Explicit publish retries failed jobs, preserving checkpoints/resources.
-	_, err = s.DB.Collection("deployments").UpdateOne(ctx, bson.M{"_id": e.ID, "phase": "error"}, bson.M{"$set": bson.M{"phase": "pending", "error": ""}})
+	_, err = s.DB.Collection("deployments").UpdateOne(ctx, bson.M{"_id": e.ID, "phase": "error"}, bson.M{"$set": bson.M{"phase": "pending", "error": "", "image": image}})
 	if err != nil {
 		return d, err
 	}
@@ -58,7 +58,7 @@ func (s Deployments) Finish(ctx context.Context, d core.Deployment, claim string
 	}
 	if d.Phase == "ready" {
 		now := time.Now().UTC()
-		result, err := s.DB.Collection("events").UpdateOne(ctx, bson.M{"_id": d.EventID, "paymentStatus": "paid"}, bson.M{"$set": bson.M{"publishedAt": now, "updatedAt": now}})
+		result, err := s.DB.Collection("events").UpdateOne(ctx, bson.M{"_id": d.EventID, "paymentStatus": "paid"}, mongo.Pipeline{bson.D{{Key: "$set", Value: bson.M{"publishedAt": bson.M{"$ifNull": bson.A{"$publishedAt", now}}, "updatedAt": now}}}})
 		if err != nil {
 			return err
 		}

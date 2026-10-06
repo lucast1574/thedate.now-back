@@ -91,7 +91,7 @@ func (c *Client) Configure(ctx context.Context, id string, e core.Event, image s
 	if err := c.call(ctx, "application.saveDockerProvider", map[string]any{"applicationId": id, "dockerImage": image, "username": nil, "password": nil, "registryUrl": nil}, nil); err != nil {
 		return err
 	}
-	env := fmt.Sprintf("PORT=3000\nHOSTNAME=0.0.0.0\nAPI_INTERNAL_URL=%s\nNEXT_PUBLIC_API_URL=%s\nINVITATION_KIND=%s\nINVITATION_SLUG=%s\nINVITATION_EVENT_ID=%s\n", c.APIURL, c.APIURL, e.Kind, e.Slug, e.ID)
+	env := fmt.Sprintf("PORT=3000\nHOSTNAME=0.0.0.0\nAPI_INTERNAL_URL=%s\nNEXT_PUBLIC_API_URL=%s\nINVITATION_KIND=%s\nINVITATION_SLUG=%s\nINVITATION_EVENT_ID=%s\nINVITATION_RENDERER_IMAGE=%s\n", c.APIURL, c.APIURL, e.Kind, e.Slug, e.ID, image)
 	if err := c.call(ctx, "application.saveEnvironment", map[string]any{"applicationId": id, "env": env, "buildArgs": "", "buildSecrets": "", "createEnvFile": false}, nil); err != nil {
 		return err
 	}
@@ -144,6 +144,7 @@ func (c *Client) Ready(ctx context.Context, d core.Deployment) (bool, error) {
 	defer resp.Body.Close()
 	var health struct {
 		EventID string `json:"eventId"`
+		Image   string `json:"image"`
 	}
-	return resp.StatusCode == 200 && json.NewDecoder(resp.Body).Decode(&health) == nil && health.EventID == d.EventID, nil
+	return resp.StatusCode == 200 && json.NewDecoder(resp.Body).Decode(&health) == nil && health.EventID == d.EventID && health.Image == d.Image, nil
 }

@@ -135,7 +135,7 @@ func (s *server) updateEvent(w http.ResponseWriter, r *http.Request) {
 		bad(w, 400, "Invalid request")
 		return
 	}
-	if in.Kind != e.Kind || core.ValidateEvent(in, false) != nil {
+	if in.Kind != e.Kind || core.ValidateEvent(in, false) != nil || (e.PublishedAt != nil && in.Slug != e.Slug) {
 		bad(w, 400, "Invalid event details")
 		return
 	}

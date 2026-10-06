@@ -61,7 +61,7 @@ Crear/importar invitados requiere `paid` y un evento real. El importador admite 
 
 Inspección del 6 de octubre de 2026: la sesión configurada S0047 en LATAM funciona, engine GOWS, nombre de perfil Wazend. El webhook `event.response` hacia esta API tiene HMAC. La sesión también tiene otra integración; no se modificó su nombre/configuración ni se enviaron mensajes reales. Para nombres de remitente separados deben conectarse cuentas/sesiones WhatsApp propias por marca y configurar sus respectivos perfiles; el nombre no es una propiedad que pueda cambiarse por mensaje. Véase [perfil WAHA](https://waha.devlike.pro/docs/how-to/profile/).
 
-Los cambios del editor/API son locales. Para activarlos, publicar una nueva imagen frontend y API siguiendo `rollout.md`; los contenedores de invitaciones existentes también necesitan el renderer nuevo para mostrar flyers. Stripe sigue en modo de pruebas.
+Frontend y API se publican siguiendo `rollout.md`; la actualización del renderer reconcilia los contenedores existentes. Stripe sigue en modo de pruebas.
 
 ## Personas y plano de mesas
 
@@ -78,3 +78,11 @@ Pruebas: `core/party_test.go`, `mongostore/seating_test.go` y `httpapi/seating_t
 ## Plantillas por producto
 
 `core/templates.json` define las 12 plantillas (tres por producto y modo). `core/templates.go` valida `templateId` contra el `kind`, estilo y modo del evento; una plantilla de eventos no se puede guardar en una boda. `mongostore/templates.go` sincroniza por ID la colección `invitationTemplates` al iniciar y completa únicamente IDs ausentes en eventos antiguos. El índice compuesto `kind/mode` identifica el catálogo. `GET /templates` requiere sesión; el diseño y la vista pública conservan `templateId`. Las pruebas `core/templates_test.go` y `httpapi/templates_test.go` cubren catálogo, compatibilidad, rechazo cruzado, persistencia y migración sin sobrescribir una elección guardada.
+
+## Personalización y versiones del renderer
+
+`core/guest_name.go` compone nombre y apellido. `guest_name` es el único binding permitido y solo puede usarse en textos. Secciones guardan `guestText`; flyers usan sus elementos habituales. `GET /public/rsvp/{token}` entrega el DTO público del evento publicado y pagado con el nombre del titular asociado al token, sin teléfonos, pagos, propietario ni otros invitados. WhatsApp usa ese mismo nombre y enlace. Editar conserva tokens, mensajes, respuestas y URL; cambiar el slug publicado se rechaza.
+
+`dokploy/renderer.go` resuelve por HEAD el digest del repositorio configurado por el operador. `httpapi/renderer.go` comprueba al iniciar y cada minuto. `mongostore/renderer.go` persiste en `runtimeConfig` y vuelve a poner en cola despliegues sin lease activo conservando recursos y publicación original. Los errores requieren reintento explícito con la imagen nueva. La disponibilidad HTTP exige evento e imagen para no aceptar el contenedor anterior.
+
+Configuración opcional: `DOKPLOY_RENDERER_IMAGE_REPOSITORY` y `DOKPLOY_RENDERER_MANIFEST_URL`. Si no está disponible se conserva la imagen existente. El repositorio debe ser exclusivo del renderer del frontend. Pruebas Mongo aisladas verifican leases y preservación de recursos/publicación; pruebas HTTP cubren edición después de enviar y permisos.

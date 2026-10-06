@@ -28,7 +28,7 @@ func (s *server) publish(w http.ResponseWriter, r *http.Request) {
 		bad(w, 403, "Complete checkout before publishing")
 		return
 	}
-	image := os.Getenv("DOKPLOY_INVITATION_IMAGE")
+	image := (mongostore.Deployments{DB: s.db}).RendererImage(r.Context(), os.Getenv("DOKPLOY_INVITATION_IMAGE"))
 	if _, err = deploymentClient(); err != nil || !dokploy.ValidImage(image) {
 		bad(w, 503, "Invitation deployment is not configured")
 		return
@@ -56,10 +56,15 @@ func (s *server) deploymentStatus(w http.ResponseWriter, r *http.Request) {
 func (s *server) deploymentWorker(ctx context.Context) {
 	ticker := time.NewTicker(3 * time.Second)
 	defer ticker.Stop()
+	releaseTicker := time.NewTicker(time.Minute)
+	defer releaseTicker.Stop()
+	s.refreshRenderer(ctx)
 	for {
 		select {
 		case <-ctx.Done():
 			return
+		case <-releaseTicker.C:
+			s.refreshRenderer(ctx)
 		case <-ticker.C:
 			s.deploymentStep(ctx)
 		}

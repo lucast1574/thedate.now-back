@@ -56,12 +56,13 @@ type Event struct {
 }
 
 type Section struct {
-	Canvas   *FlyerCanvas `bson:"canvas,omitempty" json:"canvas,omitempty"`
-	ID       string       `bson:"id" json:"id"`
-	Icon     string       `bson:"icon" json:"icon"`
-	Heading  string       `bson:"heading" json:"heading"`
-	Body     string       `bson:"body" json:"body"`
-	PhotoKey string       `bson:"photoKey,omitempty" json:"photoKey,omitempty"`
+	GuestText *FlyerElement `bson:"guestText,omitempty" json:"guestText,omitempty"`
+	Canvas    *FlyerCanvas  `bson:"canvas,omitempty" json:"canvas,omitempty"`
+	ID        string        `bson:"id" json:"id"`
+	Icon      string        `bson:"icon" json:"icon"`
+	Heading   string        `bson:"heading" json:"heading"`
+	Body      string        `bson:"body" json:"body"`
+	PhotoKey  string        `bson:"photoKey,omitempty" json:"photoKey,omitempty"`
 }
 
 type Guest struct {
