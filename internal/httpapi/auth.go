@@ -16,10 +16,11 @@ import (
 )
 
 type credentials struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-	Name     string `json:"name"`
-	Role     string `json:"role"`
+	ReferralCode string `json:"referralCode"`
+	Email        string `json:"email"`
+	Password     string `json:"password"`
+	Name         string `json:"name"`
+	Role         string `json:"role"`
 }
 
 func (s *server) register(w http.ResponseWriter, r *http.Request) {
@@ -39,7 +40,7 @@ func (s *server) register(w http.ResponseWriter, r *http.Request) {
 		bad(w, 500, "Could not create account")
 		return
 	}
-	u := core.User{ID: uuid.NewString(), Email: in.Email, Name: in.Name, PasswordHash: string(hash), Role: in.Role, CreatedAt: time.Now().UTC()}
+	u := core.User{ReferredBy: s.referredBy(r, in.ReferralCode), ID: uuid.NewString(), Email: in.Email, Name: in.Name, PasswordHash: string(hash), Role: in.Role, CreatedAt: time.Now().UTC()}
 	if _, err = s.db.Collection("users").InsertOne(r.Context(), u); err != nil {
 		if mongo.IsDuplicateKeyError(err) {
 			bad(w, 409, "Email already registered")
@@ -84,20 +85,6 @@ func (s *server) me(w http.ResponseWriter, r *http.Request) {
 	}
 	u.CreatorPortals = core.UserPortals(u)
 	u.Portals = core.UserPortals(u)
-	if u.Role != "couple" && u.Role != "admin" {
-		var membership core.Event
-		if s.db.Collection("events").FindOne(r.Context(), bson.M{"kind": "wedding", "coupleUserIds": u.ID}).Decode(&membership) == nil {
-			found := false
-			for _, p := range u.Portals {
-				if p == "wedding" {
-					found = true
-				}
-			}
-			if !found {
-				u.Portals = append(u.Portals, "wedding")
-			}
-		}
-	}
 	reply(w, 200, u)
 }
 
@@ -123,7 +110,7 @@ func (s *server) sign(u core.User, method string) (string, error) {
 func validSession(u core.User, claims *sessionClaims) bool {
 	return claims.Format == 1 && claims.Subject == u.ID && claims.Version == u.TokenVersion &&
 		((claims.Method == "google" && u.GoogleSub != "" && u.IdentityPolicy == 1) || (claims.Method == "password" && u.GoogleSub == "" && u.Role != "admin" && u.Email != adminEmail())) &&
-		(u.Role != "admin" || (claims.Method == "google" && u.GoogleSub != "" && u.Email == adminEmail() && (u.GoogleAuthoritative || u.GoogleSub == os.Getenv("GOOGLE_ADMIN_SUB"))))
+		(u.Role != "admin" || (claims.Method == "google" && u.GoogleSub != "" && (u.GoogleAuthoritative || (u.Email == adminEmail() && u.GoogleSub == os.Getenv("GOOGLE_ADMIN_SUB")))))
 }
 func (s *server) user(r *http.Request) (core.User, error) {
 	var u core.User

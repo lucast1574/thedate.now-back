@@ -14,8 +14,9 @@ import (
 )
 
 type googleLoginInput struct {
-	IDToken string `json:"idToken"`
-	Portal  string `json:"portal"`
+	ReferralCode string `json:"referralCode"`
+	IDToken      string `json:"idToken"`
+	Portal       string `json:"portal"`
 }
 
 func (s *server) googleLogin(w http.ResponseWriter, r *http.Request) {
@@ -69,7 +70,7 @@ func (s *server) googleLogin(w http.ResponseWriter, r *http.Request) {
 	if err == mongo.ErrNoDocuments {
 		err = s.db.Collection("users").FindOne(r.Context(), bson.M{"email": email}).Decode(&u)
 		if err == mongo.ErrNoDocuments {
-			u = core.User{ID: uuid.NewString(), Email: email, Name: name, Role: role, GoogleAuthoritative: authoritative, IdentityPolicy: 1, GoogleSub: payload.Subject, CreatedAt: time.Now().UTC()}
+			u = core.User{ReferredBy: s.referredBy(r, in.ReferralCode), ID: uuid.NewString(), Email: email, Name: name, Role: role, GoogleAuthoritative: authoritative, IdentityPolicy: 1, GoogleSub: payload.Subject, CreatedAt: time.Now().UTC()}
 			if _, err = s.db.Collection("users").InsertOne(r.Context(), u); err != nil {
 				bad(w, 409, "Could not create Google account")
 				return

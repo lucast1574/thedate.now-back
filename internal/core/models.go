@@ -3,6 +3,9 @@ package core
 import "time"
 
 type User struct {
+	ReferredBy          string    `bson:"referredBy,omitempty" json:"-"`
+	AffiliateCode       string    `bson:"affiliateCode,omitempty" json:"-"`
+	AffiliateEnabled    bool      `bson:"affiliateEnabled" json:"-"`
 	CreatorPortals      []string  `bson:"-" json:"creatorPortals"`
 	Portals             []string  `bson:"portals,omitempty" json:"portals"`
 	GoogleAuthoritative bool      `bson:"googleAuthoritative" json:"-"`
@@ -18,6 +21,8 @@ type User struct {
 }
 
 type Event struct {
+	Payment           *Payment                `bson:"payment,omitempty" json:"-"`
+	PaymentSource     string                  `bson:"paymentSource,omitempty" json:"paymentSource,omitempty"`
 	TemplateID        string                  `bson:"templateId" json:"templateId"`
 	CapacityUnlimited bool                    `bson:"capacityUnlimited" json:"capacityUnlimited"`
 	Seating           *SeatingPlan            `bson:"seating,omitempty" json:"-"`
@@ -88,6 +93,7 @@ type Guest struct {
 }
 
 type CoupleInvite struct {
+	Delivery  string    `bson:"delivery,omitempty" json:"delivery"`
 	ID        string    `bson:"_id" json:"id"`
 	EventID   string    `bson:"eventId" json:"eventId"`
 	Email     string    `bson:"email" json:"email"`

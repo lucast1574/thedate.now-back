@@ -39,35 +39,31 @@ func TestProductsKeepWeddingPolicySeparate(t *testing.T) {
 	if wedding.AllowVirtual || !wedding.AllowCouples || wedding.Role != "planner" || wedding.PriceCents != 2500 {
 		t.Fatal("wedding policy")
 	}
-	if !general.AllowVirtual || general.AllowCouples || general.Role != "organizer" || general.PriceCents != 500 {
+	if !general.AllowVirtual || !general.AllowCouples || general.Role != "organizer" || general.PriceCents != 500 {
 		t.Fatal("general policy")
 	}
-	if CanCreateEvent("wedding", "organizer") || CanCreateEvent("general", "planner") || CanCreateEvent("unknown", "admin") {
-		t.Fatal("cross-product role accepted")
+	if !CanCreateEvent("wedding", "organizer") || !CanCreateEvent("general", "planner") || CanCreateEvent("unknown", "admin") {
+		t.Fatal("invalid creator policy")
 	}
 }
-func TestCoupleAccessRequiresVerifiedEmailOwnership(t *testing.T) {
+func TestCollaboratorEmailLinkAllowsIndependentAccounts(t *testing.T) {
 	now := time.Now().UTC()
-	e := Event{ID: "e", Kind: "wedding", PaymentStatus: "paid", CoupleInvites: map[string]CoupleInvite{"hash": {Email: "couple@gmail.com", TokenHash: "hash", ExpiresAt: now.Add(time.Hour)}}}
-	u := User{ID: "couple", Email: "couple@gmail.com", Role: "organizer", GoogleSub: "google", IdentityPolicy: 1}
-	if _, _, err := AcceptCoupleInvite(e, "hash", u, now); !errors.Is(err, ErrCoupleAccess) {
-		t.Fatal("non-authoritative email accepted")
+	for _, kind := range []string{"general", "wedding"} {
+		e := Event{ID: "e", Kind: kind, PaymentStatus: "paid", CoupleInvites: map[string]CoupleInvite{"hash": {Email: "member@example.test", TokenHash: "hash", ExpiresAt: now.Add(time.Hour)}}}
+		u := User{ID: "member", Email: "wrong@example.test", Role: "organizer"}
+		if _, _, err := AcceptCoupleInvite(e, "hash", u, now); !errors.Is(err, ErrCoupleAccess) {
+			t.Fatal("another email joined")
+		}
+		u.Email = "member@example.test"
+		ids, invites, err := AcceptCoupleInvite(e, "hash", u, now)
+		if err != nil || len(ids) != 1 || len(invites) != 0 {
+			t.Fatal("email link could not grant event access")
+		}
+		if !UserCanCreate("general", u) || !UserCanCreate("wedding", u) {
+			t.Fatal("member cannot create independent events")
+		}
 	}
-	u.GoogleAuthoritative = true
-	ids, invites, err := AcceptCoupleInvite(e, "hash", u, now)
-	if err != nil || len(ids) != 1 || len(invites) != 0 {
-		t.Fatal("verified Google account could not join")
-	}
-	if _, err = AttachCouple(Event{Kind: "general", PaymentStatus: "paid"}, "couple", now); err == nil {
-		t.Fatal("general event accepted couple access")
-	}
-}
-
-func TestExplicitPortalAccessDoesNotExpandCoupleRole(t *testing.T) {
-	if !UserCanCreate("wedding", User{Role: "organizer", Portals: []string{"wedding"}}) {
-		t.Fatal("explicit second portal ignored")
-	}
-	if UserCanCreate("general", User{Role: "couple", Portals: []string{"general"}}) {
-		t.Fatal("couple role gained creator access")
+	if UserCanCreate("unknown", User{Role: "admin"}) || UserCanCreate("wedding", User{Role: "invalid"}) {
+		t.Fatal("invalid creation policy")
 	}
 }

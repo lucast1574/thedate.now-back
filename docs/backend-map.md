@@ -14,7 +14,7 @@
 | Invitación y acceso de parejas | `internal/core/couples.go` → `internal/application/couples.go` → `internal/mongostore/couples.go` |
 | Publicación por invitación | `internal/httpapi/deployment.go`, `internal/application/deployment.go`, `internal/mongostore/deployments.go` |
 | Adaptador Dokploy | `internal/dokploy/client.go`, `provision.go` |
-| Pago y firma Stripe | `internal/httpapi/billing.go` |
+| Pago y firma Stripe | `internal/httpapi/billing.go`, `stripe_webhook.go`, `payment_ledger.go` |
 | WhatsApp y firmas webhook | `internal/httpapi/wazend.go`, `wazend_webhook.go` |
 | Fotos y límites de tamaño/píxeles | `internal/httpapi/storage.go` |
 | Índices y protección de intentos | `internal/mongostore/indexes.go`, `rate_limits.go` |
@@ -33,10 +33,10 @@ No se presenta esta arquitectura como una garantía de perfección: sus invarian
 | Dominio | `<slug>.save.thedate.now` | `<slug>.thedate.now` |
 | Acceso creador inicial | planner | organizer |
 | Modalidad virtual | No | Sí |
-| Accesos de pareja | Hasta dos, compartiendo cupos con invitaciones activas | No |
+| Accesos de pareja | Hasta dos colaboradores, incluidos enlaces pendientes | Hasta dos colaboradores, incluidos enlaces pendientes |
 | Precio Stripe de pruebas | USD 25 | USD 5 |
 
-Google permite habilitar ambos portales en una cuenta mediante acceso explícito a cada portal. La pertenencia como pareja permite editar diseño/fotos y gestionar invitados/mesas del evento asignado; solo propietario/admin maneja envío WhatsApp, pago y publicación. Los demos permanecen privados.
+Toda cuenta válida puede crear bodas y eventos independientes, con varios eventos por propietario. La pertenencia como colaborador permite editar diseño/fotos y gestionar invitados/mesas del evento asignado; solo propietario/admin maneja envío WhatsApp, pago y publicación. Los demos permanecen privados.
 
 ## Concurrencia en MongoDB standalone
 
@@ -86,3 +86,12 @@ Pruebas: `core/party_test.go`, `mongostore/seating_test.go` y `httpapi/seating_t
 `dokploy/renderer.go` resuelve por HEAD el digest del repositorio configurado por el operador. `httpapi/renderer.go` comprueba al iniciar y cada minuto. `mongostore/renderer.go` persiste en `runtimeConfig` y vuelve a poner en cola despliegues sin lease activo conservando recursos y publicación original. Los errores requieren reintento explícito con la imagen nueva. La disponibilidad HTTP exige evento e imagen para no aceptar el contenedor anterior.
 
 Configuración opcional: `DOKPLOY_RENDERER_IMAGE_REPOSITORY` y `DOKPLOY_RENDERER_MANIFEST_URL`. Si no está disponible se conserva la imagen existente. El repositorio debe ser exclusivo del renderer del frontend. Pruebas Mongo aisladas verifican leases y preservación de recursos/publicación; pruebas HTTP cubren edición después de enviar y permisos.
+
+## Administración, acceso por correo y afiliados
+
+- `httpapi/admin*.go`: panel común de ambas marcas, roles, cortesías, retiros y `adminAudit`. La sesión consulta el rol actual en Mongo; cambiar roles incrementa `tokenVersion`. El administrador principal y la propia cuenta no pueden demoverse. Un administrador delegado necesita identidad Google autoritativa.
+- Admin crea eventos completos de cortesía sin checkout. Las cortesías para otros propietarios requieren motivo y evento sin checkout activo; se excluyen de ingresos y afiliados. Estado/rol/fuente de pago no se aceptan desde los formularios de evento.
+- `access_email.go`, `access_members.go`, `mail/`: correo HTML según marca, TLS verificado, límite atómico de dos colaboradores/pending, enlaces aleatorios de 48 hex con hash persistido y duración de siete días. Google o contraseña con correo exacto más enlace secreto. Cada cuenta crea sus propios eventos; revocar membresía no elimina la cuenta. Los campos `couple*` se mantienen como compatibilidad BSON; nuevas rutas `collaborators` y `access-invites`. Ya no se crean contraseñas para parejas.
+- `core/finance.go`, `mongostore/affiliates.go`, `httpapi/affiliates.go`: comisión de 10% del primer pago real por referido, centavos enteros, retiro mínimo USD50. Atribución solo al crear cuenta por código válido de afiliado activo; autorreferencias descartadas. Pagos de prueba tienen conversión separada y cero saldo real. Marcador y saldo se actualizan juntos en el afiliado; reservas/rechazos de retiros tienen CAS para evitar doble gasto.
+- Stripe verifica firma, modo, checkout registrado, importe/currency y PaymentIntent/charge consultados al proveedor antes de activar/abonar. Reembolsos y disputas reversan comisión de forma monotónica; replays no recuperan crédito descontado. Disputa ganada requiere revisión para restituir crédito, no autoabono; pagos manuales requieren referencia. El panel no transfiere dinero.
+- SMTP de la integración existente está configurado con nombre de remitente The Date/Save the Date y dirección autorizada existente. Se comprobó TLS/auth sin enviar correos reales. Las aplicaciones están en Rangel Tech: su clave autorizada accede; la dedicada a The Date devuelve acceso denegado.

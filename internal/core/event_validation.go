@@ -24,8 +24,8 @@ func ValidateEvent(in EventInput, creating bool) error {
 	return nil
 }
 func CanCreateEvent(kind, role string) bool {
-	product, err := ProductFor(kind)
-	return err == nil && (role == "admin" || role == product.Role)
+	_, err := ProductFor(kind)
+	return err == nil && ValidRole(role)
 }
 func NormalizeEvent(in EventInput) EventInput {
 	in.TemplateID = TemplateID(in.Kind, in.Template, in.DesignMode, in.TemplateID)

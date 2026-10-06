@@ -23,19 +23,24 @@ func TestSignedPaymentWebhookAcceptsEarlierIssuedCheckout(t *testing.T) {
 	var amount atomic.Int64
 	amount.Store(500)
 	provider := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/v1/payment_intents/pi_first" {
+			_ = json.NewEncoder(w).Encode(map[string]any{"id": "pi_first", "object": "payment_intent", "livemode": false, "amount_received": amount.Load(), "currency": "usd", "latest_charge": map[string]any{"id": "ch_first", "object": "charge", "amount_refunded": 0}})
+			return
+		}
 		if r.URL.Path != "/v1/checkout/sessions/first" {
 			t.Errorf("unexpected Stripe path %s", r.URL.Path)
 		}
-		_ = json.NewEncoder(w).Encode(map[string]any{"id": "first", "object": "checkout.session", "client_reference_id": "event", "payment_status": "paid", "livemode": false, "mode": "payment", "currency": "usd", "amount_total": amount.Load()})
+		_ = json.NewEncoder(w).Encode(map[string]any{"id": "first", "object": "checkout.session", "client_reference_id": "event", "payment_status": "paid", "payment_intent": "pi_first", "livemode": false, "mode": "payment", "currency": "usd", "amount_total": amount.Load()})
 	}))
 	defer provider.Close()
 	previous := stripe.GetBackend(stripe.APIBackend)
 	stripe.SetBackend(stripe.APIBackend, stripe.GetBackendWithConfig(stripe.APIBackend, &stripe.BackendConfig{URL: stripe.String(provider.URL), HTTPClient: provider.Client(), MaxNetworkRetries: stripe.Int64(0)}))
 	defer stripe.SetBackend(stripe.APIBackend, previous)
-	_, err := db.Collection("events").InsertOne(context.Background(), bson.M{"_id": "event", "kind": "general", "paymentStatus": "pending", "checkoutId": "second", "checkoutIds": bson.A{"first", "second"}})
+	_, err := db.Collection("events").InsertOne(context.Background(), bson.M{"_id": "event", "ownerId": "owner", "kind": "general", "paymentStatus": "pending", "checkoutId": "second", "checkoutIds": bson.A{"first", "second"}})
 	if err != nil {
 		t.Fatal(err)
 	}
+	_, _ = db.Collection("users").InsertOne(context.Background(), core.User{ID: "owner"})
 	s := &server{db: db}
 	body := `{"id":"evt_1","type":"checkout.session.completed","livemode":false,"data":{"object":{"id":"first"}}}`
 	signed := webhook.GenerateTestSignedPayload(&webhook.UnsignedPayload{Payload: []byte(body), Secret: "whsec_fake"})

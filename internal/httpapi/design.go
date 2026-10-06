@@ -36,9 +36,6 @@ func (s *server) updateDesign(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *server) ensureDemos(ctx context.Context, u core.User) error {
-	if u.Role == "couple" {
-		return nil
-	}
 	kinds := []string{}
 	if core.UserCanCreate("wedding", u) {
 		kinds = append(kinds, "wedding")

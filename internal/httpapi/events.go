@@ -43,7 +43,16 @@ func (s *server) createEvent(w http.ResponseWriter, r *http.Request) {
 	if u.Role == "admin" {
 		status = "paid"
 	}
-	e := core.Event{ID: uuid.NewString(), Kind: in.Kind, Slug: in.Slug, Title: strings.TrimSpace(in.Title), Description: in.Description, StartAt: in.StartAt, TimeZone: in.TimeZone, Organizer: strings.TrimSpace(in.Organizer), Location: eventLocation(in), IsVirtual: in.IsVirtual, MapURL: physicalMapURL(in), VirtualURL: virtualEventURL(in), Capacity: in.Capacity, CapacityUnlimited: in.CapacityUnlimited, MaybeHoldHours: in.MaybeHoldHours, Template: in.Template, TemplateID: in.TemplateID, DesignMode: in.DesignMode, AccentColor: in.AccentColor, OwnerID: u.ID, PaymentStatus: status, CreatedAt: now, UpdatedAt: now, PhotoKeys: []string{}, Sections: []core.Section{}, CoupleUserIDs: []string{}}
+	e := core.Event{ID: uuid.NewString(), Kind: in.Kind, Slug: in.Slug, Title: strings.TrimSpace(in.Title), Description: in.Description, StartAt: in.StartAt, TimeZone: in.TimeZone, Organizer: strings.TrimSpace(in.Organizer), Location: eventLocation(in), IsVirtual: in.IsVirtual, MapURL: physicalMapURL(in), VirtualURL: virtualEventURL(in), Capacity: in.Capacity, CapacityUnlimited: in.CapacityUnlimited, MaybeHoldHours: in.MaybeHoldHours, Template: in.Template, TemplateID: in.TemplateID, DesignMode: in.DesignMode, AccentColor: in.AccentColor, OwnerID: u.ID, PaymentStatus: status, PaymentSource: func() string {
+		if u.Role == "admin" {
+			return "courtesy"
+		}
+		return ""
+	}(), CreatedAt: now, UpdatedAt: now, PhotoKeys: []string{}, Sections: []core.Section{}, CoupleUserIDs: []string{}}
+	if u.Role == "admin" && s.audit(r, u, "courtesy-create", e.ID, "Administrator own event") != nil {
+		bad(w, 500, "Could not audit courtesy")
+		return
+	}
 	if _, err = s.db.Collection("events").InsertOne(r.Context(), e); err != nil {
 		if mongo.IsDuplicateKeyError(err) {
 			bad(w, 409, "That invitation address is already taken")

@@ -38,7 +38,7 @@ func (s Couples) Snapshot(ctx context.Context, id string) (core.Event, error) {
 	return e, err
 }
 func (s Couples) Save(ctx context.Context, e core.Event, ids []string, invites map[string]core.CoupleInvite) (bool, error) {
-	result, err := s.DB.Collection("events").UpdateOne(ctx, bson.M{"_id": e.ID, "coupleVersion": e.CoupleVersion, "kind": "wedding", "paymentStatus": "paid"}, bson.M{"$set": bson.M{"coupleUserIds": ids, "coupleInvites": invites}, "$inc": bson.M{"coupleVersion": 1}})
+	result, err := s.DB.Collection("events").UpdateOne(ctx, bson.M{"_id": e.ID, "coupleVersion": e.CoupleVersion, "kind": bson.M{"$in": bson.A{"wedding", "general"}}, "paymentStatus": "paid"}, bson.M{"$set": bson.M{"coupleUserIds": ids, "coupleInvites": invites}, "$inc": bson.M{"coupleVersion": 1}})
 	if err != nil {
 		return false, err
 	}

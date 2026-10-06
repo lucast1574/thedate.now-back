@@ -24,6 +24,10 @@ func EnsureIndexes(ctx context.Context, db *mongo.Database) error {
 	if err != nil {
 		return err
 	}
+	_, err = db.Collection("users").Indexes().CreateOne(ctx, mongo.IndexModel{Keys: bson.D{{Key: "affiliateCode", Value: 1}}, Options: options.Index().SetUnique(true).SetPartialFilterExpression(bson.M{"affiliateCode": bson.M{"$exists": true}})})
+	if err != nil {
+		return err
+	}
 	for collection, indexes := range map[string][]mongo.IndexModel{
 		"events":        {{Keys: bson.D{{Key: "ownerId", Value: 1}}}, {Keys: bson.D{{Key: "coupleUserIds", Value: 1}}}},
 		"guests":        {{Keys: bson.D{{Key: "eventId", Value: 1}, {Key: "sentAt", Value: 1}}}, {Keys: bson.D{{Key: "invitationMessageId", Value: 1}}}},
