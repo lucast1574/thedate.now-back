@@ -1,0 +1,80 @@
+# Mapa del backend
+
+## Capas y puntos de entrada
+
+| Cambio | Archivos iniciales |
+| --- | --- |
+| Inicio, límites HTTP y apagado | `cmd/api/main.go`, `internal/httpapi/server.go` |
+| Rutas y errores JSON/orígenes | `internal/httpapi/routes.go`, `http.go` |
+| Autenticación y Google | `internal/httpapi/auth.go`, `google.go` |
+| Políticas de bodas/eventos | `internal/core/products.go`, `event_validation.go`, `place.go` |
+| Diseño y secciones | `internal/core/design.go`, `internal/httpapi/design.go` |
+| Datos privados de eventos / DTO público | `internal/httpapi/events.go`, `public_event.go` |
+| Reservas y cambios de capacidad | `internal/core/responses.go` → `internal/application/responses.go` → `internal/mongostore/responses.go` |
+| Invitación y acceso de parejas | `internal/core/couples.go` → `internal/application/couples.go` → `internal/mongostore/couples.go` |
+| Publicación por invitación | `internal/httpapi/deployment.go`, `internal/application/deployment.go`, `internal/mongostore/deployments.go` |
+| Adaptador Dokploy | `internal/dokploy/client.go`, `provision.go` |
+| Pago y firma Stripe | `internal/httpapi/billing.go` |
+| WhatsApp y firmas webhook | `internal/httpapi/wazend.go`, `wazend_webhook.go` |
+| Fotos y límites de tamaño/píxeles | `internal/httpapi/storage.go` |
+| Índices y protección de intentos | `internal/mongostore/indexes.go`, `rate_limits.go` |
+
+## Núcleo funcional y efectos
+
+`core` contiene datos y decisiones deterministas. No consulta MongoDB, servicios HTTP ni el entorno. `application` depende de interfaces pequeñas de repositorio/proveedor y recibe el reloj. `mongostore` usa el driver oficial v2 y convierte los comandos tipados a BSON. `dokploy` encapsula transporte y autenticación del proveedor. `httpapi` es la capa de efectos de entrada: valida la sesión, traduce solicitudes/respuestas y conecta casos de uso. Los CRUD sencillos y las integraciones Stripe/S3/Wazend conservan orquestación directa en esta capa; evita añadir abstracciones que solo oculten una llamada.
+
+No se presenta esta arquitectura como una garantía de perfección: sus invariantes críticos están probados y sus límites operativos están en `rollout.md`.
+
+## Diferencias de producto
+
+| Regla | Save the Date | The Date |
+| --- | --- | --- |
+| Tipo | `wedding` | `general` |
+| Dominio | `<slug>.save.thedate.now` | `<slug>.thedate.now` |
+| Acceso creador inicial | planner | organizer |
+| Modalidad virtual | No | Sí |
+| Accesos de pareja | Hasta dos, compartiendo cupos con invitaciones activas | No |
+| Precio Stripe de pruebas | USD 25 | USD 5 |
+
+Google permite habilitar ambos portales en una cuenta mediante acceso explícito a cada portal. La pertenencia como pareja permite editar diseño/fotos y gestionar invitados/mesas del evento asignado; solo propietario/admin maneja envío WhatsApp, pago y publicación. Los demos permanecen privados.
+
+## Concurrencia en MongoDB standalone
+
+Las respuestas canónicas y sus recibos están dentro del documento del evento. Un contador `responseVersion` protege conjuntamente reserva y capacidad. La actualización usa comparación de versión, y vuelve a calcular si otra instancia escribió primero. Invitaciones/cuentas de pareja usan `coupleVersion` con el mismo principio. No se requieren transacciones entre documentos para estas invariantes.
+
+La colección `guests` conserva datos personales y del envío; su estado antiguo de RSVP sirve únicamente como fuente de migración. La lectura pública/privada combina el registro de invitado con la respuesta canónica. No lean `guests.response` directamente para estadísticas nuevas.
+
+## Referencias
+
+- Implementación de referencia: `lucast1574/nexode-backend`, `src/core/dokploy/dokploy.service.ts` y `src/modules/compute/compute.service.ts`.
+- [Driver oficial de MongoDB](https://github.com/mongodb/mongo-go-driver) y [transacciones](https://www.mongodb.com/docs/drivers/go/current/crud/transactions/).
+- [API de aplicaciones Dokploy](https://docs.dokploy.com/docs/api/reference-application), [dominios](https://docs.dokploy.com/docs/api/reference-domain).
+- [Verificación de identidad Google](https://developers.google.com/identity/gsi/web/guides/verify-google-id-token).
+
+## Diseño gratuito, lienzos y herramientas pagadas
+
+`core/flyer.go` define lienzos por sección y valida coordenadas finitas, tamaños, giros, tipografías/colores permitidos y propiedad de todas las imágenes. `core/design.go` acepta modos `sections` y `flyer`; eventos antiguos sin modo siguen usando secciones. `httpapi/design.go` guarda el diseño sin comprobar pago; los demos también son borradores persistentes. `public_event.go` incluye los lienzos explícitamente en la vista pública.
+
+Crear/importar invitados requiere `paid` y un evento real. El importador admite hasta 500 filas previamente validadas, omite teléfonos existentes y usa IDs deterministas para reintentos seguros. Fallos parciales pueden reintentarse sin borrar filas existentes. Enviar por WhatsApp además requiere `publishedAt`.
+
+`wazend_config.go` selecciona configuración por producto (`WAZEND_WEDDING_*`, `WAZEND_GENERAL_*`), con fallback compatible a `WAZEND_*`. Cada mensaje/evento incluye Save the Date o The Date. El webhook comprueba firma y sesión del producto al que pertenece el invitado; no basta con tener una firma válida de otro producto.
+
+Inspección del 6 de octubre de 2026: la sesión configurada S0047 en LATAM funciona, engine GOWS, nombre de perfil Wazend. El webhook `event.response` hacia esta API tiene HMAC. La sesión también tiene otra integración; no se modificó su nombre/configuración ni se enviaron mensajes reales. Para nombres de remitente separados deben conectarse cuentas/sesiones WhatsApp propias por marca y configurar sus respectivos perfiles; el nombre no es una propiedad que pueda cambiarse por mensaje. Véase [perfil WAHA](https://waha.devlike.pro/docs/how-to/profile/).
+
+Los cambios del editor/API son locales. Para activarlos, publicar una nueva imagen frontend y API siguiendo `rollout.md`; los contenedores de invitaciones existentes también necesitan el renderer nuevo para mostrar flyers. Stripe sigue en modo de pruebas.
+
+## Personas y plano de mesas
+
+`core/party.go` valida personas y convierte una invitación en slots estables: titular `guestID~0`, acompañantes `guestID~1…`. `Guest.Seats` es el máximo permitido (1–20); la respuesta canónica guarda el número real y los nombres. RSVP explícito `companions: []` confirma solo al titular. Respuestas nativas de WhatsApp conservan la lista registrada; si aún no se registró, reservan conservadoramente el máximo invitado. El enlace personal enviado por WhatsApp permite registrar nombres de acompañantes; no se interpreta texto libre como una lista.
+
+`capacityUnlimited` se exige como opción explícita en los formularios; eventos antiguos siguen limitados por `capacity`. Las reservas cuentan acompañantes y temporales no vencidos. Reducir aforo por debajo de reservas o personas asignadas falla.
+
+`GET/PATCH /events/{id}/seating` requiere acceso al evento real pagado. `core/seating.go` valida formas, posiciones, nombres únicos, capacidad por mesa, personas existentes/no rechazadas y aforo. El límite operativo es 100 mesas de hasta 50 personas / 5000 asignaciones. El documento del evento contiene un plano privado versionado.
+
+`mongostore/seating.go` compara `responseVersion` y `seating.version`, y al guardar incrementa ambas. RSVP limpia asientos de acompañantes eliminados o invitados que declinan, incrementando las mismas versiones en una sola escritura. Una respuesta no puede sobrescribir un plano nuevo desde un snapshot antiguo; un plano antiguo tampoco puede recuperar asientos liberados. Conflictos devuelven 409 para revisión humana.
+
+Pruebas: `core/party_test.go`, `mongostore/seating_test.go` y `httpapi/seating_test.go` cubren aforo ilimitado/finito, límites +1, limpieza de asientos, versiones, permisos de pareja/terceros y pago. Se ejecutan con MongoDB 7 aislado y race detector.
+
+## Plantillas por producto
+
+`core/templates.json` define las 12 plantillas (tres por producto y modo). `core/templates.go` valida `templateId` contra el `kind`, estilo y modo del evento; una plantilla de eventos no se puede guardar en una boda. `mongostore/templates.go` sincroniza por ID la colección `invitationTemplates` al iniciar y completa únicamente IDs ausentes en eventos antiguos. El índice compuesto `kind/mode` identifica el catálogo. `GET /templates` requiere sesión; el diseño y la vista pública conservan `templateId`. Las pruebas `core/templates_test.go` y `httpapi/templates_test.go` cubren catálogo, compatibilidad, rechazo cruzado, persistencia y migración sin sobrescribir una elección guardada.

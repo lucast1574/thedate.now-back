@@ -1,9 +1,10 @@
-package main
+package httpapi
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"go.mongodb.org/mongo-driver/v2/bson"
 	"html"
 	"io"
 	"net/http"
@@ -13,10 +14,8 @@ import (
 	"strings"
 	"sync"
 	"time"
-	_ "time/tzdata"
 
 	"github.com/lucast1574/thedate.now-back/internal/core"
-	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 var mapsCoordinates = []*regexp.Regexp{
@@ -29,28 +28,6 @@ var mapsCoordinates = []*regexp.Regexp{
 var geocodeMu sync.Mutex
 var lastGeocode time.Time
 
-func googleMapsURL(raw string) bool {
-	u, err := url.Parse(strings.TrimSpace(raw))
-	if err != nil || u.Scheme != "https" || u.User != nil || u.Port() != "" {
-		return false
-	}
-	host := strings.ToLower(u.Hostname())
-	switch host {
-	case "maps.app.goo.gl", "share.google":
-		return u.Path != "" && u.Path != "/"
-	case "goo.gl":
-		return strings.HasPrefix(u.Path, "/maps/")
-	case "g.co":
-		return strings.HasPrefix(u.Path, "/kgs/") || strings.HasPrefix(u.Path, "/maps/")
-	case "maps.google.com":
-		return true
-	case "google.com", "www.google.com":
-		return strings.HasPrefix(u.Path, "/maps")
-	default:
-		return false
-	}
-}
-
 func googleRedirectURL(raw string) bool {
 	if googleMapsURL(raw) {
 		return true
@@ -59,69 +36,12 @@ func googleRedirectURL(raw string) bool {
 	return err == nil && u.Scheme == "https" && u.User == nil && u.Port() == "" && u.Hostname() == "consent.google.com"
 }
 
-func validHTTPSURL(raw string) bool {
-	u, err := url.Parse(strings.TrimSpace(raw))
-	return err == nil && u.Scheme == "https" && u.Hostname() != "" && u.User == nil && u.Port() == "" && !strings.ContainsAny(raw, "\r\n")
-}
-
-func validEventPlace(in eventInput) bool {
-	if len(strings.TrimSpace(in.Organizer)) < 2 {
-		return false
-	}
-	if len(in.TimeZone) > 64 {
-		return false
-	}
-	if in.TimeZone != "" {
-		if _, err := time.LoadLocation(in.TimeZone); err != nil {
-			return false
-		}
-	}
-	if in.Kind == "wedding" && in.IsVirtual {
-		return false
-	}
-	if in.IsVirtual {
-		return validHTTPSURL(in.VirtualURL)
-	}
-	return strings.TrimSpace(in.Location) != "" && googleMapsURL(in.MapURL)
-}
-
-func eventLocation(in eventInput) string {
-	if in.IsVirtual {
-		return "En línea"
-	}
-	return strings.TrimSpace(in.Location)
-}
-
-func physicalMapURL(in eventInput) string {
-	if in.IsVirtual {
-		return ""
-	}
-	return strings.TrimSpace(in.MapURL)
-}
-
-func virtualEventURL(in eventInput) string {
-	if !in.IsVirtual {
-		return ""
-	}
-	return strings.TrimSpace(in.VirtualURL)
-}
-
-func (s *server) completeLegacyEvent(ctx context.Context, event *core.Event) {
-	if strings.TrimSpace(event.Organizer) == "" {
-		var owner struct {
-			Name string `bson:"name"`
-		}
-		if s.db.Collection("users").FindOne(ctx, bson.M{"_id": event.OwnerID}).Decode(&owner) == nil {
-			event.Organizer = owner.Name
-		}
-		if strings.TrimSpace(event.Organizer) == "" {
-			event.Organizer = event.Title
-		}
-	}
-	if !event.IsVirtual && event.MapURL == "" && strings.TrimSpace(event.Location) != "" {
-		event.MapURL = "https://www.google.com/maps/search/?api=1&query=" + url.QueryEscape(event.Location)
-	}
-}
+var googleMapsURL = core.GoogleMapsURL
+var validHTTPSURL = core.ValidHTTPSURL
+var validEventPlace = core.ValidEventPlace
+var eventLocation = core.EventLocation
+var physicalMapURL = core.PhysicalMapURL
+var virtualEventURL = core.VirtualEventURL
 
 func extractMapsCoordinates(raw string) (float64, float64, bool) {
 	decoded, err := url.QueryUnescape(raw)

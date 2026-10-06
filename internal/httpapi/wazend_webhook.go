@@ -1,22 +1,22 @@
-package main
+package httpapi
 
 import (
 	"bytes"
 	"crypto/hmac"
+	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"net/url"
-	"os"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/lucast1574/thedate.now-back/internal/core"
 	"go.mongodb.org/mongo-driver/v2/bson"
-	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
 type wazendEvent struct {
@@ -44,8 +44,8 @@ func validWazendSignature(body []byte, signature, secret string) bool {
 }
 
 func (s *server) wazendWebhook(w http.ResponseWriter, r *http.Request) {
-	secret := os.Getenv("WAZEND_WEBHOOK_HMAC")
-	if len(secret) < 32 {
+	configs := []wazendSettings{wazendFor("wedding"), wazendFor("general")}
+	if len(configs[0].HMAC) < 32 && len(configs[1].HMAC) < 32 {
 		bad(w, 503, "Webhook is not configured")
 		return
 	}
@@ -59,7 +59,13 @@ func (s *server) wazendWebhook(w http.ResponseWriter, r *http.Request) {
 		bad(w, 400, "Invalid body")
 		return
 	}
-	if !validWazendSignature(body, r.Header.Get("X-Webhook-Hmac"), secret) {
+	valid := false
+	for _, config := range configs {
+		if len(config.HMAC) >= 32 && validWazendSignature(body, r.Header.Get("X-Webhook-Hmac"), config.HMAC) {
+			valid = true
+		}
+	}
+	if !valid {
 		bad(w, 401, "Invalid signature")
 		return
 	}
@@ -68,7 +74,7 @@ func (s *server) wazendWebhook(w http.ResponseWriter, r *http.Request) {
 		bad(w, 400, "Invalid event")
 		return
 	}
-	if event.Session != os.Getenv("WAZEND_SESSION") || event.Event != "event.response" {
+	if event.Event != "event.response" {
 		reply(w, 200, map[string]string{"status": "ignored"})
 		return
 	}
@@ -87,18 +93,19 @@ func (s *server) wazendWebhook(w http.ResponseWriter, r *http.Request) {
 		reply(w, 200, map[string]string{"status": "ignored"})
 		return
 	}
-	_, err = s.db.Collection("webhookEvents").InsertOne(r.Context(), bson.M{"_id": event.ID, "createdAt": time.Now().UTC()})
-	if mongo.IsDuplicateKeyError(err) {
+	config := wazendFor(e.Kind)
+	if event.Session != config.Session || !validWazendSignature(body, r.Header.Get("X-Webhook-Hmac"), config.HMAC) {
+		bad(w, 401, "Wrong product session")
+		return
+	}
+	receipt := sha256.Sum256([]byte("wazend:" + event.ID))
+	err = s.responses().Apply(r.Context(), e.ID, g, response, "", hex.EncodeToString(receipt[:]))
+	if errors.Is(err, core.ErrDuplicate) {
 		reply(w, 200, map[string]string{"status": "duplicate"})
 		return
 	}
 	if err != nil {
-		bad(w, 500, "Could not record event")
-		return
-	}
-	if err := s.applyResponse(r.Context(), e, g, response, ""); err != nil {
-		_, _ = s.db.Collection("webhookEvents").DeleteOne(r.Context(), bson.M{"_id": event.ID})
-		if err == errCapacity {
+		if errors.Is(err, errCapacity) {
 			bad(w, 409, "Event capacity reached")
 		} else {
 			bad(w, 500, "Could not save response")
@@ -106,28 +113,32 @@ func (s *server) wazendWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if response == "maybe" {
-		go requestMaybeReason(e, g)
+		go requestRSVPFollowup(e, g, "Reservamos tus cupos temporalmente. Cuéntanos por qué estás en espera y registra tus acompañantes desde tu enlace: ")
+	}
+	if response == "going" && g.Seats > 1 {
+		go requestRSVPFollowup(e, g, "Gracias por confirmar. Registra los nombres de tus acompañantes y cuántas personas asistirán desde tu enlace: ")
 	}
 	reply(w, 200, map[string]string{"status": "processed"})
 }
 
-func requestMaybeReason(e core.Event, g core.Guest) {
-	if !wazendReady() {
+func requestRSVPFollowup(e core.Event, g core.Guest, text string) {
+	config := wazendFor(e.Kind)
+	if !config.ready() {
 		return
 	}
-	base, err := url.Parse(os.Getenv("WAZEND_BASE_URL"))
+	base, err := url.Parse(config.Base)
 	if err != nil || base.Scheme != "https" {
 		return
 	}
 	host, _ := core.InvitationHost(e.Kind, e.Slug)
-	message := map[string]string{"session": os.Getenv("WAZEND_SESSION"), "chatId": strings.TrimPrefix(g.Phone, "+") + "@c.us", "text": "Reservamos tus cupos temporalmente. Cuéntanos por qué estás en espera desde tu enlace: https://" + host + "/rsvp/" + g.InviteToken}
+	message := map[string]string{"session": config.Session, "chatId": strings.TrimPrefix(g.Phone, "+") + "@c.us", "text": invitationBrand(e.Kind) + " · " + text + "https://" + host + "/rsvp/" + g.InviteToken}
 	body, _ := json.Marshal(message)
 	req, err := http.NewRequest(http.MethodPost, strings.TrimSuffix(base.String(), "/")+"/api/sendText", bytes.NewReader(body))
 	if err != nil {
 		return
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("X-Api-Key", os.Getenv("WAZEND_API_KEY"))
+	req.Header.Set("X-Api-Key", config.Key)
 	resp, err := wazendClient.Do(req)
 	if err == nil {
 		resp.Body.Close()

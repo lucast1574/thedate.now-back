@@ -1,8 +1,12 @@
-package main
+package httpapi
 
 import (
 	"context"
 	"errors"
+	_ "golang.org/x/image/webp"
+	"image"
+	_ "image/jpeg"
+	_ "image/png"
 	"io"
 	"net/http"
 	"os"
@@ -72,6 +76,9 @@ func (s *server) uploadPhoto(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer file.Close()
+	if r.MultipartForm != nil {
+		defer r.MultipartForm.RemoveAll()
+	}
 	header := make([]byte, 512)
 	count, err := io.ReadFull(file, header)
 	if err != nil && err != io.ErrUnexpectedEOF {
@@ -88,16 +95,26 @@ func (s *server) uploadPhoto(w http.ResponseWriter, r *http.Request) {
 		bad(w, 400, "Could not read image")
 		return
 	}
+	config, _, configErr := image.DecodeConfig(file)
+	if configErr != nil || config.Width < 1 || config.Height < 1 || config.Width > 12000 || config.Height > 12000 || int64(config.Width)*int64(config.Height) > 40000000 {
+		bad(w, 400, "Invalid image or too many pixels")
+		return
+	}
+	if _, err = file.Seek(0, io.SeekStart); err != nil {
+		bad(w, 400, "Could not read image")
+		return
+	}
 	key := uuid.NewString() + "." + extension
 	_, err = s.storage.client.PutObject(r.Context(), s.storage.bucket(e.Kind), key, file, -1, minio.PutObjectOptions{ContentType: mime})
 	if err != nil {
 		bad(w, 502, "Could not save image")
 		return
 	}
-	_, err = s.db.Collection("events").UpdateByID(r.Context(), e.ID, bson.M{"$push": bson.M{"photoKeys": key}, "$set": bson.M{"updatedAt": time.Now().UTC()}})
-	if err != nil {
+	result, attachErr := s.db.Collection("events").UpdateOne(r.Context(), bson.M{"_id": e.ID, "photoKeys.39": bson.M{"$exists": false}}, bson.M{"$push": bson.M{"photoKeys": key}, "$set": bson.M{"updatedAt": time.Now().UTC()}})
+	err = attachErr
+	if err != nil || result.MatchedCount != 1 {
 		_ = s.storage.client.RemoveObject(r.Context(), s.storage.bucket(e.Kind), key, minio.RemoveObjectOptions{})
-		bad(w, 500, "Could not attach image")
+		bad(w, 409, "Could not attach image; maximum 40 photos per event")
 		return
 	}
 	reply(w, 201, map[string]string{"key": key})

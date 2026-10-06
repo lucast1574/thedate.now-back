@@ -1,0 +1,134 @@
+[
+  {
+    "id": "wedding-classic",
+    "name": "Amor clásico",
+    "kind": "wedding",
+    "mode": "sections",
+    "accent": "#9c6449",
+    "background": "#fff9ed",
+    "font": "serif",
+    "style": "classic",
+    "tagline": "Flores, historia y detalles"
+  },
+  {
+    "id": "wedding-modern",
+    "name": "Sí, minimal",
+    "kind": "wedding",
+    "mode": "sections",
+    "accent": "#6c795f",
+    "background": "#f1f4ec",
+    "font": "sans",
+    "style": "modern",
+    "tagline": "Líneas limpias y verde salvia"
+  },
+  {
+    "id": "general-classic",
+    "name": "Día especial",
+    "kind": "general",
+    "mode": "sections",
+    "accent": "#7451ac",
+    "background": "#fff9ed",
+    "font": "serif",
+    "style": "classic",
+    "tagline": "Una celebración cálida"
+  },
+  {
+    "id": "general-modern",
+    "name": "Encuentro",
+    "kind": "general",
+    "mode": "sections",
+    "accent": "#247785",
+    "background": "#eff9fa",
+    "font": "sans",
+    "style": "modern",
+    "tagline": "Fresco y directo"
+  },
+  {
+    "id": "wedding-flyer-floral",
+    "name": "Jardín de amor",
+    "kind": "wedding",
+    "mode": "flyer",
+    "accent": "#9c6449",
+    "background": "#fff9ed",
+    "font": "serif",
+    "style": "classic",
+    "tagline": "Láminas con flores y tipografía elegante"
+  },
+  {
+    "id": "wedding-flyer-editorial",
+    "name": "Nuestra portada",
+    "kind": "wedding",
+    "mode": "flyer",
+    "accent": "#44573e",
+    "background": "#f1f4ec",
+    "font": "sans",
+    "style": "modern",
+    "tagline": "Una historia con aire editorial"
+  },
+  {
+    "id": "general-flyer-party",
+    "name": "Fiesta en color",
+    "kind": "general",
+    "mode": "flyer",
+    "accent": "#7451ac",
+    "background": "#fff1f6",
+    "font": "sans",
+    "style": "modern",
+    "tagline": "Texto grande, estrellas y celebración"
+  },
+  {
+    "id": "general-flyer-meet",
+    "name": "Nos encontramos",
+    "kind": "general",
+    "mode": "flyer",
+    "accent": "#247785",
+    "background": "#eff9fa",
+    "font": "serif",
+    "style": "classic",
+    "tagline": "Un lienzo sencillo para tu evento"
+  },
+  {
+    "id": "wedding-sections-romance",
+    "kind": "wedding",
+    "mode": "sections",
+    "name": "Romance en rosa",
+    "accent": "#995d72",
+    "background": "#fff3f6",
+    "font": "serif",
+    "style": "classic",
+    "tagline": "Una historia romántica, a vuestro ritmo"
+  },
+  {
+    "id": "wedding-flyer-night",
+    "kind": "wedding",
+    "mode": "flyer",
+    "name": "Noche de gala",
+    "accent": "#d7bc83",
+    "background": "#222a32",
+    "font": "serif",
+    "style": "modern",
+    "tagline": "Elegancia nocturna y detalles en oro"
+  },
+  {
+    "id": "general-sections-bold",
+    "kind": "general",
+    "mode": "sections",
+    "name": "Energía viva",
+    "accent": "#bd375c",
+    "background": "#fff1e8",
+    "font": "sans",
+    "style": "modern",
+    "tagline": "Fiestas y cumpleaños con carácter"
+  },
+  {
+    "id": "general-flyer-conference",
+    "kind": "general",
+    "mode": "flyer",
+    "name": "Punto de encuentro",
+    "accent": "#165fbc",
+    "background": "#eef4ff",
+    "font": "sans",
+    "style": "modern",
+    "tagline": "Conferencias, lanzamientos y encuentros"
+  }
+]

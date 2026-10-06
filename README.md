@@ -11,7 +11,7 @@ Published invitation hosts are computed from the event type and DNS-safe slug:
 - Wedding: `<slug>.save.thedate.now`
 - General event: `<slug>.thedate.now`
 
-`maybe` responses reserve seats for the configured number of hours. A reason is required for website RSVP; Wazend's native Maybe response sends a follow-up link to collect it. The application should run as one API replica until a database-level capacity reservation mechanism is added.
+`maybe` responses reserve seats for the configured number of hours. A reason is required for website RSVP; Wazend's native Maybe response sends a follow-up link to collect it. Reservations and capacity changes now use atomic event-document writes with optimistic concurrency, including across API replicas. Read the migration requirements in `docs/rollout.md` before deploying.
 
 ## Local development
 
@@ -21,3 +21,13 @@ Use Go 1.27 or later, MongoDB and environment values based on `.env.example`. Ru
 
 - Stripe test endpoint: `POST /webhooks/stripe`. Configure its signing secret for this endpoint. Prices are created inline by Checkout in test mode.
 - Wazend endpoint: `POST /webhooks/wazend`. Configure `event.response` delivery with an HMAC key matching `WAZEND_WEBHOOK_HMAC`.
+
+## Code navigation and architecture
+
+Start with `docs/backend-map.md`: pure business rules in `internal/core`, orchestration in `internal/application`, typed MongoDB repositories in `internal/mongostore`, centralized Dokploy integration in `internal/dokploy`, and HTTP adapters in `internal/httpapi`. `cmd/api` only starts the process.
+
+Each published invitation gets its own Dokploy project/application using the dedicated The Date organization key and an immutable frontend image. Publication is asynchronous, persists checkpoints, and verifies the container before publishing. Configure the new variables in `.env.example`; operational requirements and remaining limits are described in `docs/rollout.md`.
+
+Authentication revokes legacy sessions on rollout and removes unverified local credentials when an authoritative Google identity claims the same email. Public invitation responses expose only an explicit field allowlist. Shared account rate limits, strict design validation, bounded photo uploads, HTTP timeouts and graceful shutdown are enabled.
+
+For integration tests, provide `TEST_MONGODB_URI` pointing at an isolated local MongoDB. Tests create and drop randomized `thedate_test_*` databases; they never use `MONGODB_DATABASE`.

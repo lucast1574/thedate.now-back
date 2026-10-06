@@ -1,4 +1,4 @@
-package main
+package httpapi
 
 import (
 	"crypto/sha256"
@@ -8,7 +8,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/lucast1574/thedate.now-back/internal/application"
 	"github.com/lucast1574/thedate.now-back/internal/core"
+	"github.com/lucast1574/thedate.now-back/internal/mongostore"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"golang.org/x/crypto/bcrypt"
@@ -44,7 +46,7 @@ func (s *server) inviteCouple(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	in.Email = strings.ToLower(strings.TrimSpace(in.Email))
-	if !strings.Contains(in.Email, "@") {
+	if !validEmail(in.Email) || in.Email == adminEmail() {
 		bad(w, 400, "Invalid email")
 		return
 	}
@@ -53,37 +55,23 @@ func (s *server) inviteCouple(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	now := time.Now().UTC()
-	count, err := s.db.Collection("coupleInvites").CountDocuments(r.Context(), bson.M{"eventId": e.ID, "$or": bson.A{bson.M{"accepted": true}, bson.M{"expiresAt": bson.M{"$gt": now}}}})
-	if err != nil {
-		bad(w, 500, "Could not check invitations")
-		return
-	}
-	if count >= 2 {
-		bad(w, 409, "Two active couple invitations already exist")
-		return
-	}
 	token, err := randomToken()
 	if err != nil {
-		bad(w, 500, "Could not create invitation")
+		bad(w, 409, "Could not create invitation; check active couple slots")
 		return
 	}
 	invite := core.CoupleInvite{ID: uuid.NewString(), EventID: e.ID, Email: in.Email, TokenHash: hashToken(token), ExpiresAt: now.Add(7 * 24 * time.Hour), Accepted: false}
-	if _, err = s.db.Collection("coupleInvites").InsertOne(r.Context(), invite); err != nil {
-		bad(w, 500, "Could not create invitation")
+	if err = s.couples().Invite(r.Context(), e.ID, invite); err != nil {
+		bad(w, 409, "Could not create invitation; check active couple slots")
 		return
 	}
 	reply(w, 201, map[string]any{"email": in.Email, "expiresAt": invite.ExpiresAt, "url": "https://studio.save.thedate.now/join/" + token})
 }
 
 func (s *server) coupleInviteDetails(w http.ResponseWriter, r *http.Request) {
-	var invite core.CoupleInvite
-	if err := s.db.Collection("coupleInvites").FindOne(r.Context(), bson.M{"tokenHash": hashToken(r.PathValue("token")), "accepted": false, "expiresAt": bson.M{"$gt": time.Now().UTC()}}).Decode(&invite); err != nil {
+	e, invite, err := (mongostore.Couples{DB: s.db}).Invite(r.Context(), "", hashToken(r.PathValue("token")))
+	if err != nil || invite.TokenHash == "" || invite.Accepted || !invite.ExpiresAt.After(time.Now().UTC()) || e.Kind != "wedding" || e.PaymentStatus != "paid" {
 		bad(w, 404, "Invitation not found")
-		return
-	}
-	var e core.Event
-	if err := s.db.Collection("events").FindOne(r.Context(), bson.M{"_id": invite.EventID, "kind": "wedding", "paymentStatus": "paid"}).Decode(&e); err != nil {
-		bad(w, 404, "Wedding not found")
 		return
 	}
 	reply(w, 200, map[string]string{"email": invite.Email, "eventTitle": e.Title})
@@ -95,35 +83,14 @@ func (s *server) acceptCouple(w http.ResponseWriter, r *http.Request) {
 		bad(w, 401, "Sign in required")
 		return
 	}
-	var invite core.CoupleInvite
-	if err := s.db.Collection("coupleInvites").FindOne(r.Context(), bson.M{"tokenHash": hashToken(r.PathValue("token")), "accepted": false, "expiresAt": bson.M{"$gt": time.Now().UTC()}}).Decode(&invite); err != nil {
+	hash := hashToken(r.PathValue("token"))
+	e, _, err := (mongostore.Couples{DB: s.db}).Invite(r.Context(), "", hash)
+	if err != nil {
 		bad(w, 404, "Invitation not found")
 		return
 	}
-	if invite.Email != u.Email {
-		bad(w, 403, "Sign in with the invited email address")
-		return
-	}
-	if u.Role != "couple" {
-		bad(w, 403, "Couple account required")
-		return
-	}
-	var e core.Event
-	if err := s.db.Collection("events").FindOne(r.Context(), bson.M{"_id": invite.EventID, "kind": "wedding", "paymentStatus": "paid"}).Decode(&e); err != nil {
-		bad(w, 404, "Wedding not found")
-		return
-	}
-	if len(e.CoupleUserIDs) >= 2 {
-		bad(w, 409, "This wedding already has two couple accounts")
-		return
-	}
-	result, err := s.db.Collection("events").UpdateOne(r.Context(), bson.M{"_id": e.ID, "coupleUserIds.1": bson.M{"$exists": false}}, bson.M{"$addToSet": bson.M{"coupleUserIds": u.ID}})
-	if err != nil || result.MatchedCount == 0 {
-		bad(w, 500, "Could not grant access")
-		return
-	}
-	if _, err = s.db.Collection("coupleInvites").UpdateByID(r.Context(), invite.ID, bson.M{"$set": bson.M{"accepted": true}}); err != nil {
-		bad(w, 500, "Could not complete invitation")
+	if err = s.couples().Accept(r.Context(), e.ID, hash, u); err != nil {
+		bad(w, 403, "Sign in with the invited verified Google account; check available couple slots")
 		return
 	}
 	reply(w, 200, map[string]string{"status": "accepted", "eventId": e.ID})
@@ -146,7 +113,7 @@ func (s *server) createCoupleAccount(w http.ResponseWriter, r *http.Request) {
 		bad(w, 404, "Wedding not found")
 		return
 	}
-	if e.Kind != "wedding" || e.IsDemo || e.PaymentStatus != "paid" || (u.Role != "planner" && u.Role != "admin") {
+	if e.Kind != "wedding" || e.IsDemo || e.PaymentStatus != "paid" || !core.UserCanCreate("wedding", u) {
 		bad(w, 403, "Paid wedding and planner access required")
 		return
 	}
@@ -157,7 +124,7 @@ func (s *server) createCoupleAccount(w http.ResponseWriter, r *http.Request) {
 	}
 	in.Name = strings.TrimSpace(in.Name)
 	in.Email = strings.ToLower(strings.TrimSpace(in.Email))
-	if len(in.Name) < 2 || len(in.Name) > 120 || !strings.Contains(in.Email, "@") || len(in.Password) < 10 || len(in.Password) > 72 {
+	if len(in.Name) < 2 || len(in.Name) > 120 || !validEmail(in.Email) || in.Email == adminEmail() || len(in.Password) < 10 || len(in.Password) > 72 {
 		bad(w, 400, "Name, email and password of 10-72 characters required")
 		return
 	}
@@ -179,11 +146,15 @@ func (s *server) createCoupleAccount(w http.ResponseWriter, r *http.Request) {
 		bad(w, 500, "Could not create account")
 		return
 	}
-	result, err := s.db.Collection("events").UpdateOne(r.Context(), bson.M{"_id": e.ID, "coupleUserIds.1": bson.M{"$exists": false}}, bson.M{"$addToSet": bson.M{"coupleUserIds": couple.ID}, "$set": bson.M{"updatedAt": time.Now().UTC()}})
-	if err != nil || result.MatchedCount == 0 {
+	if err = s.couples().Attach(r.Context(), e.ID, couple.ID); err != nil {
 		_, _ = s.db.Collection("users").DeleteOne(r.Context(), bson.M{"_id": couple.ID})
-		bad(w, 409, "This wedding already has two couple accounts")
+		bad(w, 409, "This wedding already has two couple accounts or active invitations")
 		return
 	}
+
 	reply(w, 201, map[string]any{"user": couple, "eventId": e.ID})
+}
+
+func (s *server) couples() application.Couples {
+	return application.Couples{Repository: mongostore.Couples{DB: s.db}, Now: func() time.Time { return time.Now().UTC() }}
 }

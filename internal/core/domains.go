@@ -11,7 +11,7 @@ var slugPattern = regexp.MustCompile(`^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$`)
 
 var reservedSlugs = map[string]bool{
 	"www": true, "api": true, "app": true, "admin": true, "backoffice": true,
-	"save": true, "mail": true, "static": true, "assets": true, "support": true,
+	"crea": true, "studio": true, "save": true, "mail": true, "static": true, "assets": true, "support": true,
 }
 
 func ValidateSlug(slug string) error {
