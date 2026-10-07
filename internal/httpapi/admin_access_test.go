@@ -65,6 +65,10 @@ func TestAdminCourtesyRolesAndScopedCollaborator(t *testing.T) {
 	if w := request(root, "PATCH", "/admin/users/"+local.ID+"/role", `{"role":"admin"}`); w.Code != 403 {
 		t.Fatal("password admin granted")
 	}
+	// The deployed legacy accounts predate session-version persistence.
+	if _, err := db.Collection("users").UpdateOne(ctx, bson.M{"_id": verified.ID}, bson.M{"$unset": bson.M{"tokenVersion": ""}}); err != nil {
+		t.Fatal(err)
+	}
 	if w := request(root, "PATCH", "/admin/users/"+verified.ID+"/role", `{"role":"admin"}`); w.Code != 200 {
 		t.Fatalf("verified promotion: %d %s", w.Code, w.Body.String())
 	}

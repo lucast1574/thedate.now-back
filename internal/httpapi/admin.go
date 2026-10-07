@@ -3,6 +3,7 @@ package httpapi
 import (
 	"github.com/google/uuid"
 	"github.com/lucast1574/thedate.now-back/internal/core"
+	"github.com/lucast1574/thedate.now-back/internal/mongostore"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 	"net/http"
@@ -45,7 +46,16 @@ func (s *server) adminUsers(w http.ResponseWriter, r *http.Request) {
 		bad(w, 500, "Could not list accounts")
 		return
 	}
-	reply(w, 200, users)
+	type account struct {
+		core.User
+		CanBeAdmin    bool `json:"canBeAdmin"`
+		RoleProtected bool `json:"roleProtected"`
+	}
+	accounts := make([]account, 0, len(users))
+	for _, user := range users {
+		accounts = append(accounts, account{User: user, CanBeAdmin: user.GoogleSub != "" && user.IdentityPolicy == 1 && user.GoogleAuthoritative, RoleProtected: user.Email == adminEmail()})
+	}
+	reply(w, 200, accounts)
 }
 func (s *server) adminRole(w http.ResponseWriter, r *http.Request) {
 	actor, ok := s.admin(w, r)
@@ -76,8 +86,8 @@ func (s *server) adminRole(w http.ResponseWriter, r *http.Request) {
 		bad(w, 500, "Could not audit role change")
 		return
 	}
-	result, err := s.db.Collection("users").UpdateOne(r.Context(), bson.M{"_id": target.ID, "role": target.Role, "tokenVersion": target.TokenVersion}, bson.M{"$set": bson.M{"role": in.Role}, "$inc": bson.M{"tokenVersion": 1}})
-	if err != nil || result.MatchedCount != 1 {
+	changed, err := mongostore.ChangeUserRole(r.Context(), s.db, target, in.Role)
+	if err != nil || !changed {
 		bad(w, 409, "Account changed; reload")
 		return
 	}
