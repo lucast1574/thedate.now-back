@@ -99,3 +99,9 @@ Configuración opcional: `DOKPLOY_RENDERER_IMAGE_REPOSITORY` y `DOKPLOY_RENDERER
 ## Enlace final de publicación
 
 `dokploy.PublicPageReady` comprueba por HTTPS la página raíz real, respuesta 200 HTML y marcador `data-invitation-event` del evento correcto. Solo solicita el host derivado del producto/subdominio; no sigue redirecciones. `httpapi/publication_view.go` oculta el host mientras publica/verifica, incluso si el contenedor ya está ready. Solo expone el enlace tras comprobar la página y `publishedAt`. La comprobación no publica eventos ni recrea recursos; el worker conserva sus checkpoints e identificación de imagen.
+
+## Perfil y muestras personales
+
+`core/profile.go` valida nombres y URLs HTTPS de fotos de Google. OAuth conserva `picture` únicamente desde el ID token verificado y hosts de Google permitidos; las cuentas ya conectadas reciben la foto al volver a iniciar sesión. `PATCH /profile` solo acepta nombre. `POST /profile/avatar` limita bytes/píxeles, decodifica JPEG/PNG/WebP y vuelve a codificar PNG sin metadatos; la colección privada `profilePhotos` usa el ID de la sesión. `GET /profile/avatar` sirve únicamente la foto propia con no-store y nosniff. No acepta roles, permisos, correo ni identificadores ajenos.
+
+La lista del administrador conserva acceso a eventos reales para gestión, pero excluye demos de otros propietarios. La galería personal muestra eventos propios y compartidos; una muestra por producto se crea mediante el ID determinista existente, sin borrar diseños guardados.

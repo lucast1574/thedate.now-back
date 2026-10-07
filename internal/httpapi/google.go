@@ -134,6 +134,14 @@ func (s *server) googleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	u.GoogleAuthoritative = authoritative
+	picture, _ := payload.Claims["picture"].(string)
+	if picture = core.GooglePhoto(picture); picture != "" {
+		if _, err = s.db.Collection("users").UpdateByID(r.Context(), u.ID, bson.M{"$set": bson.M{"googlePhotoUrl": picture}}); err != nil {
+			bad(w, 500, "Could not update profile")
+			return
+		}
+		u.GooglePhotoURL = picture
+	}
 	if u.Role != "couple" && u.Role != "admin" {
 		if _, err = s.db.Collection("users").UpdateByID(r.Context(), u.ID, bson.M{"$addToSet": bson.M{"portals": in.Portal}}); err != nil {
 			bad(w, 500, "Could not update portal access")
