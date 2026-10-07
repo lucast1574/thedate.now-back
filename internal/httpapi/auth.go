@@ -5,6 +5,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/lucast1574/thedate.now-back/internal/core"
+	"github.com/lucast1574/thedate.now-back/internal/mongostore"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"golang.org/x/crypto/bcrypt"
@@ -40,7 +41,7 @@ func (s *server) register(w http.ResponseWriter, r *http.Request) {
 		bad(w, 500, "Could not create account")
 		return
 	}
-	u := core.User{ReferredBy: s.referredBy(r, in.ReferralCode), ID: uuid.NewString(), Email: in.Email, Name: in.Name, PasswordHash: string(hash), Role: in.Role, CreatedAt: time.Now().UTC()}
+	u := core.User{AffiliateEnabled: true, AffiliateCode: mongostore.AffiliateCode(), ReferredBy: s.referredBy(r, in.ReferralCode), ID: uuid.NewString(), Email: in.Email, Name: in.Name, PasswordHash: string(hash), Role: in.Role, CreatedAt: time.Now().UTC()}
 	if _, err = s.db.Collection("users").InsertOne(r.Context(), u); err != nil {
 		if mongo.IsDuplicateKeyError(err) {
 			bad(w, 409, "Email already registered")
@@ -65,9 +66,15 @@ func (s *server) login(w http.ResponseWriter, r *http.Request) {
 	}
 	var u core.User
 	err := s.db.Collection("users").FindOne(r.Context(), bson.M{"email": strings.ToLower(strings.TrimSpace(in.Email))}).Decode(&u)
-	if err != nil || u.Role == "admin" || u.Email == adminEmail() || u.GoogleSub != "" || len(in.Password) > 72 || bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(in.Password)) != nil {
+	if err != nil || u.Email == adminEmail() || u.GoogleSub != "" || len(in.Password) > 72 || bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(in.Password)) != nil {
 		bad(w, 401, "Invalid credentials")
 		return
+	}
+	if u.Role != "admin" {
+		if _, err := (mongostore.Affiliates{DB: s.db}).EnableDefaults(r.Context(), u.ID); err != nil {
+			bad(w, 500, "Could not prepare affiliate links")
+			return
+		}
 	}
 	token, err := s.sign(u, "password")
 	if err != nil {
@@ -108,10 +115,12 @@ func (s *server) sign(u core.User, method string) (string, error) {
 	}).SignedString(s.secret)
 }
 func validSession(u core.User, claims *sessionClaims) bool {
-	return claims.Format == 1 && claims.Subject == u.ID && claims.Version == u.TokenVersion &&
-		((claims.Method == "google" && u.GoogleSub != "" && u.IdentityPolicy == 1) || (claims.Method == "password" && u.GoogleSub == "" && u.Role != "admin" && u.Email != adminEmail())) &&
-		(u.Role != "admin" || (claims.Method == "google" && u.GoogleSub != "" && (u.GoogleAuthoritative || (u.Email == adminEmail() && u.GoogleSub == os.Getenv("GOOGLE_ADMIN_SUB")))))
+	if claims.Format != 1 || claims.Subject != u.ID || claims.Version != u.TokenVersion {
+		return false
+	}
+	return core.SessionMethodAllowed(u, claims.Method, adminEmail(), os.Getenv("GOOGLE_ADMIN_SUB"))
 }
+
 func (s *server) user(r *http.Request) (core.User, error) {
 	var u core.User
 	raw, ok := strings.CutPrefix(r.Header.Get("Authorization"), "Bearer ")

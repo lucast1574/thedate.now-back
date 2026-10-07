@@ -89,7 +89,7 @@ Configuración opcional: `DOKPLOY_RENDERER_IMAGE_REPOSITORY` y `DOKPLOY_RENDERER
 
 ## Administración, acceso por correo y afiliados
 
-- `httpapi/admin*.go`: panel común de ambas marcas, roles, cortesías, retiros y `adminAudit`. La sesión consulta el rol actual en Mongo; cambiar roles incrementa `tokenVersion`. El administrador principal y la propia cuenta no pueden demoverse. Un administrador delegado necesita identidad Google autoritativa.
+- `httpapi/admin*.go`: panel común de ambas marcas, roles, cortesías, retiros y `adminAudit`. La sesión consulta el rol actual en Mongo; cambiar roles incrementa `tokenVersion`. El administrador principal y la propia cuenta no pueden demoverse. Un administrador delegado puede usar Google o correo/contraseña; solo un administrador existente puede asignar ese rol. La cuenta principal conserva su identidad Google protegida.
 - Admin crea eventos completos de cortesía sin checkout. Las cortesías para otros propietarios requieren motivo y evento sin checkout activo; se excluyen de ingresos y afiliados. Estado/rol/fuente de pago no se aceptan desde los formularios de evento.
 - `access_email.go`, `access_members.go`, `mail/`: correo HTML según marca, TLS verificado, límite atómico de dos colaboradores/pending, enlaces aleatorios de 48 hex con hash persistido y duración de siete días. Google o contraseña con correo exacto más enlace secreto. Cada cuenta crea sus propios eventos; revocar membresía no elimina la cuenta. Los campos `couple*` se mantienen como compatibilidad BSON; nuevas rutas `collaborators` y `access-invites`. Ya no se crean contraseñas para parejas.
 - `core/finance.go`, `mongostore/affiliates.go`, `httpapi/affiliates.go`: comisión de 10% del primer pago real por referido, centavos enteros, retiro mínimo USD50. Atribución solo al crear cuenta por código válido de afiliado activo; autorreferencias descartadas. Pagos de prueba tienen conversión separada y cero saldo real. Marcador y saldo se actualizan juntos en el afiliado; reservas/rechazos de retiros tienen CAS para evitar doble gasto.
@@ -106,4 +106,8 @@ Configuración opcional: `DOKPLOY_RENDERER_IMAGE_REPOSITORY` y `DOKPLOY_RENDERER
 
 La lista del administrador conserva acceso a eventos reales para gestión, pero excluye demos de otros propietarios. La galería personal muestra eventos propios y compartidos; una muestra por producto se crea mediante el ID determinista existente, sin borrar diseños guardados.
 
-`mongostore/user_roles.go` cambia rol y revoca sesiones mediante CAS de rol/versión. Las cuentas antiguas sin `tokenVersion` equivalen exclusivamente a versión cero; los escritores obsoletos no pueden sobrescribir una versión nueva. La lista administrativa incluye elegibilidad Google y protección de rol, sin exponer identidad interna.
+`mongostore/user_roles.go` cambia rol y revoca sesiones mediante CAS de rol/versión. Las cuentas antiguas sin `tokenVersion` equivalen exclusivamente a versión cero; los escritores obsoletos no pueden sobrescribir una versión nueva. La lista administrativa indica protección del rol, sin exponer identidad interna.
+
+`mongostore/affiliate_defaults.go` activa enlaces para cuentas elegibles al registrarse, iniciar sesión y en la migración de inicio para cuentas antiguas. Las escrituras condicionales preservan el código, saldo, conversiones y retiros. Las cuentas administradoras mantienen la exclusión de comisiones; los pagos de prueba y cortesías siguen sin saldo real.
+
+`core/session_policy.go` decide de forma pura qué método corresponde a la identidad actual, con propietario y subject fijado como argumentos; el adaptador JWT sigue validando firma, audiencia, expiración, formato y versión revocable.

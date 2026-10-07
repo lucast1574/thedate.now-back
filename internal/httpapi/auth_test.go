@@ -15,7 +15,7 @@ import (
 	"time"
 )
 
-func TestSessionPolicyRejectsStaleAndPasswordAdmin(t *testing.T) {
+func TestSessionPolicyRejectsStaleAndProtectsRootIdentity(t *testing.T) {
 	t.Setenv("ADMIN_EMAIL", "admin@gmail.com")
 	u := core.User{ID: "user", Role: "organizer", Email: "ordinary@gmail.com", TokenVersion: 2}
 	for _, claims := range []sessionClaims{{RegisteredClaims: jwt.RegisteredClaims{Subject: u.ID}, Format: 0, Version: 2, Method: "password"}, {RegisteredClaims: jwt.RegisteredClaims{Subject: u.ID}, Format: 1, Version: 1, Method: "password"}, {RegisteredClaims: jwt.RegisteredClaims{Subject: u.ID}, Format: 1, Version: 2, Method: "unknown"}} {

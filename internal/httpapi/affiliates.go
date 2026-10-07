@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"regexp"
 	"sort"
-	"strings"
 	"time"
 )
 
@@ -34,12 +33,6 @@ func (s *server) affiliateJoin(w http.ResponseWriter, r *http.Request) {
 		bad(w, 403, "Admin courtesy accounts are not commission eligible")
 		return
 	}
-	code := strings.ReplaceAll(uuid.NewString(), "-", "")[:24]
-	_, e = s.db.Collection("users").UpdateOne(r.Context(), bson.M{"_id": u.ID, "affiliateEnabled": bson.M{"$ne": true}}, bson.M{"$set": bson.M{"affiliateCode": code, "affiliateEnabled": true}})
-	if e != nil {
-		bad(w, 500, "Could not enable affiliates")
-		return
-	}
 	s.affiliateOverview(w, r)
 }
 func (s *server) affiliateOverview(w http.ResponseWriter, r *http.Request) {
@@ -48,7 +41,11 @@ func (s *server) affiliateOverview(w http.ResponseWriter, r *http.Request) {
 		bad(w, 401, "Sign in required")
 		return
 	}
-	wallet, e := (mongostore.Affiliates{DB: s.db}).Wallet(r.Context(), u.ID)
+	repo := mongostore.Affiliates{DB: s.db}
+	wallet, e := repo.Wallet(r.Context(), u.ID)
+	if e == nil && u.Role != "admin" {
+		wallet, e = repo.EnableDefaults(r.Context(), u.ID)
+	}
 	if e != nil {
 		bad(w, 500, "Could not load affiliate account")
 		return

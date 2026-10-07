@@ -62,8 +62,14 @@ func TestAdminCourtesyRolesAndScopedCollaborator(t *testing.T) {
 	if w := request(root, "PATCH", "/admin/users/"+root.ID+"/role", `{"role":"organizer"}`); w.Code != 403 {
 		t.Fatal("root demoted")
 	}
-	if w := request(root, "PATCH", "/admin/users/"+local.ID+"/role", `{"role":"admin"}`); w.Code != 403 {
-		t.Fatal("password admin granted")
+	if w := request(root, "PATCH", "/admin/users/"+local.ID+"/role", `{"role":"admin"}`); w.Code != 200 {
+		t.Fatal("password account promotion failed")
+	}
+	if w := request(root, "PATCH", "/admin/users/"+local.ID+"/role", `{"role":"organizer"}`); w.Code != 200 {
+		t.Fatal("local demotion failed")
+	}
+	if err := db.Collection("users").FindOne(ctx, bson.M{"_id": local.ID}).Decode(&local); err != nil {
+		t.Fatal(err)
 	}
 	// The deployed legacy accounts predate session-version persistence.
 	if _, err := db.Collection("users").UpdateOne(ctx, bson.M{"_id": verified.ID}, bson.M{"$unset": bson.M{"tokenVersion": ""}}); err != nil {

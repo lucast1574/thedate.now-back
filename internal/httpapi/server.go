@@ -48,6 +48,9 @@ func Run() {
 	if err := mongostore.EnsureTemplates(ctx, s.db); err != nil {
 		log.Fatal(err)
 	}
+	if err := mongostore.EnsureAffiliateDefaults(ctx, s.db); err != nil {
+		log.Fatal(err)
+	}
 	runCtx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	workerDone := make(chan struct{})

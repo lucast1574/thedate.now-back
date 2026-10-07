@@ -48,12 +48,11 @@ func (s *server) adminUsers(w http.ResponseWriter, r *http.Request) {
 	}
 	type account struct {
 		core.User
-		CanBeAdmin    bool `json:"canBeAdmin"`
 		RoleProtected bool `json:"roleProtected"`
 	}
 	accounts := make([]account, 0, len(users))
 	for _, user := range users {
-		accounts = append(accounts, account{User: user, CanBeAdmin: user.GoogleSub != "" && user.IdentityPolicy == 1 && user.GoogleAuthoritative, RoleProtected: user.Email == adminEmail()})
+		accounts = append(accounts, account{User: user, RoleProtected: user.Email == adminEmail()})
 	}
 	reply(w, 200, accounts)
 }
@@ -76,10 +75,6 @@ func (s *server) adminRole(w http.ResponseWriter, r *http.Request) {
 	}
 	if target.Email == adminEmail() || target.ID == actor.ID {
 		bad(w, 403, "The owner and your own role are protected")
-		return
-	}
-	if in.Role == "admin" && (target.GoogleSub == "" || target.IdentityPolicy != 1 || !target.GoogleAuthoritative) {
-		bad(w, 403, "Administrators must first sign in with an authoritative Google identity")
 		return
 	}
 	if s.audit(r, actor, "role-request", target.ID, in.Role) != nil {

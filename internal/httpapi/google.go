@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/lucast1574/thedate.now-back/internal/core"
+	"github.com/lucast1574/thedate.now-back/internal/mongostore"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"google.golang.org/api/idtoken"
@@ -148,6 +149,12 @@ func (s *server) googleLogin(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		u.Portals = append(u.Portals, in.Portal)
+	}
+	if u.Role != "admin" {
+		if _, err := (mongostore.Affiliates{DB: s.db}).EnableDefaults(r.Context(), u.ID); err != nil {
+			bad(w, 500, "Could not prepare affiliate links")
+			return
+		}
 	}
 	token, err := s.sign(u, "google")
 	if err != nil {
