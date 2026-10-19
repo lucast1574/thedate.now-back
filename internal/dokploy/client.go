@@ -15,6 +15,7 @@ import (
 
 type Client struct {
 	URL, Key, APIURL string
+	ServerID         string
 	HTTP             *http.Client
 }
 

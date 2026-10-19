@@ -78,7 +78,11 @@ func (c *Client) EnsureApplication(ctx context.Context, name, env string) (strin
 		}
 	}
 	var a application
-	err = c.call(ctx, "application.create", map[string]string{"name": name, "environmentId": env}, &a)
+	input := map[string]string{"name": name, "environmentId": env}
+	if c.ServerID != "" {
+		input["serverId"] = c.ServerID
+	}
+	err = c.call(ctx, "application.create", input, &a)
 	if err == nil && a.ID == "" {
 		err = fmt.Errorf("application ID missing")
 	}

@@ -16,7 +16,11 @@ import (
 )
 
 func deploymentClient() (*dokploy.Client, error) {
-	return dokploy.New(os.Getenv("DOKPLOY_URL"), os.Getenv("DOKPLOY_THE_DATE_API_KEY"), env("INVITATION_API_URL", "https://api.thedate.now"))
+	client, err := dokploy.New(os.Getenv("DOKPLOY_URL"), os.Getenv("DOKPLOY_THE_DATE_API_KEY"), env("INVITATION_API_URL", "https://api.thedate.now"))
+	if err == nil {
+		client.ServerID = os.Getenv("DOKPLOY_DEPLOY_SERVER_ID")
+	}
+	return client, err
 }
 func (s *server) publish(w http.ResponseWriter, r *http.Request) {
 	e, err := s.managedEvent(r)

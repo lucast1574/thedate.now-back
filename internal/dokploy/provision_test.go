@@ -41,6 +41,11 @@ func TestNexodeFlowCheckpointsAndReusesInvitationResources(t *testing.T) {
 			projectCreated = true
 			_, _ = w.Write([]byte(`{"project":{"projectId":"project"},"environment":{"environmentId":"environment"}}`))
 		case "application.create":
+			var input map[string]string
+			_ = json.NewDecoder(r.Body).Decode(&input)
+			if input["serverId"] != "remote-worker" {
+				t.Error("invitation created outside configured remote server")
+			}
 			appCreated = true
 			_, _ = w.Write([]byte(`{"applicationId":"app"}`))
 		case "application.saveEnvironment":
@@ -74,6 +79,7 @@ func TestNexodeFlowCheckpointsAndReusesInvitationResources(t *testing.T) {
 		t.Fatal(err)
 	}
 	client.HTTP = provider.Client()
+	client.ServerID = "remote-worker"
 	image := "ghcr.io/example/invitation@sha256:" + strings.Repeat("a", 64)
 	e := core.Event{ID: "event", Kind: "wedding", Slug: "ana"}
 	d := core.Deployment{EventID: e.ID, Host: "ana.save.thedate.now", Image: image, Phase: "pending"}
