@@ -17,7 +17,7 @@ import (
 func resendConfig(product string) email.Config {
 	prefix, sender := "THE_DATE", "The Date <hola@thedate.now>"
 	if product == "wedding" {
-		prefix, sender = "SAVE_THE_DATE", "Save the Date <hola@save.thedate.now>"
+		prefix, sender = "SAVE_THE_DATE", "Save the Date <savethedate@thedate.now>"
 	}
 	return email.Config{APIKey: env(prefix+"_RESEND_API_KEY", os.Getenv("RESEND_API_KEY")), From: env(prefix+"_MAIL_FROM", sender)}
 }
