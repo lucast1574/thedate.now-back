@@ -41,7 +41,7 @@ func (s *server) register(w http.ResponseWriter, r *http.Request) {
 		bad(w, 500, "Could not create account")
 		return
 	}
-	u := core.User{Product: s.product, AffiliateEnabled: true, AffiliateCode: mongostore.AffiliateCode(), ReferredBy: s.referredBy(r, in.ReferralCode), ID: uuid.NewString(), Email: in.Email, Name: in.Name, PasswordHash: string(hash), Role: in.Role, CreatedAt: time.Now().UTC()}
+	u := core.User{Mail: map[string]core.EmailDelivery{"welcome": core.PendingEmail(time.Now().UTC())}, Product: s.product, AffiliateEnabled: true, AffiliateCode: mongostore.AffiliateCode(), ReferredBy: s.referredBy(r, in.ReferralCode), ID: uuid.NewString(), Email: in.Email, Name: in.Name, PasswordHash: string(hash), Role: in.Role, CreatedAt: time.Now().UTC()}
 	if _, err = s.db.Collection("users").InsertOne(r.Context(), u); err != nil {
 		if mongo.IsDuplicateKeyError(err) {
 			bad(w, 409, "Email already registered")

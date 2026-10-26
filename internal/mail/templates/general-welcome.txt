@@ -1,0 +1,21 @@
+The Date https://thedate.now
+
+Tu cuenta está lista
+
+
+HAGAMOS QUE SUCEDA.
+
+Hola{{if .Name}} {{.Name}}{{end}},
+
+Ya tienes tu espacio para preparar invitaciones, organizar a tus invitados y dar forma a tu próxima celebración.
+
+Entrar a mi espacio {{.ActionURL}}
+
+También puedes abrir este enlace {{.ActionURL}} en tu navegador.
+
+----------------------------------------
+
+El equipo de The Date
+
+Tu próxima fecha empieza aquí.
+Este correo corresponde únicamente a tu cuenta de The Date.

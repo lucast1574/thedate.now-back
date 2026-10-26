@@ -1,0 +1,23 @@
+The Date https://thedate.now
+
+Soporte
+
+
+TU TICKET ESTÁ RESUELTO.
+
+Hola{{if .Name}} {{.Name}}{{end}},
+
+El equipo marcó tu reporte como resuelto. Entra a tu cuenta para consultar el historial y la respuesta.
+
+{{.Title}}
+
+Consultar respuesta {{.ActionURL}}
+
+También puedes abrir este enlace {{.ActionURL}} en tu navegador.
+
+----------------------------------------
+
+El equipo de The Date
+
+Tu próxima fecha empieza aquí.
+Este correo corresponde únicamente a tu cuenta de The Date.

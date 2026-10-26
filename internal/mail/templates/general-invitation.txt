@@ -1,0 +1,25 @@
+The Date https://thedate.now
+
+Una invitación para colaborar
+
+
+ESTE EVENTO TAMBIÉN ES TUYO.
+
+Hola{{if .Name}} {{.Name}}{{end}},
+
+{{.Inviter}} te invita a colaborar en un evento. Accede con la cuenta a la que llegó este correo para aceptar la invitación.
+
+El enlace vence en 7 días. Este acceso se limita al evento invitado y no permite ver otros eventos ni los pagos del organizador.
+
+{{.Title}}
+
+Aceptar invitación {{.ActionURL}}
+
+También puedes abrir este enlace {{.ActionURL}} en tu navegador.
+
+----------------------------------------
+
+El equipo de The Date
+
+Tu próxima fecha empieza aquí.
+Este correo corresponde únicamente a tu cuenta de The Date.

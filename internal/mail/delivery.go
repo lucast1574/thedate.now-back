@@ -13,8 +13,8 @@ import (
 )
 
 type Config struct {
-	Host, Port, User, Password, From string
-	Secure                           bool
+	Host, Port, User, Password, From, APIKey string
+	Secure                                   bool
 }
 
 // Result distinguishes a rejected attempt from an unknown acknowledgement.
@@ -22,9 +22,12 @@ type Result struct{ State string }
 
 func (c Config) Valid() bool {
 	a, e := mail.ParseAddress(c.From)
-	return e == nil && a.Address != "" && c.Host != "" && c.Port != "" && c.User != "" && c.Password != ""
+	return e == nil && a.Address != "" && (c.APIKey != "" || (c.Host != "" && c.Port != "" && c.User != "" && c.Password != ""))
 }
 func Send(ctx context.Context, c Config, to, subject, html string) Result {
+	if c.APIKey != "" {
+		return SendResend(ctx, c, to, subject, html, "", "")
+	}
 	failed := Result{"failed"}
 	if !c.Valid() || strings.ContainsAny(to+subject, "\r\n") {
 		return failed

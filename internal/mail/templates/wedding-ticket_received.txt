@@ -1,0 +1,23 @@
+Save the Date https://save.thedate.now
+
+Soporte
+
+
+RECIBIMOS TU REPORTE.
+
+Hola{{if .Name}} {{.Name}}{{end}},
+
+Tu ticket quedó guardado. Nuestro equipo lo revisará y podrás seguir su estado desde tu cuenta.
+
+{{.Title}}
+
+Ver mis tickets {{.ActionURL}}
+
+También puedes abrir este enlace {{.ActionURL}} en tu navegador.
+
+----------------------------------------
+
+El equipo de Save the Date
+
+Una fecha. Todos tus momentos.
+Este correo corresponde únicamente a tu cuenta de Save the Date.

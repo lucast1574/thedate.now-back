@@ -34,7 +34,7 @@ func (s *server) listCollaborators(w http.ResponseWriter, r *http.Request) {
 		bad(w, 500, "Could not list members")
 		return
 	}
-	reply(w, 200, map[string]any{"members": members, "pending": pending, "limit": 2, "emailConfigured": mailConfigured()})
+	reply(w, 200, map[string]any{"members": members, "pending": pending, "limit": 2, "emailConfigured": s.mailConfigured()})
 }
 func (s *server) revokeCollaborator(w http.ResponseWriter, r *http.Request) {
 	e, err := s.managedEvent(r)

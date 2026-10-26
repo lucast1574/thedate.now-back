@@ -1,0 +1,23 @@
+Save the Date https://save.thedate.now
+
+Tu evento
+
+
+PAGO CONFIRMADO.
+
+Hola{{if .Name}} {{.Name}}{{end}},
+
+El pago de tu evento quedó confirmado. Entra a tu espacio para consultar los detalles y continuar con tu invitación.
+
+{{.Title}}
+
+Ver mi evento {{.ActionURL}}
+
+También puedes abrir este enlace {{.ActionURL}} en tu navegador.
+
+----------------------------------------
+
+El equipo de Save the Date
+
+Una fecha. Todos tus momentos.
+Este correo corresponde únicamente a tu cuenta de Save the Date.

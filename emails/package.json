@@ -1,0 +1,1 @@
+{"name":"thedate-transactional-emails","private":true,"type":"module","scripts":{"build":"tsx generate.tsx"},"devDependencies":{"react":"^19.3.1","react-dom":"^19.3.1","react-email":"^6.11.3","tsx":"^4.23.15"}}

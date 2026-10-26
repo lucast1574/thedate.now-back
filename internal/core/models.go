@@ -3,24 +3,25 @@ package core
 import "time"
 
 type User struct {
-	Product             string    `bson:"product,omitempty" json:"product,omitempty"`
-	GooglePhotoURL      string    `bson:"googlePhotoUrl,omitempty" json:"googlePhotoUrl,omitempty"`
-	AvatarVersion       int64     `bson:"avatarVersion,omitempty" json:"avatarVersion,omitempty"`
-	ReferredBy          string    `bson:"referredBy,omitempty" json:"-"`
-	AffiliateCode       string    `bson:"affiliateCode,omitempty" json:"-"`
-	AffiliateEnabled    bool      `bson:"affiliateEnabled" json:"-"`
-	CreatorPortals      []string  `bson:"-" json:"creatorPortals"`
-	Portals             []string  `bson:"portals,omitempty" json:"portals"`
-	GoogleAuthoritative bool      `bson:"googleAuthoritative" json:"-"`
-	TokenVersion        int       `bson:"tokenVersion" json:"-"`
-	IdentityPolicy      int       `bson:"identityPolicy" json:"-"`
-	ID                  string    `bson:"_id" json:"id"`
-	Email               string    `bson:"email" json:"email"`
-	Name                string    `bson:"name" json:"name"`
-	PasswordHash        string    `bson:"passwordHash" json:"-"`
-	Role                string    `bson:"role" json:"role"` // admin, planner, organizer or couple
-	GoogleSub           string    `bson:"googleSub,omitempty" json:"-"`
-	CreatedAt           time.Time `bson:"createdAt" json:"createdAt"`
+	Mail                map[string]EmailDelivery `bson:"mail,omitempty" json:"-"`
+	Product             string                   `bson:"product,omitempty" json:"product,omitempty"`
+	GooglePhotoURL      string                   `bson:"googlePhotoUrl,omitempty" json:"googlePhotoUrl,omitempty"`
+	AvatarVersion       int64                    `bson:"avatarVersion,omitempty" json:"avatarVersion,omitempty"`
+	ReferredBy          string                   `bson:"referredBy,omitempty" json:"-"`
+	AffiliateCode       string                   `bson:"affiliateCode,omitempty" json:"-"`
+	AffiliateEnabled    bool                     `bson:"affiliateEnabled" json:"-"`
+	CreatorPortals      []string                 `bson:"-" json:"creatorPortals"`
+	Portals             []string                 `bson:"portals,omitempty" json:"portals"`
+	GoogleAuthoritative bool                     `bson:"googleAuthoritative" json:"-"`
+	TokenVersion        int                      `bson:"tokenVersion" json:"-"`
+	IdentityPolicy      int                      `bson:"identityPolicy" json:"-"`
+	ID                  string                   `bson:"_id" json:"id"`
+	Email               string                   `bson:"email" json:"email"`
+	Name                string                   `bson:"name" json:"name"`
+	PasswordHash        string                   `bson:"passwordHash" json:"-"`
+	Role                string                   `bson:"role" json:"role"` // admin, planner, organizer or couple
+	GoogleSub           string                   `bson:"googleSub,omitempty" json:"-"`
+	CreatedAt           time.Time                `bson:"createdAt" json:"createdAt"`
 }
 
 type Event struct {

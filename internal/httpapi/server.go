@@ -65,8 +65,9 @@ func Run() {
 	defer stop()
 	var workers sync.WaitGroup
 	for _, s := range servers {
-		workers.Add(1)
+		workers.Add(2)
 		go func(s *server) { defer workers.Done(); s.deploymentWorker(runCtx) }(s)
+		go func(s *server) { defer workers.Done(); s.emailWorker(runCtx) }(s)
 	}
 	port := env("PORT", "8080")
 	log.Printf("The Date API listening on :%s", port)

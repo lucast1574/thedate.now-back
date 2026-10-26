@@ -54,7 +54,7 @@ func (s *server) inviteCouple(w http.ResponseWriter, r *http.Request) {
 		bad(w, 409, "This event already has two collaborators")
 		return
 	}
-	if !mailConfigured() {
+	if !s.mailConfigured() {
 		bad(w, 503, "Email invitations are not configured")
 		return
 	}

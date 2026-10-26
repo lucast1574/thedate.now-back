@@ -1,0 +1,23 @@
+The Date https://thedate.now
+
+Tu evento
+
+
+PAGO CONFIRMADO.
+
+Hola{{if .Name}} {{.Name}}{{end}},
+
+El pago de tu evento quedó confirmado. Entra a tu espacio para consultar los detalles y continuar con tu invitación.
+
+{{.Title}}
+
+Ver mi evento {{.ActionURL}}
+
+También puedes abrir este enlace {{.ActionURL}} en tu navegador.
+
+----------------------------------------
+
+El equipo de The Date
+
+Tu próxima fecha empieza aquí.
+Este correo corresponde únicamente a tu cuenta de The Date.

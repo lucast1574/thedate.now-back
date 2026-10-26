@@ -1,0 +1,21 @@
+Save the Date https://save.thedate.now
+
+Tu cuenta está lista
+
+
+HAGAMOS QUE SUCEDA.
+
+Hola{{if .Name}} {{.Name}}{{end}},
+
+Ya tienes tu espacio para preparar invitaciones, organizar a tus invitados y dar forma a tu próxima celebración.
+
+Entrar a mi espacio {{.ActionURL}}
+
+También puedes abrir este enlace {{.ActionURL}} en tu navegador.
+
+----------------------------------------
+
+El equipo de Save the Date
+
+Una fecha. Todos tus momentos.
+Este correo corresponde únicamente a tu cuenta de Save the Date.
