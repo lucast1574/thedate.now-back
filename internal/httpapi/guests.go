@@ -86,5 +86,12 @@ func (s *server) listGuests(w http.ResponseWriter, r *http.Request) {
 
 func guestView(e core.Event, g core.Guest) map[string]any {
 	host, _ := core.InvitationHost(e.Kind, e.Slug)
-	return map[string]any{"id": g.ID, "name": g.Name, "phone": g.Phone, "seats": g.Seats, "lastName": g.LastName, "family": g.Family, "gender": g.Gender, "companions": g.Companions, "attendingSeats": g.AttendingSeats, "partyRegistered": g.PartyRegistered, "response": g.Response, "maybeReason": g.MaybeReason, "maybeExpiresAt": g.MaybeExpiresAt, "sentAt": g.SentAt, "invitationUrl": "https://" + host + "/rsvp/" + g.InviteToken}
+	view := map[string]any{"id": g.ID, "name": g.Name, "phone": g.Phone, "seats": g.Seats, "lastName": g.LastName, "family": g.Family, "gender": g.Gender, "companions": g.Companions, "attendingSeats": g.AttendingSeats, "partyRegistered": g.PartyRegistered, "response": g.Response, "maybeReason": g.MaybeReason, "maybeExpiresAt": g.MaybeExpiresAt, "sentAt": g.SentAt, "invitationUrl": "https://" + host + "/rsvp/" + g.InviteToken}
+	for _, item := range e.Wishlist.Items {
+		if item.GuestID == g.ID {
+			view["gift"] = map[string]any{"id": item.ID, "title": item.Title, "delivered": item.Delivered}
+			break
+		}
+	}
+	return view
 }
