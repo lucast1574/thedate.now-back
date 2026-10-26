@@ -31,11 +31,19 @@ func validElementBinding(el FlyerElement) bool {
 			return false
 		}
 	case "location":
-		if el.Type != "text" || (el.LocationStyle != "icon" && el.LocationStyle != "label" && el.LocationStyle != "address") || len(el.Address) > 500 || len(el.Link) > 2048 || (el.Link != "" && !GoogleMapsURL(el.Link)) {
+		if el.Type != "text" || !validLocationStyle(el.LocationStyle) || len(el.Address) > 500 || len(el.Link) > 2048 || (el.Link != "" && !GoogleMapsURL(el.Link)) {
 			return false
 		}
 	default:
 		return false
 	}
 	return el.Binding == "location" || (el.LocationStyle == "" && el.Address == "" && el.Link == "")
+}
+
+func validLocationStyle(style string) bool {
+	switch style {
+	case "icon", "label", "address", "icon-label", "icon-address", "label-address", "all":
+		return true
+	}
+	return false
 }
