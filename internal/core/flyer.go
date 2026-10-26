@@ -34,6 +34,9 @@ func bounded(n, min, max float64) bool {
 	return !math.IsNaN(n) && !math.IsInf(n, 0) && n >= min && n <= max
 }
 func validPhoto(key string, photos []string) bool {
+	if key == "template-photo" {
+		return true
+	}
 	for _, photo := range photos {
 		if key == photo {
 			return true

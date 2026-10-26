@@ -27,7 +27,14 @@ func (s *server) updateDesign(w http.ResponseWriter, r *http.Request) {
 		bad(w, 400, "Invalid invitation design")
 		return
 	}
-	_, err = s.db.Collection("events").UpdateByID(r.Context(), e.ID, bson.M{"$set": bson.M{"music": in.Music, "title": strings.TrimSpace(in.Title), "description": in.Description, "template": in.Template, "templateId": core.TemplateID(e.Kind, in.Template, in.DesignMode, in.TemplateID), "accentColor": in.AccentColor, "sections": in.Sections, "designMode": in.DesignMode, "updatedAt": time.Now().UTC()}})
+	fields := bson.M{"music": in.Music, "title": strings.TrimSpace(in.Title), "description": in.Description, "template": in.Template, "templateId": core.TemplateID(e.Kind, in.Template, in.DesignMode, in.TemplateID), "accentColor": in.AccentColor, "sections": in.Sections, "designMode": in.DesignMode, "updatedAt": time.Now().UTC()}
+	if in.Opening != nil {
+		fields["opening"] = in.Opening
+	}
+	if in.Celebration != nil {
+		fields["celebration"] = in.Celebration
+	}
+	_, err = s.db.Collection("events").UpdateByID(r.Context(), e.ID, bson.M{"$set": fields})
 	if err != nil {
 		bad(w, 500, "Could not save design")
 		return
