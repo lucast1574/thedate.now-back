@@ -20,7 +20,7 @@ func ProductFor(kind string) (Product, error) {
 }
 
 func UserCanCreate(kind string, u User) bool {
-	return CanCreateEvent(kind, u.Role)
+	return (u.Product == "" || u.Product == kind) && CanCreateEvent(kind, u.Role)
 }
 func UserPortals(u User) []string {
 	result := []string{}

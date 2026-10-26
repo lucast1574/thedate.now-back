@@ -44,6 +44,9 @@ func (s *server) ensureDemos(ctx context.Context, u core.User) error {
 		kinds = append(kinds, "general")
 	}
 	for _, kind := range kinds {
+		if s.product != "" && kind != s.product {
+			continue
+		}
 		id := "demo-" + kind + "-" + u.ID
 		now := time.Now().UTC()
 		title := "Una celebración inolvidable"

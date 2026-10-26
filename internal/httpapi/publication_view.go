@@ -22,7 +22,7 @@ func (s *server) publicationView(ctx context.Context, e core.Event, d core.Deplo
 		return view
 	}
 	view.Phase = "verifying"
-	client, err := deploymentClient()
+	client, err := deploymentClientFor(s.product)
 	if err != nil {
 		return view
 	}

@@ -1,5 +1,32 @@
 # Puesta en marcha y límites operativos
 
+## Cuentas independientes por marca
+
+`ISOLATE_PRODUCTS=true` monta `/products/general/` y `/products/wedding/`.
+Cada servicio usa su propia base (`MONGODB_GENERAL_DATABASE` y
+`MONGODB_WEDDING_DATABASE`) y una clave de sesión derivada distinta. No hay
+fallback a usuarios ni sesiones de la base compartida anterior. Esta activación
+se ha diseñado para iniciar ambas marcas sin usuarios: no migra ni elimina los
+datos anteriores. No usarla como migración automática de cuentas existentes.
+
+Configura `GOOGLE_GENERAL_CLIENT_ID` y `GOOGLE_WEDDING_CLIENT_ID` con clientes
+de proyectos Google distintos. El cliente y el portal deben corresponder al
+producto de la URL. La misma persona puede crear dos cuentas independientes.
+El acceso administrativo y los afiliados también quedan separados.
+
+En el frontend activa `API_PRODUCT_ISOLATION=true` y configura los dos pares
+`GOOGLE_GENERAL_CLIENT_ID/SECRET` y `GOOGLE_WEDDING_CLIENT_ID/SECRET`. Los
+callbacks autorizados son `https://crea.thedate.now/api/auth/google/callback`
+y `https://studio.save.thedate.now/api/auth/google/callback`, respectivamente.
+Despliega primero la API y después los frontends. Los workers de publicación
+incluyen la ruta del producto en la URL de API de cada contenedor.
+
+Los endpoints raíz de Stripe y Wazend se conservan: verifican las firmas en
+cada base independiente y solo aplican cambios a los registros correspondientes.
+No habilitan autenticación compartida en la raíz. Los certificados y los buckets
+de fotos se conservan; la pertenencia a eventos se comprueba en la base de cada
+marca.
+
 ## Estado inspeccionado en Dokploy
 
 Revisión de solo lectura el 6 de octubre de 2026: el proyecto `thedate` existe en Rangel Tech; su MongoDB usa `mongo:7`, una réplica, sin `replicaSet` en la configuración inspeccionada. La organización dedicada The Date no devolvió proyectos. Esta revisión no leyó datos de usuarios ni modificó infraestructura.

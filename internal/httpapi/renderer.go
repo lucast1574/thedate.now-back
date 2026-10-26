@@ -16,7 +16,7 @@ func (s *server) refreshRenderer(parent context.Context) {
 	}
 	ctx, cancel := context.WithTimeout(parent, 20*time.Second)
 	defer cancel()
-	provider, err := deploymentClient()
+	provider, err := deploymentClientFor(s.product)
 	if err != nil {
 		return
 	}

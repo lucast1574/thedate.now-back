@@ -3,6 +3,7 @@ package core
 import "time"
 
 type User struct {
+	Product             string    `bson:"product,omitempty" json:"product,omitempty"`
 	GooglePhotoURL      string    `bson:"googlePhotoUrl,omitempty" json:"googlePhotoUrl,omitempty"`
 	AvatarVersion       int64     `bson:"avatarVersion,omitempty" json:"avatarVersion,omitempty"`
 	ReferredBy          string    `bson:"referredBy,omitempty" json:"-"`

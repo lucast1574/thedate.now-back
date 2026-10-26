@@ -12,11 +12,16 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 )
 
-func deploymentClient() (*dokploy.Client, error) {
-	client, err := dokploy.New(os.Getenv("DOKPLOY_URL"), os.Getenv("DOKPLOY_THE_DATE_API_KEY"), env("INVITATION_API_URL", "https://api.thedate.now"))
+func deploymentClientFor(product string) (*dokploy.Client, error) {
+	apiURL := env("INVITATION_API_URL", "https://api.thedate.now")
+	if product != "" {
+		apiURL = strings.TrimRight(apiURL, "/") + "/products/" + product
+	}
+	client, err := dokploy.New(os.Getenv("DOKPLOY_URL"), os.Getenv("DOKPLOY_THE_DATE_API_KEY"), apiURL)
 	if err == nil {
 		client.ServerID = os.Getenv("DOKPLOY_DEPLOY_SERVER_ID")
 	}
@@ -33,7 +38,7 @@ func (s *server) publish(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	image := (mongostore.Deployments{DB: s.db}).RendererImage(r.Context(), os.Getenv("DOKPLOY_INVITATION_IMAGE"))
-	if _, err = deploymentClient(); err != nil || !dokploy.ValidImage(image) {
+	if _, err = deploymentClientFor(s.product); err != nil || !dokploy.ValidImage(image) {
 		bad(w, 503, "Invitation deployment is not configured")
 		return
 	}
@@ -75,7 +80,7 @@ func (s *server) deploymentWorker(ctx context.Context) {
 	}
 }
 func (s *server) deploymentStep(parent context.Context) {
-	provider, err := deploymentClient()
+	provider, err := deploymentClientFor(s.product)
 	if err != nil {
 		return
 	}

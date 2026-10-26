@@ -21,14 +21,14 @@ type googleLoginInput struct {
 }
 
 func (s *server) googleLogin(w http.ResponseWriter, r *http.Request) {
-	clientID := os.Getenv("GOOGLE_CLIENT_ID")
-	if clientID == "" {
-		bad(w, 503, "Google sign-in is not configured")
+	var in googleLoginInput
+	if decode(r, &in) != nil || (s.product != "" && in.Portal != s.product) || len(in.IDToken) > 10000 || (in.Portal != "wedding" && in.Portal != "general") {
+		bad(w, 400, "Invalid Google sign-in")
 		return
 	}
-	var in googleLoginInput
-	if decode(r, &in) != nil || len(in.IDToken) > 10000 || (in.Portal != "wedding" && in.Portal != "general") {
-		bad(w, 400, "Invalid Google sign-in")
+	clientID := googleClientID(in.Portal)
+	if clientID == "" {
+		bad(w, 503, "Google sign-in is not configured")
 		return
 	}
 	verify := s.verifyGoogle
@@ -71,7 +71,7 @@ func (s *server) googleLogin(w http.ResponseWriter, r *http.Request) {
 	if err == mongo.ErrNoDocuments {
 		err = s.db.Collection("users").FindOne(r.Context(), bson.M{"email": email}).Decode(&u)
 		if err == mongo.ErrNoDocuments {
-			u = core.User{ReferredBy: s.referredBy(r, in.ReferralCode), ID: uuid.NewString(), Email: email, Name: name, Role: role, GoogleAuthoritative: authoritative, IdentityPolicy: 1, GoogleSub: payload.Subject, CreatedAt: time.Now().UTC()}
+			u = core.User{Product: s.product, ReferredBy: s.referredBy(r, in.ReferralCode), ID: uuid.NewString(), Email: email, Name: name, Role: role, GoogleAuthoritative: authoritative, IdentityPolicy: 1, GoogleSub: payload.Subject, CreatedAt: time.Now().UTC()}
 			if _, err = s.db.Collection("users").InsertOne(r.Context(), u); err != nil {
 				bad(w, 409, "Could not create Google account")
 				return

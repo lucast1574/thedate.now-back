@@ -32,7 +32,7 @@ func (s *server) register(w http.ResponseWriter, r *http.Request) {
 	}
 	in.Email = strings.ToLower(strings.TrimSpace(in.Email))
 	in.Name = strings.TrimSpace(in.Name)
-	if !validEmail(in.Email) || in.Email == adminEmail() || len(in.Password) < 10 || len(in.Password) > 72 || len(in.Name) < 2 || len(in.Name) > 120 || (in.Role != "planner" && in.Role != "organizer") {
+	if (s.product == "wedding" && in.Role != "planner") || (s.product == "general" && in.Role != "organizer") || !validEmail(in.Email) || in.Email == adminEmail() || len(in.Password) < 10 || len(in.Password) > 72 || len(in.Name) < 2 || len(in.Name) > 120 || (in.Role != "planner" && in.Role != "organizer") {
 		bad(w, 400, "Name, email, role and password of at least 10 characters required")
 		return
 	}
@@ -41,7 +41,7 @@ func (s *server) register(w http.ResponseWriter, r *http.Request) {
 		bad(w, 500, "Could not create account")
 		return
 	}
-	u := core.User{AffiliateEnabled: true, AffiliateCode: mongostore.AffiliateCode(), ReferredBy: s.referredBy(r, in.ReferralCode), ID: uuid.NewString(), Email: in.Email, Name: in.Name, PasswordHash: string(hash), Role: in.Role, CreatedAt: time.Now().UTC()}
+	u := core.User{Product: s.product, AffiliateEnabled: true, AffiliateCode: mongostore.AffiliateCode(), ReferredBy: s.referredBy(r, in.ReferralCode), ID: uuid.NewString(), Email: in.Email, Name: in.Name, PasswordHash: string(hash), Role: in.Role, CreatedAt: time.Now().UTC()}
 	if _, err = s.db.Collection("users").InsertOne(r.Context(), u); err != nil {
 		if mongo.IsDuplicateKeyError(err) {
 			bad(w, 409, "Email already registered")

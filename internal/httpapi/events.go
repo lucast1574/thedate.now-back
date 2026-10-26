@@ -26,7 +26,7 @@ func (s *server) createEvent(w http.ResponseWriter, r *http.Request) {
 		bad(w, 400, "Invalid event details")
 		return
 	}
-	if !core.UserCanCreate(in.Kind, u) {
+	if (s.product != "" && in.Kind != s.product) || !core.UserCanCreate(in.Kind, u) {
 		bad(w, 403, "Account cannot create this event kind")
 		return
 	}

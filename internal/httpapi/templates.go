@@ -11,7 +11,11 @@ func (s *server) listTemplates(w http.ResponseWriter, r *http.Request) {
 		bad(w, 401, "Sign in required")
 		return
 	}
-	cur, err := s.db.Collection("invitationTemplates").Find(r.Context(), bson.M{})
+	filter := bson.M{}
+	if s.product != "" {
+		filter["kind"] = s.product
+	}
+	cur, err := s.db.Collection("invitationTemplates").Find(r.Context(), filter)
 	if err != nil {
 		bad(w, 500, "Could not load templates")
 		return
