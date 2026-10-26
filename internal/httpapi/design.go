@@ -23,11 +23,11 @@ func (s *server) updateDesign(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var in designInput
-	if decode(r, &in) != nil || !validDesign(in, e.PhotoKeys) || core.TemplateID(e.Kind, in.Template, in.DesignMode, in.TemplateID) == "" {
+	if decode(r, &in) != nil || !validDesign(in, e.PhotoKeys) || !core.ValidMusic(in.Music, e.AudioKeys) || core.TemplateID(e.Kind, in.Template, in.DesignMode, in.TemplateID) == "" {
 		bad(w, 400, "Invalid invitation design")
 		return
 	}
-	_, err = s.db.Collection("events").UpdateByID(r.Context(), e.ID, bson.M{"$set": bson.M{"title": strings.TrimSpace(in.Title), "description": in.Description, "template": in.Template, "templateId": core.TemplateID(e.Kind, in.Template, in.DesignMode, in.TemplateID), "accentColor": in.AccentColor, "sections": in.Sections, "designMode": in.DesignMode, "updatedAt": time.Now().UTC()}})
+	_, err = s.db.Collection("events").UpdateByID(r.Context(), e.ID, bson.M{"$set": bson.M{"music": in.Music, "title": strings.TrimSpace(in.Title), "description": in.Description, "template": in.Template, "templateId": core.TemplateID(e.Kind, in.Template, in.DesignMode, in.TemplateID), "accentColor": in.AccentColor, "sections": in.Sections, "designMode": in.DesignMode, "updatedAt": time.Now().UTC()}})
 	if err != nil {
 		bad(w, 500, "Could not save design")
 		return

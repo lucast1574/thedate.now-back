@@ -25,6 +25,8 @@ type User struct {
 }
 
 type Event struct {
+	Music             *Music                  `bson:"music,omitempty" json:"music,omitempty"`
+	AudioKeys         []string                `bson:"audioKeys,omitempty" json:"audioKeys,omitempty"`
 	Payment           *Payment                `bson:"payment,omitempty" json:"-"`
 	PaymentSource     string                  `bson:"paymentSource,omitempty" json:"paymentSource,omitempty"`
 	TemplateID        string                  `bson:"templateId" json:"templateId"`

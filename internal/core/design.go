@@ -5,6 +5,7 @@ import "strings"
 var sectionIcons = map[string]bool{"heart": true, "sparkle": true, "flower": true, "ring": true, "music": true, "star": true, "calendar": true, "none": true}
 
 type DesignInput struct {
+	Music       *Music    `json:"music"`
 	TemplateID  string    `json:"templateId"`
 	DesignMode  string    `json:"designMode"`
 	Title       string    `json:"title"`

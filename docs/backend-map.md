@@ -111,3 +111,9 @@ La lista del administrador conserva acceso a eventos reales para gestión, pero 
 `mongostore/affiliate_defaults.go` activa enlaces para cuentas elegibles al registrarse, iniciar sesión y en la migración de inicio para cuentas antiguas. Las escrituras condicionales preservan el código, saldo, conversiones y retiros. Las cuentas administradoras mantienen la exclusión de comisiones; los pagos de prueba y cortesías siguen sin saldo real.
 
 `core/session_policy.go` decide de forma pura qué método corresponde a la identidad actual, con propietario y subject fijado como argumentos; el adaptador JWT sigue validando firma, audiencia, expiración, formato y versión revocable.
+
+## Música y audio
+
+`core/music.go` valida fuentes (`mp3`, `spotify`, `youtube`), las referencias de audio del evento y encabezados ID3/MPEG. `httpapi/music.go` recibe MP3 binario hasta 10 MiB, usa el almacenamiento S3 existente por producto y conserva claves inmutables. `mongostore.AttachAudio` limita atómicamente a 20 archivos por evento; cambiar de canción no reemplaza el audio publicado hasta guardar el diseño. Las versiones anteriores permanecen en almacenamiento y requieren una política futura de retención.
+
+El PATCH de diseño valida `music` contra las claves propias; el DTO público incluye solo la canción seleccionada, sin exponer la biblioteca de borradores. El audio público requiere evento pagado/publicado y coincidencia con `music.value`; el privado exige acceso al evento. `http.ServeContent` sirve rangos, con MIME fijo y `nosniff`. No se descargan pistas de Spotify/YouTube ni se extrae su audio: se conservan referencias para sus reproductores oficiales. No hay migración de datos ni nuevas credenciales/servicios.
