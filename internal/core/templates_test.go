@@ -27,10 +27,33 @@ func TestTemplateProductAndModeAreAuthoritative(t *testing.T) {
 			t.Fatal("wrong mode accepted")
 		}
 	}
-	if len(seen) != 12 {
-		t.Fatal("expected twelve distinct templates")
+	if len(seen) != 30 {
+		t.Fatal("expected thirty distinct templates")
 	}
 	if TemplateID("wedding", "classic", "", "") != "wedding-classic" {
 		t.Fatal("legacy default lost")
+	}
+	for _, kind := range []string{"wedding", "general"} {
+		count := 0
+		for _, item := range TemplateCatalog() {
+			if item.Kind == kind && item.Mode == "flyer" {
+				count++
+				if item.Layout == "" || item.Category == "" {
+					t.Fatal("canvas metadata missing")
+				}
+			}
+		}
+		if count != 12 {
+			t.Fatalf("%s has %d canvas designs", kind, count)
+		}
+	}
+}
+
+func TestTemplateDecorationsAreValidCanvasElements(t *testing.T) {
+	for _, icon := range []string{"frame", "arch", "leaf", "sunburst"} {
+		canvas := &FlyerCanvas{Width: 720, Height: 960, Background: "#fff9ed", Elements: []FlyerElement{{ID: "decoration", Type: "icon", Icon: icon, X: 40, Y: 40, Width: 640, Height: 880, Color: "#826148", Font: "serif", FontSize: 160, Align: "center"}}}
+		if !ValidCanvas(canvas, nil) {
+			t.Fatalf("decoration %s rejected", icon)
+		}
 	}
 }

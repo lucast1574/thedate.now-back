@@ -9,6 +9,8 @@ import (
 var templateFiles embed.FS
 
 type InvitationTemplate struct {
+	Layout     string `bson:"layout,omitempty" json:"layout,omitempty"`
+	Category   string `bson:"category,omitempty" json:"category,omitempty"`
 	ID         string `bson:"_id" json:"id"`
 	Kind       string `bson:"kind" json:"kind"`
 	Mode       string `bson:"mode" json:"mode"`

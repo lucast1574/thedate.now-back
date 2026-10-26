@@ -77,7 +77,7 @@ Pruebas: `core/party_test.go`, `mongostore/seating_test.go` y `httpapi/seating_t
 
 ## Plantillas por producto
 
-`core/templates.json` define las 12 plantillas (tres por producto y modo). `core/templates.go` valida `templateId` contra el `kind`, estilo y modo del evento; una plantilla de eventos no se puede guardar en una boda. `mongostore/templates.go` sincroniza por ID la colección `invitationTemplates` al iniciar y completa únicamente IDs ausentes en eventos antiguos. El índice compuesto `kind/mode` identifica el catálogo. `GET /templates` requiere sesión; el diseño y la vista pública conservan `templateId`. Las pruebas `core/templates_test.go` y `httpapi/templates_test.go` cubren catálogo, compatibilidad, rechazo cruzado, persistencia y migración sin sobrescribir una elección guardada.
+`core/templates.json` define 30 entradas: 12 plantillas de lienzo por producto y 6 de secciones antiguas para compatibilidad. Las entradas de lienzo incluyen categoría y geometría de composición. `core/design.go` también acepta los motivos SVG editables frame/arch/leaf/sunburst. `core/templates.go` valida `templateId` contra el `kind`, estilo y modo del evento; una plantilla de eventos no se puede guardar en una boda. `mongostore/templates.go` sincroniza por ID la colección `invitationTemplates` al iniciar y completa únicamente IDs ausentes en eventos antiguos. El índice compuesto `kind/mode` identifica el catálogo. `GET /templates` requiere sesión; el diseño y la vista pública conservan `templateId`. Las pruebas `core/templates_test.go` y `httpapi/templates_test.go` cubren catálogo, compatibilidad, rechazo cruzado, persistencia y migración sin sobrescribir una elección guardada.
 
 ## Personalización y versiones del renderer
 

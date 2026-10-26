@@ -2,7 +2,7 @@ package core
 
 import "strings"
 
-var sectionIcons = map[string]bool{"heart": true, "sparkle": true, "flower": true, "ring": true, "music": true, "star": true, "calendar": true, "none": true}
+var sectionIcons = map[string]bool{"heart": true, "sparkle": true, "flower": true, "ring": true, "music": true, "star": true, "calendar": true, "none": true, "frame": true, "arch": true, "leaf": true, "sunburst": true}
 
 type DesignInput struct {
 	Music       *Music    `json:"music"`
