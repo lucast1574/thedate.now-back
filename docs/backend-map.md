@@ -124,6 +124,13 @@ El PATCH de diseño valida `music` contra las claves propias; el DTO público in
 
 ## Lista de regalos por evento
 
+`linkpreview/structured.go` reconoce Product JSON-LD en arrays, grafos y objetos
+de imagen como respaldo de Open Graph, validando las imágenes con las mismas
+restricciones HTTPS/red pública. La lectura HTML está limitada al primer MiB;
+una página grande no descarta los metadatos del encabezado. No se ejecuta JavaScript
+ni se consultan URLs de los datos estructurados. Tiendas que bloquean solicitudes
+siguen permitiendo completar nombre e imagen manualmente en el frontend.
+
 `core/wishlist.go` define productos, validación y decisiones puras de reserva: un producto por invitación, un titular por producto, reintentos idempotentes y liberación por el titular mientras no esté recibido. Editar la presentación nunca acepta asignaciones aportadas por el cliente y no permite quitar/cambiar un producto comprometido sin liberar la reserva. `Event.Wishlist` queda fuera del JSON general; la vista pública de la invitación solo expone si está activada. La lista pública propia devuelve disponibilidad y la elección del visitante, nunca nombres/IDs de otros invitados.
 
 `application/wishlist.go` y `mongostore/wishlist.go` realizan compare-and-swap por `wishlist.version` en el documento del evento. Pago/publicación/opción activada se verifican tanto al decidir como al escribir una reserva pública. Cambios concurrentes del organizador retornan 409 y no pisan reservas. `httpapi/wishlist.go` permite preparar el borrador antes de pagar a propietarios/colaboradores; `public_wishlist.go` verifica el token de RSVP, evento real, pago, publicación y activación. Los límites por invitado/evento están en `gift_limits.go`.
