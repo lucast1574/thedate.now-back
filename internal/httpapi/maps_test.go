@@ -42,10 +42,10 @@ func TestExtractMapsCoordinates(t *testing.T) {
 	}
 }
 
-func TestWeddingCannotBeVirtual(t *testing.T) {
+func TestProductsSupportVirtualEvents(t *testing.T) {
 	input := eventInput{Kind: "wedding", Organizer: "Laura", IsVirtual: true, VirtualURL: "https://meet.google.com/abc"}
-	if validEventPlace(input) {
-		t.Fatal("virtual wedding accepted")
+	if !validEventPlace(input) {
+		t.Fatal("virtual wedding rejected")
 	}
 	input.Kind = "general"
 	if !validEventPlace(input) {

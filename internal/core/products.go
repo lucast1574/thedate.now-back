@@ -11,7 +11,7 @@ type Product struct {
 func ProductFor(kind string) (Product, error) {
 	switch kind {
 	case "wedding":
-		return Product{Kind: kind, Role: "planner", Domain: "save.thedate.now", Label: "Save the Date - boda", PriceCents: 2500, AllowCouples: true}, nil
+		return Product{Kind: kind, Role: "planner", Domain: "save.thedate.now", Label: "Save the Date - boda", PriceCents: 2500, AllowVirtual: true, AllowCouples: true}, nil
 	case "general":
 		return Product{Kind: kind, Role: "organizer", Domain: "thedate.now", Label: "The Date - evento", PriceCents: 500, AllowVirtual: true, AllowCouples: true}, nil
 	default:

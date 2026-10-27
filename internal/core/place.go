@@ -46,9 +46,6 @@ func ValidEventPlace(in EventInput) bool {
 			return false
 		}
 	}
-	if in.Kind == "wedding" && in.IsVirtual {
-		return false
-	}
 	if in.IsVirtual {
 		return ValidHTTPSURL(in.VirtualURL)
 	}

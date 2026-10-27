@@ -27,7 +27,7 @@ func TestResponseDecisionsRespectExpiryAndOwnSeats(t *testing.T) {
 		t.Fatal("unpublished RSVP accepted")
 	}
 }
-func TestProductsKeepWeddingPolicySeparate(t *testing.T) {
+func TestProductsShareCapabilitiesAndKeepTheirConfiguration(t *testing.T) {
 	wedding, err := ProductFor("wedding")
 	if err != nil {
 		t.Fatal(err)
@@ -36,7 +36,7 @@ func TestProductsKeepWeddingPolicySeparate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if wedding.AllowVirtual || !wedding.AllowCouples || wedding.Role != "planner" || wedding.PriceCents != 2500 {
+	if !wedding.AllowVirtual || !wedding.AllowCouples || wedding.Role != "planner" || wedding.PriceCents != 2500 {
 		t.Fatal("wedding policy")
 	}
 	if !general.AllowVirtual || !general.AllowCouples || general.Role != "organizer" || general.PriceCents != 500 {
