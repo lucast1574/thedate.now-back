@@ -3,10 +3,12 @@ package core
 import "math"
 
 type FlyerCanvas struct {
-	Width      float64        `bson:"width" json:"width"`
-	Height     float64        `bson:"height" json:"height"`
-	Background string         `bson:"background" json:"background"`
-	Elements   []FlyerElement `bson:"elements" json:"elements"`
+	BackgroundImage    *ImageBackground `bson:"backgroundImage,omitempty" json:"backgroundImage,omitempty"`
+	BackgroundOverride bool             `bson:"backgroundOverride,omitempty" json:"backgroundOverride,omitempty"`
+	Width              float64          `bson:"width" json:"width"`
+	Height             float64          `bson:"height" json:"height"`
+	Background         string           `bson:"background" json:"background"`
+	Elements           []FlyerElement   `bson:"elements" json:"elements"`
 }
 type FlyerElement struct {
 	DressStyle    string  `bson:"dressStyle,omitempty" json:"dressStyle,omitempty"`
@@ -51,7 +53,7 @@ func ValidCanvas(c *FlyerCanvas, photos []string) bool {
 	if c == nil {
 		return true
 	}
-	if !bounded(c.Width, 320, 1200) || !bounded(c.Height, 240, 2000) || !validColor(c.Background) || len(c.Elements) > 60 {
+	if !ValidBackground(c.BackgroundImage, photos) || !bounded(c.Width, 320, 1200) || !bounded(c.Height, 240, 2000) || !validColor(c.Background) || len(c.Elements) > 60 {
 		return false
 	}
 	seen := map[string]bool{}

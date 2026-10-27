@@ -28,6 +28,9 @@ func (s *server) updateDesign(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fields := bson.M{"music": in.Music, "title": strings.TrimSpace(in.Title), "description": in.Description, "template": in.Template, "templateId": core.TemplateID(e.Kind, in.Template, in.DesignMode, in.TemplateID), "accentColor": in.AccentColor, "sections": in.Sections, "designMode": in.DesignMode, "updatedAt": time.Now().UTC()}
+	if in.BackgroundImage != nil || in.ClearBackgroundImage {
+		fields["backgroundImage"] = in.BackgroundImage
+	}
 	if in.Opening != nil {
 		fields["opening"] = in.Opening
 	}

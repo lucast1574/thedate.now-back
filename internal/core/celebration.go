@@ -3,15 +3,16 @@ package core
 import "strings"
 
 type Opening struct {
-	Title       string `bson:"title,omitempty" json:"title,omitempty"`
-	Font        string `bson:"font,omitempty" json:"font,omitempty"`
-	SealIcon    string `bson:"sealIcon,omitempty" json:"sealIcon,omitempty"`
-	Enabled     bool   `bson:"enabled" json:"enabled"`
-	Style       string `bson:"style" json:"style"`
-	Color       string `bson:"color" json:"color"`
-	Ink         string `bson:"ink" json:"ink"`
-	Message     string `bson:"message" json:"message"`
-	ButtonLabel string `bson:"buttonLabel" json:"buttonLabel"`
+	BackgroundImage *ImageBackground `bson:"backgroundImage,omitempty" json:"backgroundImage,omitempty"`
+	Title           string           `bson:"title,omitempty" json:"title,omitempty"`
+	Font            string           `bson:"font,omitempty" json:"font,omitempty"`
+	SealIcon        string           `bson:"sealIcon,omitempty" json:"sealIcon,omitempty"`
+	Enabled         bool             `bson:"enabled" json:"enabled"`
+	Style           string           `bson:"style" json:"style"`
+	Color           string           `bson:"color" json:"color"`
+	Ink             string           `bson:"ink" json:"ink"`
+	Message         string           `bson:"message" json:"message"`
+	ButtonLabel     string           `bson:"buttonLabel" json:"buttonLabel"`
 }
 type Celebration struct {
 	AdultsOnly     bool   `bson:"adultsOnly" json:"adultsOnly"`

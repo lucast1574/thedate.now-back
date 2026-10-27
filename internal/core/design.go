@@ -5,16 +5,18 @@ import "strings"
 var sectionIcons = map[string]bool{"heart": true, "sparkle": true, "flower": true, "ring": true, "music": true, "star": true, "calendar": true, "none": true, "frame": true, "arch": true, "leaf": true, "sunburst": true}
 
 type DesignInput struct {
-	Opening     *Opening     `json:"opening"`
-	Celebration *Celebration `json:"celebration"`
-	Music       *Music       `json:"music"`
-	TemplateID  string       `json:"templateId"`
-	DesignMode  string       `json:"designMode"`
-	Title       string       `json:"title"`
-	Description string       `json:"description"`
-	Template    string       `json:"template"`
-	AccentColor string       `json:"accentColor"`
-	Sections    []Section    `json:"sections"`
+	BackgroundImage      *ImageBackground `json:"backgroundImage"`
+	ClearBackgroundImage bool             `json:"clearBackgroundImage"`
+	Opening              *Opening         `json:"opening"`
+	Celebration          *Celebration     `json:"celebration"`
+	Music                *Music           `json:"music"`
+	TemplateID           string           `json:"templateId"`
+	DesignMode           string           `json:"designMode"`
+	Title                string           `json:"title"`
+	Description          string           `json:"description"`
+	Template             string           `json:"template"`
+	AccentColor          string           `json:"accentColor"`
+	Sections             []Section        `json:"sections"`
 }
 
 func validColor(color string) bool {
@@ -29,7 +31,10 @@ func validColor(color string) bool {
 	return true
 }
 func ValidDesign(in DesignInput, photos []string) bool {
-	if !ValidOpening(in.Opening) || !ValidCelebration(in.Celebration) {
+	if in.Opening != nil && !ValidBackground(in.Opening.BackgroundImage, photos) {
+		return false
+	}
+	if !ValidBackground(in.BackgroundImage, photos) || !ValidOpening(in.Opening) || !ValidCelebration(in.Celebration) {
 		return false
 	}
 	if in.DesignMode != "" && in.DesignMode != "sections" && in.DesignMode != "flyer" {
