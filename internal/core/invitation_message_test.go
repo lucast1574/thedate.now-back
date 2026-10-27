@@ -6,6 +6,7 @@ func TestInvitationMessage(t *testing.T) {
 	link := "https://fiesta.thedate.now/rsvp/personal"
 	for _, tc := range []struct{ in, want string }{
 		{"", link},
+		{"Antes{{link}}Después", "Antes " + link + " Después"},
 		{" Ven a celebrar ", "Ven a celebrar\n\n" + link},
 		{"Confirma: {{enlace}}. Te esperamos.", "Confirma: " + link + ". Te esperamos."},
 	} {
