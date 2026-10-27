@@ -6,6 +6,9 @@ import (
 )
 
 func ValidateEvent(in EventInput, creating bool) error {
+	if !ValidInitialDesign(in, creating) {
+		return errors.New("invalid initial invitation design")
+	}
 	if !ValidCelebration(in.Celebration) {
 		return errors.New("invalid celebration details")
 	}

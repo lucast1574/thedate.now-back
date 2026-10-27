@@ -1,0 +1,1020 @@
+[
+  {
+    "kind": "wedding",
+    "celebration": {
+      "adultsOnly": false,
+      "adultsMessage": "Celebraremos este día solo entre adultos. Gracias por acompañarnos y por tu comprensión.",
+      "whatsappNotice": false,
+      "dressCode": "Elegante",
+      "dressNote": "Elige un look cómodo para celebrar con nosotros."
+    },
+    "slug": "celebracion",
+    "title": "Una gran celebración",
+    "description": "",
+    "startAt": "2027-06-19T18:00:00.000Z",
+    "timeZone": "America/Lima",
+    "organizer": "Lucas",
+    "location": "Lima",
+    "isVirtual": false,
+    "mapUrl": "https://maps.google.com/?q=Lima",
+    "virtualUrl": "",
+    "capacity": 50,
+    "capacityUnlimited": false,
+    "maybeHoldHours": 48,
+    "template": "classic",
+    "templateId": "wedding-flyer-floral",
+    "designMode": "flyer",
+    "accentColor": "#9c6449",
+    "initialDesign": {
+      "backgroundImage": null,
+      "clearBackgroundImage": true,
+      "opening": {
+        "enabled": true,
+        "paletteMode": "design",
+        "style": "bloom",
+        "color": "#fff9ed",
+        "ink": "#9c6449",
+        "message": "Nuestra historia tiene un nuevo capítulo. Ábrelo con nosotros.",
+        "buttonLabel": "Abrir invitación"
+      },
+      "celebration": {
+        "adultsOnly": false,
+        "adultsMessage": "Celebraremos este día solo entre adultos. Gracias por acompañarnos y por tu comprensión.",
+        "whatsappNotice": false,
+        "dressCode": "Elegante",
+        "dressNote": "Elige un look cómodo para celebrar con nosotros."
+      },
+      "music": null,
+      "title": "Una gran celebración",
+      "description": "",
+      "template": "classic",
+      "templateId": "wedding-flyer-floral",
+      "accentColor": "#9c6449",
+      "designMode": "flyer",
+      "sections": [
+        {
+          "id": "74ebca1e-1054-426c-ba4a-d823cfe02a5c",
+          "heading": "Portada",
+          "body": "",
+          "icon": "none",
+          "canvas": {
+            "width": 720,
+            "height": 960,
+            "background": "#fff9ed",
+            "elements": [
+              {
+                "id": "motif-0",
+                "type": "icon",
+                "x": 30,
+                "y": 25,
+                "width": 160,
+                "height": 160,
+                "rotation": -20,
+                "color": "#9c6449",
+                "font": "serif",
+                "fontSize": 160,
+                "bold": false,
+                "align": "center",
+                "icon": "flower"
+              },
+              {
+                "id": "motif-1",
+                "type": "icon",
+                "x": 530,
+                "y": 735,
+                "width": 150,
+                "height": 150,
+                "rotation": 160,
+                "color": "#9c6449",
+                "font": "serif",
+                "fontSize": 150,
+                "bold": false,
+                "align": "center",
+                "icon": "flower"
+              },
+              {
+                "id": "motif-2",
+                "type": "icon",
+                "x": 15,
+                "y": 560,
+                "width": 100,
+                "height": 320,
+                "rotation": 0,
+                "color": "#9c6449",
+                "font": "serif",
+                "fontSize": 100,
+                "bold": false,
+                "align": "center",
+                "icon": "leaf"
+              },
+              {
+                "id": "kicker",
+                "type": "text",
+                "x": 110,
+                "y": 170,
+                "width": 500,
+                "height": 50,
+                "rotation": 0,
+                "color": "#9c6449",
+                "font": "sans",
+                "fontSize": 18,
+                "bold": false,
+                "align": "center",
+                "text": "NOS CASAMOS"
+              },
+              {
+                "id": "title",
+                "type": "text",
+                "x": 110,
+                "y": 270,
+                "width": 500,
+                "height": 310,
+                "rotation": 0,
+                "color": "#9c6449",
+                "font": "serif",
+                "fontSize": 73,
+                "bold": false,
+                "align": "center",
+                "text": "Una gran celebración"
+              },
+              {
+                "id": "body",
+                "type": "text",
+                "x": 150,
+                "y": 650,
+                "width": 420,
+                "height": 140,
+                "rotation": 0,
+                "color": "#9c6449",
+                "font": "serif",
+                "fontSize": 24,
+                "bold": false,
+                "align": "center",
+                "text": "Un día para celebrar nuestra historia contigo."
+              }
+            ]
+          }
+        },
+        {
+          "id": "e6171ea2-0d68-4a34-a1b4-5b3d9539b4b5",
+          "heading": "Nuestra historia",
+          "body": "",
+          "icon": "none",
+          "canvas": {
+            "width": 720,
+            "height": 960,
+            "background": "#fff9ed",
+            "elements": [
+              {
+                "id": "e6171ea2-guest",
+                "type": "text",
+                "x": 60,
+                "y": 48,
+                "width": 600,
+                "height": 100,
+                "rotation": 0,
+                "color": "#9c6449",
+                "font": "serif",
+                "fontSize": 38,
+                "bold": false,
+                "align": "center",
+                "text": "Hola, {{nombre_invitado}}",
+                "binding": "guest_name"
+              },
+              {
+                "id": "e6171ea2-intro",
+                "type": "text",
+                "x": 60,
+                "y": 160,
+                "width": 600,
+                "height": 100,
+                "rotation": 0,
+                "color": "#9c6449",
+                "font": "serif",
+                "fontSize": 36,
+                "bold": false,
+                "align": "center",
+                "text": "El comienzo de una nueva aventura"
+              },
+              {
+                "id": "e6171ea2-sample-photo",
+                "type": "image",
+                "x": 70,
+                "y": 290,
+                "width": 580,
+                "height": 440,
+                "rotation": 0,
+                "color": "#463466",
+                "font": "serif",
+                "fontSize": 40,
+                "bold": false,
+                "align": "center",
+                "photoKey": "template-photo"
+              },
+              {
+                "id": "e6171ea2-story",
+                "type": "text",
+                "x": 60,
+                "y": 780,
+                "width": 600,
+                "height": 120,
+                "rotation": 0,
+                "color": "#9c6449",
+                "font": "serif",
+                "fontSize": 28,
+                "bold": false,
+                "align": "center",
+                "text": "Queremos que seas parte de un día que recordaremos siempre."
+              }
+            ]
+          }
+        },
+        {
+          "id": "842620fe-714f-4f60-a152-d9ce1ee4f683",
+          "heading": "Fecha y hora",
+          "body": "",
+          "icon": "none",
+          "canvas": {
+            "width": 720,
+            "height": 640,
+            "background": "#fff9ed",
+            "elements": [
+              {
+                "id": "842620fe-calendar",
+                "type": "icon",
+                "x": 310,
+                "y": 60,
+                "width": 100,
+                "height": 100,
+                "rotation": 0,
+                "color": "#9c6449",
+                "font": "serif",
+                "fontSize": 72,
+                "bold": false,
+                "align": "center",
+                "icon": "calendar"
+              },
+              {
+                "id": "842620fe-save-date",
+                "type": "text",
+                "x": 60,
+                "y": 210,
+                "width": 600,
+                "height": 100,
+                "rotation": 0,
+                "color": "#9c6449",
+                "font": "serif",
+                "fontSize": 52,
+                "bold": false,
+                "align": "center",
+                "text": "Reserva esta fecha"
+              },
+              {
+                "id": "842620fe-date",
+                "type": "text",
+                "x": 60,
+                "y": 350,
+                "width": 600,
+                "height": 160,
+                "rotation": 0,
+                "color": "#9c6449",
+                "font": "serif",
+                "fontSize": 34,
+                "bold": false,
+                "align": "center",
+                "text": "19 de junio de 2027 a las 13:00"
+              }
+            ]
+          }
+        },
+        {
+          "id": "15382e15-e9cf-48d7-aaff-81a461919427",
+          "heading": "Ubicación",
+          "body": "",
+          "icon": "none",
+          "canvas": {
+            "width": 720,
+            "height": 720,
+            "background": "#fff9ed",
+            "elements": [
+              {
+                "id": "15382e15-lucide-map-pinned",
+                "type": "icon",
+                "x": 310,
+                "y": 50,
+                "width": 100,
+                "height": 100,
+                "rotation": 0,
+                "color": "#9c6449",
+                "font": "serif",
+                "fontSize": 72,
+                "bold": false,
+                "align": "center",
+                "icon": "lucide:map-pinned"
+              },
+              {
+                "id": "15382e15-place-title",
+                "type": "text",
+                "x": 60,
+                "y": 200,
+                "width": 600,
+                "height": 100,
+                "rotation": 0,
+                "color": "#9c6449",
+                "font": "serif",
+                "fontSize": 48,
+                "bold": false,
+                "align": "center",
+                "text": "Nuestra celebración"
+              },
+              {
+                "id": "15382e15-location",
+                "type": "text",
+                "x": 60,
+                "y": 350,
+                "width": 600,
+                "height": 170,
+                "rotation": 0,
+                "color": "#9c6449",
+                "font": "serif",
+                "fontSize": 32,
+                "bold": false,
+                "align": "center",
+                "text": "Cómo llegar",
+                "binding": "location",
+                "locationStyle": "all",
+                "address": "Lima",
+                "link": "https://maps.google.com/?q=Lima"
+              },
+              {
+                "id": "15382e15-place-note",
+                "type": "text",
+                "x": 60,
+                "y": 560,
+                "width": 600,
+                "height": 90,
+                "rotation": 0,
+                "color": "#9c6449",
+                "font": "serif",
+                "fontSize": 24,
+                "bold": false,
+                "align": "center",
+                "text": "Pulsa la ubicación para ver cómo llegar."
+              }
+            ]
+          }
+        },
+        {
+          "id": "dc832bbf-3bec-4d99-a16e-432bcbe34f9c",
+          "heading": "Dress code",
+          "body": "",
+          "icon": "none",
+          "canvas": {
+            "width": 720,
+            "height": 700,
+            "background": "#fff9ed",
+            "elements": [
+              {
+                "id": "dc832bbf-dress-title",
+                "type": "text",
+                "x": 60,
+                "y": 80,
+                "width": 600,
+                "height": 100,
+                "rotation": 0,
+                "color": "#9c6449",
+                "font": "serif",
+                "fontSize": 46,
+                "bold": false,
+                "align": "center",
+                "text": "Dress code"
+              },
+              {
+                "id": "dc832bbf-dress",
+                "type": "text",
+                "x": 60,
+                "y": 270,
+                "width": 600,
+                "height": 340,
+                "rotation": 0,
+                "color": "#9c6449",
+                "font": "serif",
+                "fontSize": 32,
+                "bold": false,
+                "align": "center",
+                "text": "Elegante\nElige un look cómodo para celebrar con nosotros.",
+                "binding": "dress_code",
+                "dressStyle": "icon-text",
+                "dressIcon": "lucide:shirt",
+                "dressExcludedColors": [
+                  {
+                    "name": "Blanco",
+                    "color": "#FFFFFF"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "482a963c-0f8a-4233-8761-5cceb1174b28",
+          "heading": "Para disfrutar juntos",
+          "body": "",
+          "icon": "none",
+          "canvas": {
+            "width": 720,
+            "height": 600,
+            "background": "#fff9ed",
+            "elements": [
+              {
+                "id": "482a963c-rules-title",
+                "type": "text",
+                "x": 60,
+                "y": 70,
+                "width": 600,
+                "height": 100,
+                "rotation": 0,
+                "color": "#9c6449",
+                "font": "serif",
+                "fontSize": 44,
+                "bold": false,
+                "align": "center",
+                "text": "Ten en cuenta"
+              },
+              {
+                "id": "482a963c-rules-0",
+                "type": "text",
+                "x": 60,
+                "y": 220,
+                "width": 600,
+                "height": 290,
+                "rotation": 0,
+                "color": "#9c6449",
+                "font": "serif",
+                "fontSize": 28,
+                "bold": false,
+                "align": "center",
+                "text": "El lugar no admite mascotas.",
+                "binding": "restrictions",
+                "restrictionStyle": "icon-text",
+                "restrictionIcon": "lucide:paw-print"
+              }
+            ]
+          }
+        },
+        {
+          "id": "412e0013-5de8-4508-b9d9-2c16a4ca4b9a",
+          "heading": "Con todo nuestro cariño",
+          "body": "",
+          "icon": "none",
+          "canvas": {
+            "width": 720,
+            "height": 560,
+            "background": "#fff9ed",
+            "elements": [
+              {
+                "id": "412e0013-flower",
+                "type": "icon",
+                "x": 310,
+                "y": 70,
+                "width": 100,
+                "height": 100,
+                "rotation": 0,
+                "color": "#9c6449",
+                "font": "serif",
+                "fontSize": 72,
+                "bold": false,
+                "align": "center",
+                "icon": "flower"
+              },
+              {
+                "id": "412e0013-thanks",
+                "type": "text",
+                "x": 60,
+                "y": 240,
+                "width": 600,
+                "height": 150,
+                "rotation": 0,
+                "color": "#9c6449",
+                "font": "serif",
+                "fontSize": 50,
+                "bold": false,
+                "align": "center",
+                "text": "Nos encantará compartirlo contigo"
+              },
+              {
+                "id": "412e0013-closing",
+                "type": "text",
+                "x": 60,
+                "y": 430,
+                "width": 600,
+                "height": 80,
+                "rotation": 0,
+                "color": "#9c6449",
+                "font": "serif",
+                "fontSize": 26,
+                "bold": false,
+                "align": "center",
+                "text": "Gracias por ser parte de este momento."
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "kind": "general",
+    "celebration": {
+      "adultsOnly": false,
+      "adultsMessage": "Celebraremos este día solo entre adultos. Gracias por acompañarnos y por tu comprensión.",
+      "whatsappNotice": false,
+      "dressCode": "A tu estilo",
+      "dressNote": "Elige un look cómodo para celebrar con nosotros."
+    },
+    "slug": "celebracion",
+    "title": "Una gran celebración",
+    "description": "",
+    "startAt": "2027-06-19T18:00:00.000Z",
+    "timeZone": "America/Lima",
+    "organizer": "Lucas",
+    "location": "Lima",
+    "isVirtual": false,
+    "mapUrl": "https://maps.google.com/?q=Lima",
+    "virtualUrl": "",
+    "capacity": 50,
+    "capacityUnlimited": false,
+    "maybeHoldHours": 48,
+    "template": "modern",
+    "templateId": "general-flyer-party",
+    "designMode": "flyer",
+    "accentColor": "#7451ac",
+    "initialDesign": {
+      "backgroundImage": null,
+      "clearBackgroundImage": true,
+      "opening": {
+        "enabled": true,
+        "paletteMode": "design",
+        "style": "curtain",
+        "color": "#fff1f6",
+        "ink": "#7451ac",
+        "message": "Tenemos algo especial para celebrar contigo.",
+        "buttonLabel": "Abrir invitación"
+      },
+      "celebration": {
+        "adultsOnly": false,
+        "adultsMessage": "Celebraremos este día solo entre adultos. Gracias por acompañarnos y por tu comprensión.",
+        "whatsappNotice": false,
+        "dressCode": "A tu estilo",
+        "dressNote": "Elige un look cómodo para celebrar con nosotros."
+      },
+      "music": null,
+      "title": "Una gran celebración",
+      "description": "",
+      "template": "modern",
+      "templateId": "general-flyer-party",
+      "accentColor": "#7451ac",
+      "designMode": "flyer",
+      "sections": [
+        {
+          "id": "63669290-eee0-42ab-8935-cd42b2528733",
+          "heading": "Portada",
+          "body": "",
+          "icon": "none",
+          "canvas": {
+            "width": 720,
+            "height": 960,
+            "background": "#fff1f6",
+            "elements": [
+              {
+                "id": "motif-0",
+                "type": "icon",
+                "x": 485,
+                "y": 735,
+                "width": 160,
+                "height": 160,
+                "rotation": 15,
+                "color": "#7451ac",
+                "font": "serif",
+                "fontSize": 160,
+                "bold": false,
+                "align": "center",
+                "icon": "star"
+              },
+              {
+                "id": "kicker",
+                "type": "text",
+                "x": 65,
+                "y": 65,
+                "width": 590,
+                "height": 50,
+                "rotation": 0,
+                "color": "#7451ac",
+                "font": "sans",
+                "fontSize": 18,
+                "bold": false,
+                "align": "left",
+                "text": "ESTÁS INVITADO"
+              },
+              {
+                "id": "title",
+                "type": "text",
+                "x": 65,
+                "y": 185,
+                "width": 590,
+                "height": 350,
+                "rotation": 0,
+                "color": "#7451ac",
+                "font": "sans",
+                "fontSize": 72,
+                "bold": true,
+                "align": "left",
+                "text": "UNA GRAN CELEBRACIÓN"
+              },
+              {
+                "id": "body",
+                "type": "text",
+                "x": 65,
+                "y": 650,
+                "width": 500,
+                "height": 170,
+                "rotation": 0,
+                "color": "#7451ac",
+                "font": "sans",
+                "fontSize": 26,
+                "bold": false,
+                "align": "left",
+                "text": "Una fecha para encontrarnos y celebrar lo que nos une."
+              }
+            ]
+          }
+        },
+        {
+          "id": "415684f0-c357-4db6-a85a-27c5ac12c89c",
+          "heading": "Nos reunimos",
+          "body": "",
+          "icon": "none",
+          "canvas": {
+            "width": 720,
+            "height": 960,
+            "background": "#fff1f6",
+            "elements": [
+              {
+                "id": "415684f0-guest",
+                "type": "text",
+                "x": 60,
+                "y": 48,
+                "width": 600,
+                "height": 100,
+                "rotation": 0,
+                "color": "#7451ac",
+                "font": "sans",
+                "fontSize": 38,
+                "bold": false,
+                "align": "center",
+                "text": "Hola, {{nombre_invitado}}",
+                "binding": "guest_name"
+              },
+              {
+                "id": "415684f0-intro",
+                "type": "text",
+                "x": 60,
+                "y": 160,
+                "width": 600,
+                "height": 100,
+                "rotation": 0,
+                "color": "#7451ac",
+                "font": "sans",
+                "fontSize": 36,
+                "bold": false,
+                "align": "center",
+                "text": "Los mejores momentos se comparten"
+              },
+              {
+                "id": "415684f0-sample-photo",
+                "type": "image",
+                "x": 70,
+                "y": 290,
+                "width": 580,
+                "height": 440,
+                "rotation": 0,
+                "color": "#463466",
+                "font": "serif",
+                "fontSize": 40,
+                "bold": false,
+                "align": "center",
+                "photoKey": "template-photo"
+              },
+              {
+                "id": "415684f0-story",
+                "type": "text",
+                "x": 60,
+                "y": 780,
+                "width": 600,
+                "height": 120,
+                "rotation": 0,
+                "color": "#7451ac",
+                "font": "sans",
+                "fontSize": 28,
+                "bold": false,
+                "align": "center",
+                "text": "Una ocasión para reunirnos, reír y crear nuevos recuerdos."
+              }
+            ]
+          }
+        },
+        {
+          "id": "49e6115d-d285-45a3-9cf2-721344b7a89f",
+          "heading": "Fecha y hora",
+          "body": "",
+          "icon": "none",
+          "canvas": {
+            "width": 720,
+            "height": 640,
+            "background": "#fff1f6",
+            "elements": [
+              {
+                "id": "49e6115d-calendar",
+                "type": "icon",
+                "x": 310,
+                "y": 60,
+                "width": 100,
+                "height": 100,
+                "rotation": 0,
+                "color": "#7451ac",
+                "font": "serif",
+                "fontSize": 72,
+                "bold": false,
+                "align": "center",
+                "icon": "calendar"
+              },
+              {
+                "id": "49e6115d-save-date",
+                "type": "text",
+                "x": 60,
+                "y": 210,
+                "width": 600,
+                "height": 100,
+                "rotation": 0,
+                "color": "#7451ac",
+                "font": "sans",
+                "fontSize": 52,
+                "bold": false,
+                "align": "center",
+                "text": "Apunta el día"
+              },
+              {
+                "id": "49e6115d-date",
+                "type": "text",
+                "x": 60,
+                "y": 350,
+                "width": 600,
+                "height": 160,
+                "rotation": 0,
+                "color": "#7451ac",
+                "font": "sans",
+                "fontSize": 34,
+                "bold": false,
+                "align": "center",
+                "text": "19 de junio de 2027 a las 13:00"
+              }
+            ]
+          }
+        },
+        {
+          "id": "96ba3430-cf7c-4d1b-9577-a3bd0479405d",
+          "heading": "Ubicación",
+          "body": "",
+          "icon": "none",
+          "canvas": {
+            "width": 720,
+            "height": 720,
+            "background": "#fff1f6",
+            "elements": [
+              {
+                "id": "96ba3430-lucide-map-pinned",
+                "type": "icon",
+                "x": 310,
+                "y": 50,
+                "width": 100,
+                "height": 100,
+                "rotation": 0,
+                "color": "#7451ac",
+                "font": "serif",
+                "fontSize": 72,
+                "bold": false,
+                "align": "center",
+                "icon": "lucide:map-pinned"
+              },
+              {
+                "id": "96ba3430-place-title",
+                "type": "text",
+                "x": 60,
+                "y": 200,
+                "width": 600,
+                "height": 100,
+                "rotation": 0,
+                "color": "#7451ac",
+                "font": "sans",
+                "fontSize": 48,
+                "bold": false,
+                "align": "center",
+                "text": "Nos vemos aquí"
+              },
+              {
+                "id": "96ba3430-location",
+                "type": "text",
+                "x": 60,
+                "y": 350,
+                "width": 600,
+                "height": 170,
+                "rotation": 0,
+                "color": "#7451ac",
+                "font": "sans",
+                "fontSize": 32,
+                "bold": false,
+                "align": "center",
+                "text": "Cómo llegar",
+                "binding": "location",
+                "locationStyle": "all",
+                "address": "Lima",
+                "link": "https://maps.google.com/?q=Lima"
+              },
+              {
+                "id": "96ba3430-place-note",
+                "type": "text",
+                "x": 60,
+                "y": 560,
+                "width": 600,
+                "height": 90,
+                "rotation": 0,
+                "color": "#7451ac",
+                "font": "sans",
+                "fontSize": 24,
+                "bold": false,
+                "align": "center",
+                "text": "Pulsa la ubicación para ver cómo llegar."
+              }
+            ]
+          }
+        },
+        {
+          "id": "0a32fe47-fa7e-42be-94b8-a4709da5fc5b",
+          "heading": "Dress code",
+          "body": "",
+          "icon": "none",
+          "canvas": {
+            "width": 720,
+            "height": 700,
+            "background": "#fff1f6",
+            "elements": [
+              {
+                "id": "0a32fe47-dress-title",
+                "type": "text",
+                "x": 60,
+                "y": 80,
+                "width": 600,
+                "height": 100,
+                "rotation": 0,
+                "color": "#7451ac",
+                "font": "sans",
+                "fontSize": 46,
+                "bold": false,
+                "align": "center",
+                "text": "Dress code"
+              },
+              {
+                "id": "0a32fe47-dress",
+                "type": "text",
+                "x": 60,
+                "y": 270,
+                "width": 600,
+                "height": 340,
+                "rotation": 0,
+                "color": "#7451ac",
+                "font": "sans",
+                "fontSize": 32,
+                "bold": false,
+                "align": "center",
+                "text": "A tu estilo\nElige un look cómodo para celebrar con nosotros.",
+                "binding": "dress_code",
+                "dressStyle": "icon-text",
+                "dressIcon": "lucide:shirt",
+                "dressExcludedColors": [
+                  {
+                    "name": "Blanco",
+                    "color": "#FFFFFF"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "9b2d2b54-9dc1-4c29-a906-3efc7409aee9",
+          "heading": "Para disfrutar juntos",
+          "body": "",
+          "icon": "none",
+          "canvas": {
+            "width": 720,
+            "height": 600,
+            "background": "#fff1f6",
+            "elements": [
+              {
+                "id": "9b2d2b54-rules-title",
+                "type": "text",
+                "x": 60,
+                "y": 70,
+                "width": 600,
+                "height": 100,
+                "rotation": 0,
+                "color": "#7451ac",
+                "font": "sans",
+                "fontSize": 44,
+                "bold": false,
+                "align": "center",
+                "text": "Ten en cuenta"
+              },
+              {
+                "id": "9b2d2b54-rules-0",
+                "type": "text",
+                "x": 60,
+                "y": 220,
+                "width": 600,
+                "height": 290,
+                "rotation": 0,
+                "color": "#7451ac",
+                "font": "sans",
+                "fontSize": 28,
+                "bold": false,
+                "align": "center",
+                "text": "El lugar no admite mascotas.",
+                "binding": "restrictions",
+                "restrictionStyle": "icon-text",
+                "restrictionIcon": "lucide:paw-print"
+              }
+            ]
+          }
+        },
+        {
+          "id": "36153671-7968-4d13-bb53-ee9a7507d308",
+          "heading": "Te esperamos",
+          "body": "",
+          "icon": "none",
+          "canvas": {
+            "width": 720,
+            "height": 560,
+            "background": "#fff1f6",
+            "elements": [
+              {
+                "id": "36153671-sparkle",
+                "type": "icon",
+                "x": 310,
+                "y": 70,
+                "width": 100,
+                "height": 100,
+                "rotation": 0,
+                "color": "#7451ac",
+                "font": "serif",
+                "fontSize": 72,
+                "bold": false,
+                "align": "center",
+                "icon": "sparkle"
+              },
+              {
+                "id": "36153671-thanks",
+                "type": "text",
+                "x": 60,
+                "y": 240,
+                "width": 600,
+                "height": 150,
+                "rotation": 0,
+                "color": "#7451ac",
+                "font": "sans",
+                "fontSize": 50,
+                "bold": false,
+                "align": "center",
+                "text": "La celebración empieza contigo"
+              },
+              {
+                "id": "36153671-closing",
+                "type": "text",
+                "x": 60,
+                "y": 430,
+                "width": 600,
+                "height": 80,
+                "rotation": 0,
+                "color": "#7451ac",
+                "font": "sans",
+                "fontSize": 26,
+                "bold": false,
+                "align": "center",
+                "text": "Gracias por ser parte de este momento."
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+]

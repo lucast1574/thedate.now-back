@@ -3,6 +3,7 @@ package core
 import "time"
 
 type EventInput struct {
+	InitialDesign     *DesignInput `json:"initialDesign,omitempty"`
 	Celebration       *Celebration `json:"celebration"`
 	TemplateID        string       `json:"templateId"`
 	DesignMode        string       `json:"designMode"`
