@@ -11,28 +11,31 @@ type FlyerCanvas struct {
 	Elements           []FlyerElement   `bson:"elements" json:"elements"`
 }
 type FlyerElement struct {
-	DressStyle    string  `bson:"dressStyle,omitempty" json:"dressStyle,omitempty"`
-	DressIcon     string  `bson:"dressIcon,omitempty" json:"dressIcon,omitempty"`
-	DressPhotoKey string  `bson:"dressPhotoKey,omitempty" json:"dressPhotoKey,omitempty"`
-	LocationStyle string  `bson:"locationStyle,omitempty" json:"locationStyle,omitempty"`
-	Address       string  `bson:"address,omitempty" json:"address,omitempty"`
-	Link          string  `bson:"link,omitempty" json:"link,omitempty"`
-	Binding       string  `bson:"binding,omitempty" json:"binding,omitempty"`
-	ID            string  `bson:"id" json:"id"`
-	Type          string  `bson:"type" json:"type"`
-	X             float64 `bson:"x" json:"x"`
-	Y             float64 `bson:"y" json:"y"`
-	Width         float64 `bson:"width" json:"width"`
-	Height        float64 `bson:"height" json:"height"`
-	Rotation      float64 `bson:"rotation" json:"rotation"`
-	Text          string  `bson:"text,omitempty" json:"text,omitempty"`
-	PhotoKey      string  `bson:"photoKey,omitempty" json:"photoKey,omitempty"`
-	Icon          string  `bson:"icon,omitempty" json:"icon,omitempty"`
-	Color         string  `bson:"color" json:"color"`
-	Font          string  `bson:"font" json:"font"`
-	FontSize      float64 `bson:"fontSize" json:"fontSize"`
-	Bold          bool    `bson:"bold" json:"bold"`
-	Align         string  `bson:"align" json:"align"`
+	DressExcludedColors []DressExcludedColor `bson:"dressExcludedColors,omitempty" json:"dressExcludedColors,omitempty"`
+	RestrictionStyle    string               `bson:"restrictionStyle,omitempty" json:"restrictionStyle,omitempty"`
+	RestrictionIcon     string               `bson:"restrictionIcon,omitempty" json:"restrictionIcon,omitempty"`
+	DressStyle          string               `bson:"dressStyle,omitempty" json:"dressStyle,omitempty"`
+	DressIcon           string               `bson:"dressIcon,omitempty" json:"dressIcon,omitempty"`
+	DressPhotoKey       string               `bson:"dressPhotoKey,omitempty" json:"dressPhotoKey,omitempty"`
+	LocationStyle       string               `bson:"locationStyle,omitempty" json:"locationStyle,omitempty"`
+	Address             string               `bson:"address,omitempty" json:"address,omitempty"`
+	Link                string               `bson:"link,omitempty" json:"link,omitempty"`
+	Binding             string               `bson:"binding,omitempty" json:"binding,omitempty"`
+	ID                  string               `bson:"id" json:"id"`
+	Type                string               `bson:"type" json:"type"`
+	X                   float64              `bson:"x" json:"x"`
+	Y                   float64              `bson:"y" json:"y"`
+	Width               float64              `bson:"width" json:"width"`
+	Height              float64              `bson:"height" json:"height"`
+	Rotation            float64              `bson:"rotation" json:"rotation"`
+	Text                string               `bson:"text,omitempty" json:"text,omitempty"`
+	PhotoKey            string               `bson:"photoKey,omitempty" json:"photoKey,omitempty"`
+	Icon                string               `bson:"icon,omitempty" json:"icon,omitempty"`
+	Color               string               `bson:"color" json:"color"`
+	Font                string               `bson:"font" json:"font"`
+	FontSize            float64              `bson:"fontSize" json:"fontSize"`
+	Bold                bool                 `bson:"bold" json:"bold"`
+	Align               string               `bson:"align" json:"align"`
 }
 
 func bounded(n, min, max float64) bool {
@@ -62,7 +65,7 @@ func ValidCanvas(c *FlyerCanvas, photos []string) bool {
 			return false
 		}
 		seen[el.ID] = true
-		if !validElementBinding(el) || !ValidDressCode(el, photos) {
+		if !validElementBinding(el) || !ValidDressCode(el, photos) || !ValidRestrictions(el) {
 			return false
 		}
 		if el.Font != "serif" && el.Font != "sans" && el.Font != "mono" && el.Font != "script" {

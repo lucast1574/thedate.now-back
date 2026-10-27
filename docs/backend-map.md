@@ -124,6 +124,13 @@ El PATCH de diseño valida `music` contra las claves propias; el DTO público in
 
 ## Lista de regalos por evento
 
+El binding de canvas `restrictions` acepta únicamente elementos de texto con
+`restrictionStyle` icon/text/icon-text y un `restrictionIcon` del catálogo SVG.
+`ValidRestrictions` impide esos campos en otros elementos. Dress code acepta
+`dressExcludedColors` (hasta ocho nombres de 1–40 caracteres y colores HEX),
+validados por `ValidDressCode`. Se conservan en JSON/BSON, sin migrar ni alterar
+las restricciones de público, reservas o permisos del evento.
+
 Las aperturas aceptan `classic`, `arch`, `ticket`, `curtain`, `bloom` y `orbit`.
 `Opening.paletteMode` puede ser `design` (colores derivados por el renderer) o
 `custom`; el campo ausente mantiene la apariencia anterior. Se conservan los dos
