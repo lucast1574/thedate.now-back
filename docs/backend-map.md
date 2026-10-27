@@ -34,7 +34,7 @@ No se presenta esta arquitectura como una garantía de perfección: sus invarian
 | Acceso creador inicial | planner | organizer |
 | Modalidad virtual | No | Sí |
 | Accesos de pareja | Hasta dos colaboradores, incluidos enlaces pendientes | Hasta dos colaboradores, incluidos enlaces pendientes |
-| Precio Stripe de pruebas | USD 20 | USD 5 |
+| Precio Stripe Checkout | USD 20 | USD 5 |
 
 Toda cuenta válida puede crear bodas y eventos independientes, con varios eventos por propietario. La pertenencia como colaborador permite editar diseño/fotos y gestionar invitados/mesas del evento asignado; solo propietario/admin maneja envío WhatsApp, pago y publicación. Los demos permanecen privados.
 
