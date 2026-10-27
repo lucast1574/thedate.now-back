@@ -27,8 +27,8 @@ func TestTemplateProductAndModeAreAuthoritative(t *testing.T) {
 			t.Fatal("wrong mode accepted")
 		}
 	}
-	if len(seen) != 30 {
-		t.Fatal("expected thirty distinct templates")
+	if len(seen) != 54 {
+		t.Fatal("expected fifty-four distinct templates including legacy section designs")
 	}
 	if TemplateID("wedding", "classic", "", "") != "wedding-classic" {
 		t.Fatal("legacy default lost")
@@ -43,7 +43,7 @@ func TestTemplateProductAndModeAreAuthoritative(t *testing.T) {
 				}
 			}
 		}
-		if count != 12 {
+		if count != 24 {
 			t.Fatalf("%s has %d canvas designs", kind, count)
 		}
 	}
