@@ -17,7 +17,7 @@ func TestAudienceStartsAtCreationAndSurvivesEventUpdates(t *testing.T) {
 		t.Run(kind, func(t *testing.T) {
 			db := testutil.Mongo(t)
 			ctx := context.Background()
-			u := core.User{ID: "owner", Email: "owner@example.com", Role: "organizer"}
+			u := core.User{ID: "owner", Email: "owner@example.com", Role: "user"}
 			if _, err := db.Collection("users").InsertOne(ctx, u); err != nil {
 				t.Fatal(err)
 			}

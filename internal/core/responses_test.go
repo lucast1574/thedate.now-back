@@ -50,7 +50,7 @@ func TestCollaboratorEmailLinkAllowsIndependentAccounts(t *testing.T) {
 	now := time.Now().UTC()
 	for _, kind := range []string{"general", "wedding"} {
 		e := Event{ID: "e", Kind: kind, PaymentStatus: "paid", CoupleInvites: map[string]CoupleInvite{"hash": {Email: "member@example.test", TokenHash: "hash", ExpiresAt: now.Add(time.Hour)}}}
-		u := User{ID: "member", Email: "wrong@example.test", Role: "organizer"}
+		u := User{ID: "member", Email: "wrong@example.test", Role: "user"}
 		if _, _, err := AcceptCoupleInvite(e, "hash", u, now); !errors.Is(err, ErrCoupleAccess) {
 			t.Fatal("another email joined")
 		}

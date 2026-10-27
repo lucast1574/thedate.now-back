@@ -40,7 +40,7 @@ func TestTemplateCatalogAndSavedDesignKeepProductIdentity(t *testing.T) {
 	}
 	w := call("GET", "/templates", "")
 	var catalog []core.InvitationTemplate
-	if w.Code != 200 || json.Unmarshal(w.Body.Bytes(), &catalog) != nil || len(catalog) != 30 {
+	if w.Code != 200 || json.Unmarshal(w.Body.Bytes(), &catalog) != nil || len(catalog) != len(core.TemplateCatalog()) {
 		t.Fatal("catalog not loaded from database")
 	}
 	payload := `{"title":"Our wedding","template":"classic","templateId":"general-classic","accentColor":"#9c6449","designMode":"sections","sections":[]}`

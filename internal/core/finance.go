@@ -49,7 +49,7 @@ func WithdrawalTransition(from, to string) bool {
 }
 func ValidRole(role string) bool {
 	switch role {
-	case "admin", "planner", "organizer", "couple":
+	case "admin", "planner", "organizer", "user":
 		return true
 	}
 	return false

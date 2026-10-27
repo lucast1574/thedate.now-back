@@ -18,7 +18,7 @@ func TestCouplePlansButOtherAccountsAndUnpaidEventsCannot(t *testing.T) {
 	now := time.Now().UTC()
 	s := &server{db: db, secret: []byte(strings.Repeat("x", 32))}
 	owner := core.User{ID: "owner", Email: "owner@example.com", Role: "planner"}
-	couple := core.User{ID: "couple", Email: "couple@example.com", Role: "couple"}
+	couple := core.User{ID: "couple", Email: "couple@example.com", Role: "user"}
 	outsider := core.User{ID: "outside", Email: "outside@example.com", Role: "planner"}
 	for _, u := range []core.User{owner, couple, outsider} {
 		if _, err := db.Collection("users").InsertOne(ctx, u); err != nil {

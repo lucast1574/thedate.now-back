@@ -15,6 +15,8 @@ func (s *server) routes() http.Handler {
 	mux.HandleFunc("GET /admin/support/tickets", s.adminSupportTickets)
 	mux.HandleFunc("PATCH /admin/support/tickets/{id}", s.updateSupportTicket)
 	mux.HandleFunc("PATCH /profile", s.updateProfile)
+	mux.HandleFunc("POST /profile/professional", s.becomeProfessional)
+	mux.HandleFunc("POST /events/{id}/activate", s.activateDemo)
 	mux.HandleFunc("POST /profile/avatar", s.uploadAvatar)
 	mux.HandleFunc("GET /profile/avatar", s.profileAvatar)
 	mux.HandleFunc("GET /admin/overview", s.adminOverview)

@@ -14,6 +14,11 @@ func (s *server) listCollaborators(w http.ResponseWriter, r *http.Request) {
 		bad(w, 404, "Event not found")
 		return
 	}
+	u, _ := s.user(r)
+	if !core.CanShareEvent(e.Kind, u) {
+		bad(w, 403, "Professional account required")
+		return
+	}
 	e, err = (mongostore.Couples{DB: s.db}).Snapshot(r.Context(), e.ID)
 	if err != nil {
 		bad(w, 500, "Could not load access")
@@ -24,7 +29,11 @@ func (s *server) listCollaborators(w http.ResponseWriter, r *http.Request) {
 		pending = append(pending, i)
 	}
 	members := []core.User{}
-	cur, err := s.db.Collection("users").Find(r.Context(), bson.M{"_id": bson.M{"$in": e.CoupleUserIDs}})
+	ids := e.CoupleUserIDs
+	if ids == nil {
+		ids = []string{}
+	}
+	cur, err := s.db.Collection("users").Find(r.Context(), bson.M{"_id": bson.M{"$in": ids}})
 	if err != nil {
 		bad(w, 500, "Could not list members")
 		return
@@ -40,6 +49,11 @@ func (s *server) revokeCollaborator(w http.ResponseWriter, r *http.Request) {
 	e, err := s.managedEvent(r)
 	if err != nil {
 		bad(w, 404, "Event not found")
+		return
+	}
+	u, _ := s.user(r)
+	if !core.CanShareEvent(e.Kind, u) {
+		bad(w, 403, "Professional account required")
 		return
 	}
 	repo := mongostore.Couples{DB: s.db}

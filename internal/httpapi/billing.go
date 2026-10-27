@@ -72,7 +72,7 @@ func (s *server) checkout(w http.ResponseWriter, r *http.Request) {
 	params := &stripe.CheckoutSessionParams{
 		Mode:              stripe.String("payment"),
 		LineItems:         []*stripe.CheckoutSessionLineItemParams{{PriceData: &stripe.CheckoutSessionLineItemPriceDataParams{Currency: stripe.String("usd"), UnitAmount: stripe.Int64(amount), ProductData: &stripe.CheckoutSessionLineItemPriceDataProductDataParams{Name: stripe.String(label)}}, Quantity: stripe.Int64(1)}},
-		SuccessURL:        stripe.String(base + "/?payment=success&event=" + e.ID),
+		SuccessURL:        stripe.String(base + "/editor/" + e.ID + "?payment=success"),
 		CancelURL:         stripe.String(base + "/?payment=cancelled&event=" + e.ID),
 		ClientReferenceID: stripe.String(e.ID),
 		CustomerEmail:     stripe.String(owner.Email),

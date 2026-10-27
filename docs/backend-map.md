@@ -167,3 +167,9 @@ El binding `gift_link` acepta exclusivamente elementos de texto con el destino i
 La creación admite `initialDesign` opcional: `core/initial_design.go` valida el lienzo completo y su coherencia con los datos del evento antes de una única inserción. No se admite en la actualización de metadatos. Las fotos iniciales deben ser referencias de plantilla; no permite reutilizar archivos privados de otro evento.
 
 Los planos de asientos incluyen `areas` opcionales para escenario, pista, bar, bocaditos, fotos, descanso y entrada. `core/venue_areas.go` valida límites, tamaños e identidad antes del guardado existente con control de versión; no cuentan como asientos ni aforo.
+
+## Roles y activación profesional
+
+Cada base de producto admite `admin`, `user` y su rol profesional (`planner` en bodas, `organizer` en eventos). `EnsureProductRoles` normaliza roles retirados al arrancar, conserva administradores y asignaciones y revoca únicamente las sesiones de cuentas normalizadas. Registrarse crea `user`; `POST /profile/professional` activa el rol profesional del producto sin conceder administración. Las operaciones de colaboradores exigen ese rol o admin, propiedad y pago para enviar invitaciones.
+
+`demo_activation.go` convierte la demo propia en evento mediante una escritura condicional; preserva el identificador, secciones, fotos, audio y apertura. Reintentos no crean eventos duplicados. El checkout vuelve al editor y únicamente el webhook verificado confirma el pago.

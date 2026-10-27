@@ -32,7 +32,12 @@ func (s *server) register(w http.ResponseWriter, r *http.Request) {
 	}
 	in.Email = strings.ToLower(strings.TrimSpace(in.Email))
 	in.Name = strings.TrimSpace(in.Name)
-	if (s.product == "wedding" && in.Role != "planner") || (s.product == "general" && in.Role != "organizer") || !validEmail(in.Email) || in.Email == adminEmail() || len(in.Password) < 10 || len(in.Password) > 72 || len(in.Name) < 2 || len(in.Name) > 120 || (in.Role != "planner" && in.Role != "organizer") {
+	if in.Role != "" && in.Role != "user" && in.Role != "planner" && in.Role != "organizer" {
+		bad(w, 400, "Invalid registration role")
+		return
+	}
+	in.Role = "user"
+	if !validEmail(in.Email) || in.Email == adminEmail() || len(in.Password) < 10 || len(in.Password) > 72 || len(in.Name) < 2 || len(in.Name) > 120 {
 		bad(w, 400, "Name, email, role and password of at least 10 characters required")
 		return
 	}

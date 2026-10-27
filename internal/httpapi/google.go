@@ -55,10 +55,7 @@ func (s *server) googleLogin(w http.ResponseWriter, r *http.Request) {
 	hd, _ := payload.Claims["hd"].(string)
 	authoritative := strings.HasSuffix(email, "@gmail.com") || hd != ""
 	adminEmail := strings.ToLower(strings.TrimSpace(os.Getenv("ADMIN_EMAIL")))
-	role := "organizer"
-	if in.Portal == "wedding" {
-		role = "planner"
-	}
+	role := "user"
 	if adminEmail != "" && email == adminEmail {
 		if !authoritative && payload.Subject != os.Getenv("GOOGLE_ADMIN_SUB") {
 			bad(w, 403, "Admin Google identity requires an authoritative email or pinned subject")
@@ -143,7 +140,7 @@ func (s *server) googleLogin(w http.ResponseWriter, r *http.Request) {
 		}
 		u.GooglePhotoURL = picture
 	}
-	if u.Role != "couple" && u.Role != "admin" {
+	if u.Role != "admin" {
 		if _, err = s.db.Collection("users").UpdateByID(r.Context(), u.ID, bson.M{"$addToSet": bson.M{"portals": in.Portal}}); err != nil {
 			bad(w, 500, "Could not update portal access")
 			return

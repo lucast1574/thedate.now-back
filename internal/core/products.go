@@ -20,7 +20,7 @@ func ProductFor(kind string) (Product, error) {
 }
 
 func UserCanCreate(kind string, u User) bool {
-	return (u.Product == "" || u.Product == kind) && CanCreateEvent(kind, u.Role)
+	return (u.Product == "" || u.Product == kind) && ValidProductRole(kind, u.Role)
 }
 func UserPortals(u User) []string {
 	result := []string{}
@@ -30,4 +30,13 @@ func UserPortals(u User) []string {
 		}
 	}
 	return result
+}
+
+func ValidProductRole(kind, role string) bool {
+	p, err := ProductFor(kind)
+	return err == nil && (role == "admin" || role == "user" || role == p.Role)
+}
+func CanShareEvent(kind string, u User) bool {
+	p, err := ProductFor(kind)
+	return err == nil && (u.Role == "admin" || u.Role == p.Role)
 }

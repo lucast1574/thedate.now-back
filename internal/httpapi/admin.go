@@ -64,7 +64,7 @@ func (s *server) adminRole(w http.ResponseWriter, r *http.Request) {
 	var in struct {
 		Role string `json:"role"`
 	}
-	if decode(r, &in) != nil || !core.ValidRole(in.Role) {
+	if decode(r, &in) != nil || !(core.ValidRole(in.Role) && (s.product == "" || core.ValidProductRole(s.product, in.Role))) {
 		bad(w, 400, "Invalid role")
 		return
 	}

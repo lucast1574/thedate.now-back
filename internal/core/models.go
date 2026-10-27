@@ -19,7 +19,7 @@ type User struct {
 	Email               string                   `bson:"email" json:"email"`
 	Name                string                   `bson:"name" json:"name"`
 	PasswordHash        string                   `bson:"passwordHash" json:"-"`
-	Role                string                   `bson:"role" json:"role"` // admin, planner, organizer or couple
+	Role                string                   `bson:"role" json:"role"` // admin, user, planner or organizer
 	GoogleSub           string                   `bson:"googleSub,omitempty" json:"-"`
 	CreatedAt           time.Time                `bson:"createdAt" json:"createdAt"`
 }

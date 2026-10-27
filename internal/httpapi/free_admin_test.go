@@ -15,7 +15,7 @@ func TestFreeAdminEventsCannotBeRequestedByLocalAccounts(t *testing.T) {
 	db := testutil.Mongo(t)
 	s := &server{db: db, secret: []byte(strings.Repeat("s", 32))}
 	admin := core.User{ID: "admin", Email: "admin@gmail.com", Role: "admin", GoogleSub: "google", GoogleAuthoritative: true, IdentityPolicy: 1}
-	member := core.User{ID: "member", Role: "couple", Email: "member@example.test"}
+	member := core.User{ID: "member", Role: "user", Email: "member@example.test"}
 	for _, u := range []core.User{admin, member} {
 		_, _ = db.Collection("users").InsertOne(context.Background(), u)
 	}

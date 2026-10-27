@@ -51,6 +51,9 @@ func Run() {
 		}
 	}
 	for _, s := range servers {
+		if err := mongostore.EnsureProductRoles(ctx, s.db, s.product); err != nil {
+			log.Fatal(err)
+		}
 		if err := mongostore.EnsureIndexes(ctx, s.db); err != nil {
 			log.Fatal(err)
 		}

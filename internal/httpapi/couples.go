@@ -36,7 +36,7 @@ func (s *server) inviteCouple(w http.ResponseWriter, r *http.Request) {
 		bad(w, 404, "Event not found")
 		return
 	}
-	if e.PaymentStatus != "paid" || e.IsDemo || (e.OwnerID != u.ID && u.Role != "admin") {
+	if !core.CanShareEvent(e.Kind, u) || e.PaymentStatus != "paid" || e.IsDemo || (e.OwnerID != u.ID && u.Role != "admin") {
 		bad(w, 403, "Only the owner or administrator can invite collaborators after payment")
 		return
 	}
