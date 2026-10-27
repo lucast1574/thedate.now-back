@@ -24,3 +24,14 @@ func TestCelebrationDressDefaults(t *testing.T) {
 		t.Fatal("invalid defaults accepted")
 	}
 }
+
+func TestCelebrationRestrictionDefaults(t *testing.T) {
+	c := &Celebration{RestrictionText: "Sin mascotas.", RestrictionIcon: "lucide:paw-print"}
+	if !ValidCelebration(c) {
+		t.Fatal("valid restrictions rejected")
+	}
+	c.RestrictionIcon = "javascript:invalid"
+	if ValidCelebration(c) {
+		t.Fatal("invalid icon accepted")
+	}
+}
