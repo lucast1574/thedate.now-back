@@ -48,7 +48,7 @@ func (s *server) checkout(w http.ResponseWriter, r *http.Request) {
 	}
 	base = strings.TrimSuffix(base, "/")
 	client := session.Client{B: stripe.GetBackend(stripe.APIBackend), Key: os.Getenv("STRIPE_SECRET_KEY")}
-	if e.CheckoutID != "" {
+	if e.CheckoutID != "" && strings.HasPrefix(e.CheckoutID, "cs_live_") == stripeLive() {
 		current, getErr := client.Get(e.CheckoutID, &stripe.CheckoutSessionParams{Params: stripe.Params{Context: r.Context()}})
 		if getErr != nil {
 			bad(w, 502, "Could not verify existing checkout")
@@ -58,9 +58,15 @@ func (s *server) checkout(w http.ResponseWriter, r *http.Request) {
 			bad(w, 409, "Payment already completed; waiting for confirmation")
 			return
 		}
-		if current.Status == stripe.CheckoutSessionStatusOpen {
+		if current.Status == stripe.CheckoutSessionStatusOpen && current.AmountTotal == amount && current.Livemode == stripeLive() {
 			reply(w, 200, map[string]string{"url": current.URL})
 			return
+		}
+		if current.Status == stripe.CheckoutSessionStatusOpen {
+			if _, expireErr := client.Expire(current.ID, &stripe.CheckoutSessionExpireParams{Params: stripe.Params{Context: r.Context()}}); expireErr != nil {
+				bad(w, 502, "Could not replace existing checkout")
+				return
+			}
 		}
 	}
 	// One provider request per event/generation, even across processes and retries.
@@ -78,7 +84,7 @@ func (s *server) checkout(w http.ResponseWriter, r *http.Request) {
 		CustomerEmail:     stripe.String(owner.Email),
 	}
 	params.Context = r.Context()
-	params.SetIdempotencyKey("thedate-event:" + e.ID + ":" + e.CheckoutID)
+	params.SetIdempotencyKey("thedate-event:v2:" + e.ID + ":" + e.CheckoutID)
 	checkout, err := client.New(params)
 	if err != nil {
 		bad(w, 502, "Could not start checkout")

@@ -36,7 +36,7 @@ func TestProductsShareCapabilitiesAndKeepTheirConfiguration(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !wedding.AllowVirtual || !wedding.AllowCouples || wedding.Role != "planner" || wedding.PriceCents != 2500 {
+	if !wedding.AllowVirtual || !wedding.AllowCouples || wedding.Role != "planner" || wedding.PriceCents != 2000 {
 		t.Fatal("wedding policy")
 	}
 	if !general.AllowVirtual || !general.AllowCouples || general.Role != "organizer" || general.PriceCents != 500 {

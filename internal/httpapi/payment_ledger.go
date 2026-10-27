@@ -16,7 +16,10 @@ import (
 	"time"
 )
 
-func stripeLive() bool { return strings.HasPrefix(os.Getenv("STRIPE_SECRET_KEY"), "sk_live_") }
+func stripeLive() bool {
+	key := os.Getenv("STRIPE_SECRET_KEY")
+	return strings.HasPrefix(key, "sk_live_") || strings.HasPrefix(key, "rk_live_")
+}
 func (s *server) recordPayment(ctx context.Context, e core.Event, checkout *stripe.CheckoutSession) error {
 	intent := ""
 	if checkout.PaymentIntent != nil {
