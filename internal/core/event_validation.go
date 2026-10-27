@@ -3,11 +3,15 @@ package core
 import (
 	"errors"
 	"strings"
+	"unicode/utf8"
 )
 
 func ValidateEvent(in EventInput, creating bool) error {
 	if !ValidInitialDesign(in, creating) {
 		return errors.New("invalid initial invitation design")
+	}
+	if utf8.RuneCountInString(in.InvitationMessage) > 4000 {
+		return errors.New("invitation message too long")
 	}
 	if !ValidCelebration(in.Celebration) {
 		return errors.New("invalid celebration details")

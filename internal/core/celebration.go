@@ -16,15 +16,16 @@ type Opening struct {
 	ButtonLabel     string           `bson:"buttonLabel" json:"buttonLabel"`
 }
 type Celebration struct {
-	AdultsOnly     bool   `bson:"adultsOnly" json:"adultsOnly"`
-	AdultsMessage  string `bson:"adultsMessage" json:"adultsMessage"`
-	WhatsAppNotice bool   `bson:"whatsappNotice" json:"whatsappNotice"`
-	DressCode      string `bson:"dressCode" json:"dressCode"`
-	DressNote      string `bson:"dressNote" json:"dressNote"`
+	DressExcludedColors []DressExcludedColor `bson:"dressExcludedColors,omitempty" json:"dressExcludedColors,omitempty"`
+	AdultsOnly          bool                 `bson:"adultsOnly" json:"adultsOnly"`
+	AdultsMessage       string               `bson:"adultsMessage" json:"adultsMessage"`
+	WhatsAppNotice      bool                 `bson:"whatsappNotice" json:"whatsappNotice"`
+	DressCode           string               `bson:"dressCode" json:"dressCode"`
+	DressNote           string               `bson:"dressNote" json:"dressNote"`
 }
 
 func ValidCelebration(c *Celebration) bool {
-	return c == nil || (len(c.AdultsMessage) <= 500 && len(c.DressCode) <= 120 && len(c.DressNote) <= 500)
+	return c == nil || (len(c.AdultsMessage) <= 500 && len(c.DressCode) <= 120 && len(c.DressNote) <= 500 && ValidDressCode(FlyerElement{Binding: "dress_code", DressExcludedColors: c.DressExcludedColors}, nil))
 }
 func ValidOpening(o *Opening) bool {
 	if o == nil {

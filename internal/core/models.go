@@ -25,6 +25,7 @@ type User struct {
 }
 
 type Event struct {
+	InvitationMessage string                  `bson:"invitationMessage,omitempty" json:"invitationMessage,omitempty"`
 	BackgroundImage   *ImageBackground        `bson:"backgroundImage,omitempty" json:"backgroundImage,omitempty"`
 	Opening           *Opening                `bson:"opening,omitempty" json:"opening,omitempty"`
 	Celebration       *Celebration            `bson:"celebration,omitempty" json:"celebration,omitempty"`
