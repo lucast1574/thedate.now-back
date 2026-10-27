@@ -9,7 +9,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"strconv"
 	"strings"
 	"time"
 
@@ -26,7 +25,7 @@ func eventMessage(e core.Event, g core.Guest) map[string]any {
 		"chatId": strings.TrimPrefix(g.Phone, "+") + "@c.us",
 		"event": map[string]any{
 			"name":               invitationBrand(e.Kind) + " · " + e.Title,
-			"description":        core.InvitationMessage(e.InvitationMessage, invitationBrand(e.Kind)+" · Hola "+core.GuestFullName(g)+", te invitamos a "+e.Title+". Tu invitación permite hasta "+strconv.Itoa(g.Seats)+" personas (incluyéndote). Confirma y registra a tus acompañantes aquí: "+link, link) + core.WhatsAppCelebration(e.Celebration),
+			"description":        core.InvitationMessage(e.InvitationMessage, link) + core.WhatsAppCelebration(e.Celebration),
 			"startTime":          e.StartAt.UTC().Format(time.RFC3339),
 			"endTime":            e.StartAt.Add(4 * time.Hour).UTC().Format(time.RFC3339),
 			"location":           map[string]string{"name": e.Location},

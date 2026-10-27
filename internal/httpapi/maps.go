@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"go.mongodb.org/mongo-driver/v2/bson"
-	"html"
 	"io"
 	"net/http"
 	"net/url"
@@ -60,54 +59,6 @@ func extractMapsCoordinates(raw string) (float64, float64, bool) {
 		}
 	}
 	return 0, 0, false
-}
-
-func resolveMapsCoordinates(ctx context.Context, raw string) (float64, float64, bool) {
-	if lat, lng, ok := extractMapsCoordinates(raw); ok {
-		return lat, lng, true
-	}
-	client := &http.Client{Timeout: 8 * time.Second, CheckRedirect: func(req *http.Request, via []*http.Request) error {
-		if len(via) >= 6 || !googleRedirectURL(req.URL.String()) {
-			return http.ErrUseLastResponse
-		}
-		return nil
-	}}
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, raw, nil)
-	if err != nil {
-		return 0, 0, false
-	}
-	req.Header.Set("User-Agent", "Mozilla/5.0 (compatible; TheDate/1.0; +https://thedate.now)")
-	response, err := client.Do(req)
-	if err != nil {
-		return 0, 0, false
-	}
-	defer response.Body.Close()
-	if lat, lng, ok := extractMapsCoordinates(response.Request.URL.String()); ok {
-		return lat, lng, true
-	}
-	if response.Request.URL.Hostname() == "consent.google.com" {
-		continued := response.Request.URL.Query().Get("continue")
-		if googleMapsURL(continued) {
-			if lat, lng, ok := extractMapsCoordinates(continued); ok {
-				return lat, lng, true
-			}
-		}
-	}
-	if response.StatusCode >= 300 && response.StatusCode < 400 {
-		if location := response.Header.Get("Location"); location != "" {
-			if next, err := response.Request.URL.Parse(location); err == nil && googleRedirectURL(next.String()) {
-				return extractMapsCoordinates(next.String())
-			}
-		}
-	}
-	if response.StatusCode != http.StatusOK {
-		return 0, 0, false
-	}
-	body, err := io.ReadAll(io.LimitReader(response.Body, 256<<10))
-	if err != nil {
-		return 0, 0, false
-	}
-	return extractMapsCoordinates(html.UnescapeString(string(body)))
 }
 
 func (s *server) reverseGeocode(ctx context.Context, lat, lng float64) string {
@@ -177,11 +128,11 @@ func (s *server) resolveMapsURL(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx, cancel := context.WithTimeout(r.Context(), 18*time.Second)
 	defer cancel()
-	lat, lng, ok := resolveMapsCoordinates(ctx, strings.TrimSpace(in.URL))
+	lat, lng, placeName, ok := resolveMapsLocation(ctx, strings.TrimSpace(in.URL))
 	if !ok {
 		bad(w, http.StatusUnprocessableEntity, "No pude obtener la ubicación automáticamente. Reintenta o comparte otro enlace de Google Maps del lugar.")
 		return
 	}
 	address := s.reverseGeocode(ctx, lat, lng)
-	reply(w, http.StatusOK, map[string]any{"address": address, "latitude": lat, "longitude": lng, "attribution": "© OpenStreetMap contributors"})
+	reply(w, http.StatusOK, map[string]any{"address": mapsDisplayAddress(placeName, address), "placeName": placeName, "streetAddress": address, "latitude": lat, "longitude": lng, "attribution": "© OpenStreetMap contributors"})
 }

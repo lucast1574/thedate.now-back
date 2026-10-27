@@ -5,11 +5,11 @@ import "testing"
 func TestInvitationMessage(t *testing.T) {
 	link := "https://fiesta.thedate.now/rsvp/personal"
 	for _, tc := range []struct{ in, want string }{
-		{"", "default personal invitation"},
-		{" Ven a celebrar ", "Ven a celebrar\n\nConfirma tu asistencia aquí: " + link},
+		{"", link},
+		{" Ven a celebrar ", "Ven a celebrar\n\n" + link},
 		{"Confirma: {{enlace}}. Te esperamos.", "Confirma: " + link + ". Te esperamos."},
 	} {
-		if got := InvitationMessage(tc.in, "default personal invitation", link); got != tc.want {
+		if got := InvitationMessage(tc.in, link); got != tc.want {
 			t.Errorf("got %q want %q", got, tc.want)
 		}
 	}

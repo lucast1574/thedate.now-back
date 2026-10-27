@@ -3,13 +3,13 @@ package core
 import "strings"
 
 // InvitationMessage places the personal RSVP link without touching public design copy.
-func InvitationMessage(message, fallback, link string) string {
+func InvitationMessage(message, link string) string {
 	message = strings.TrimSpace(message)
 	if message == "" {
-		return fallback
+		return link
 	}
-	if strings.Contains(message, "{{enlace}}") {
-		return strings.ReplaceAll(message, "{{enlace}}", link)
+	if strings.Contains(message, "{{link}}") || strings.Contains(message, "{{enlace}}") {
+		return strings.NewReplacer("{{link}}", link, "{{enlace}}", link).Replace(message)
 	}
-	return message + "\n\nConfirma tu asistencia aquí: " + link
+	return message + "\n\n" + link
 }
