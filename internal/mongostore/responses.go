@@ -63,6 +63,9 @@ func (s Responses) CommitResponse(ctx context.Context, e core.Event, id string, 
 }
 func (s Responses) CommitEvent(ctx context.Context, e core.Event, in core.EventInput, now time.Time) (bool, error) {
 	set := bson.M{"title": in.Title, "description": in.Description, "startAt": in.StartAt, "timeZone": in.TimeZone, "organizer": in.Organizer, "location": in.Location, "isVirtual": in.IsVirtual, "mapUrl": in.MapURL, "virtualUrl": in.VirtualURL, "capacity": in.Capacity, "capacityUnlimited": in.CapacityUnlimited, "maybeHoldHours": in.MaybeHoldHours, "template": in.Template, "templateId": in.TemplateID, "designMode": in.DesignMode, "accentColor": in.AccentColor, "updatedAt": now}
+	if in.Celebration != nil {
+		set["celebration"] = in.Celebration
+	}
 	result, err := s.DB.Collection("events").UpdateOne(ctx, bson.M{"_id": e.ID, "responseVersion": e.ResponseVersion}, bson.M{"$set": set, "$inc": bson.M{"responseVersion": 1}})
 	if err != nil {
 		return false, err

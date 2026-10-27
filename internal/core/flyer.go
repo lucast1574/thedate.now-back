@@ -9,6 +9,9 @@ type FlyerCanvas struct {
 	Elements   []FlyerElement `bson:"elements" json:"elements"`
 }
 type FlyerElement struct {
+	DressStyle    string  `bson:"dressStyle,omitempty" json:"dressStyle,omitempty"`
+	DressIcon     string  `bson:"dressIcon,omitempty" json:"dressIcon,omitempty"`
+	DressPhotoKey string  `bson:"dressPhotoKey,omitempty" json:"dressPhotoKey,omitempty"`
 	LocationStyle string  `bson:"locationStyle,omitempty" json:"locationStyle,omitempty"`
 	Address       string  `bson:"address,omitempty" json:"address,omitempty"`
 	Link          string  `bson:"link,omitempty" json:"link,omitempty"`
@@ -57,7 +60,7 @@ func ValidCanvas(c *FlyerCanvas, photos []string) bool {
 			return false
 		}
 		seen[el.ID] = true
-		if !validElementBinding(el) {
+		if !validElementBinding(el) || !ValidDressCode(el, photos) {
 			return false
 		}
 		if el.Font != "serif" && el.Font != "sans" && el.Font != "mono" && el.Font != "script" {

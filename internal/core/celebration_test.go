@@ -59,3 +59,23 @@ func TestOnlyBundledPhotosArePublicTemplateAssets(t *testing.T) {
 		t.Fatal("owned photo rejected")
 	}
 }
+
+func TestOpeningCustomTitleFontAndSeal(t *testing.T) {
+	o := Opening{Enabled: true, Style: "classic", Color: "#FFFFFF", Ink: "#123456", ButtonLabel: "Abrir", Title: "Una carta para ti", Font: "script", SealIcon: "lucide:heart"}
+	if !ValidOpening(&o) {
+		t.Fatal("custom opening rejected")
+	}
+	o.SealIcon = "none"
+	if !ValidOpening(&o) {
+		t.Fatal("hidden seal rejected")
+	}
+	o.SealIcon = "unknown"
+	if ValidOpening(&o) {
+		t.Fatal("unknown seal accepted")
+	}
+	o.SealIcon = ""
+	o.Font = "url(https://external)"
+	if ValidOpening(&o) {
+		t.Fatal("invalid font accepted")
+	}
+}

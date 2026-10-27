@@ -6,6 +6,9 @@ import (
 )
 
 func ValidateEvent(in EventInput, creating bool) error {
+	if !ValidCelebration(in.Celebration) {
+		return errors.New("invalid celebration details")
+	}
 	if _, err := ProductFor(in.Kind); err != nil {
 		return err
 	}

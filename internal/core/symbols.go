@@ -30,6 +30,10 @@ func validElementBinding(el FlyerElement) bool {
 		if el.Type != "text" {
 			return false
 		}
+	case "gift_link":
+		if el.Type != "text" || !ValidGiftLink(el.Link) {
+			return false
+		}
 	case "location":
 		if el.Type != "text" || !validLocationStyle(el.LocationStyle) || len(el.Address) > 500 || len(el.Link) > 2048 || (el.Link != "" && !GoogleMapsURL(el.Link)) {
 			return false
@@ -37,7 +41,7 @@ func validElementBinding(el FlyerElement) bool {
 	default:
 		return false
 	}
-	return el.Binding == "location" || (el.LocationStyle == "" && el.Address == "" && el.Link == "")
+	return (el.Binding == "gift_link" && el.LocationStyle == "" && el.Address == "") || el.Binding == "location" || (el.LocationStyle == "" && el.Address == "" && el.Link == "")
 }
 
 func validLocationStyle(style string) bool {
