@@ -25,7 +25,7 @@ func TestOpeningAndCelebrationValidation(t *testing.T) {
 	if !ValidOpening(&valid) || !ValidOpening(nil) || !ValidCelebration(nil) {
 		t.Fatal("valid configuration rejected")
 	}
-	for _, style := range []string{"classic", "arch", "ticket"} {
+	for _, style := range []string{"classic", "arch", "ticket", "curtain", "bloom", "orbit"} {
 		valid.Style = style
 		if !ValidOpening(&valid) {
 			t.Fatal(style)
@@ -42,6 +42,20 @@ func TestOpeningAndCelebrationValidation(t *testing.T) {
 	}
 	if ValidCelebration(&Celebration{AdultsMessage: strings.Repeat("x", 501)}) {
 		t.Fatal("unbounded notice")
+	}
+}
+
+func TestOpeningPaletteMode(t *testing.T) {
+	opening := Opening{Style: "bloom", Color: "#F4EBDF", Ink: "#766044", ButtonLabel: "Abrir"}
+	for _, mode := range []string{"", "design", "custom"} {
+		opening.PaletteMode = mode
+		if !ValidOpening(&opening) {
+			t.Fatal("supported palette rejected", mode)
+		}
+	}
+	opening.PaletteMode = "external"
+	if ValidOpening(&opening) {
+		t.Fatal("unknown palette mode accepted")
 	}
 }
 func TestOnlyBundledPhotosArePublicTemplateAssets(t *testing.T) {

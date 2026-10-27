@@ -7,6 +7,7 @@ type Opening struct {
 	Title           string           `bson:"title,omitempty" json:"title,omitempty"`
 	Font            string           `bson:"font,omitempty" json:"font,omitempty"`
 	SealIcon        string           `bson:"sealIcon,omitempty" json:"sealIcon,omitempty"`
+	PaletteMode     string           `bson:"paletteMode,omitempty" json:"paletteMode,omitempty"`
 	Enabled         bool             `bson:"enabled" json:"enabled"`
 	Style           string           `bson:"style" json:"style"`
 	Color           string           `bson:"color" json:"color"`
@@ -29,10 +30,14 @@ func ValidOpening(o *Opening) bool {
 	if o == nil {
 		return true
 	}
+	if o.PaletteMode != "" && o.PaletteMode != "design" && o.PaletteMode != "custom" {
+		return false
+	}
 	if len(o.Title) > 160 || (o.Font != "" && o.Font != "serif" && o.Font != "sans" && o.Font != "script") || (o.SealIcon != "" && !validFlyerIcon(o.SealIcon)) {
 		return false
 	}
-	return (o.Style == "classic" || o.Style == "arch" || o.Style == "ticket") && validColor(o.Color) && validColor(o.Ink) && len(o.Message) <= 240 && len(strings.TrimSpace(o.ButtonLabel)) > 0 && len(o.ButtonLabel) <= 60
+	validStyle := o.Style == "classic" || o.Style == "arch" || o.Style == "ticket" || o.Style == "curtain" || o.Style == "bloom" || o.Style == "orbit"
+	return validStyle && validColor(o.Color) && validColor(o.Ink) && len(o.Message) <= 240 && len(strings.TrimSpace(o.ButtonLabel)) > 0 && len(o.ButtonLabel) <= 60
 }
 
 func WhatsAppCelebration(c *Celebration) string {

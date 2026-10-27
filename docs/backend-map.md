@@ -124,6 +124,12 @@ El PATCH de diseño valida `music` contra las claves propias; el DTO público in
 
 ## Lista de regalos por evento
 
+Las aperturas aceptan `classic`, `arch`, `ticket`, `curtain`, `bloom` y `orbit`.
+`Opening.paletteMode` puede ser `design` (colores derivados por el renderer) o
+`custom`; el campo ausente mantiene la apariencia anterior. Se conservan los dos
+colores HEX para compatibilidad y el icono opcional. Desplegar la API con estos
+valores antes que el editor que permite seleccionarlos.
+
 `linkpreview/structured.go` reconoce Product JSON-LD en arrays, grafos y objetos
 de imagen como respaldo de Open Graph, validando las imágenes con las mismas
 restricciones HTTPS/red pública. La lectura HTML está limitada al primer MiB;
