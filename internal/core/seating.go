@@ -16,6 +16,7 @@ type SeatingTable struct {
 	Rotation float64 `bson:"rotation" json:"rotation"`
 }
 type SeatingPlan struct {
+	Areas       []VenueArea       `bson:"areas,omitempty" json:"areas,omitempty"`
 	Version     int64             `bson:"version" json:"version"`
 	Width       float64           `bson:"width" json:"width"`
 	Height      float64           `bson:"height" json:"height"`
@@ -27,6 +28,9 @@ func DefaultSeating() SeatingPlan {
 	return SeatingPlan{Width: 1600, Height: 1000, Tables: []SeatingTable{}, Assignments: map[string]string{}}
 }
 func ValidateSeating(plan SeatingPlan, e Event, guests []Guest) error {
+	if err := ValidateVenueAreas(plan); err != nil {
+		return err
+	}
 	if plan.Width != 1600 || plan.Height != 1000 || len(plan.Tables) > 100 || len(plan.Assignments) > 5000 || plan.Version < 0 {
 		return errors.New("invalid plan size")
 	}

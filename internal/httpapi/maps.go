@@ -179,7 +179,7 @@ func (s *server) resolveMapsURL(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 	lat, lng, ok := resolveMapsCoordinates(ctx, strings.TrimSpace(in.URL))
 	if !ok {
-		bad(w, http.StatusUnprocessableEntity, "No pude obtener la dirección automáticamente. Escríbela manualmente y conserva el enlace de Google Maps.")
+		bad(w, http.StatusUnprocessableEntity, "No pude obtener la ubicación automáticamente. Reintenta o comparte otro enlace de Google Maps del lugar.")
 		return
 	}
 	address := s.reverseGeocode(ctx, lat, lng)
