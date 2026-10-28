@@ -25,50 +25,53 @@ type User struct {
 }
 
 type Event struct {
-	InvitationMessage string                  `bson:"invitationMessage,omitempty" json:"invitationMessage,omitempty"`
-	BackgroundImage   *ImageBackground        `bson:"backgroundImage,omitempty" json:"backgroundImage,omitempty"`
-	Opening           *Opening                `bson:"opening,omitempty" json:"opening,omitempty"`
-	Celebration       *Celebration            `bson:"celebration,omitempty" json:"celebration,omitempty"`
-	Wishlist          Wishlist                `bson:"wishlist,omitempty" json:"-"`
-	Music             *Music                  `bson:"music,omitempty" json:"music,omitempty"`
-	AudioKeys         []string                `bson:"audioKeys,omitempty" json:"audioKeys,omitempty"`
-	Payment           *Payment                `bson:"payment,omitempty" json:"-"`
-	PaymentSource     string                  `bson:"paymentSource,omitempty" json:"paymentSource,omitempty"`
-	TemplateID        string                  `bson:"templateId" json:"templateId"`
-	CapacityUnlimited bool                    `bson:"capacityUnlimited" json:"capacityUnlimited"`
-	Seating           *SeatingPlan            `bson:"seating,omitempty" json:"-"`
-	DesignMode        string                  `bson:"designMode,omitempty" json:"designMode"`
-	CoupleVersion     int64                   `bson:"coupleVersion" json:"-"`
-	CoupleInvites     map[string]CoupleInvite `bson:"coupleInvites" json:"-"`
-	ResponseVersion   int64                   `bson:"responseVersion" json:"-"`
-	Responses         map[string]Response     `bson:"responses" json:"-"`
-	ResponseReceipts  map[string]bool         `bson:"responseReceipts" json:"-"`
-	ID                string                  `bson:"_id" json:"id"`
-	Kind              string                  `bson:"kind" json:"kind"` // wedding or general
-	Slug              string                  `bson:"slug" json:"slug"`
-	Title             string                  `bson:"title" json:"title"`
-	Description       string                  `bson:"description" json:"description"`
-	StartAt           time.Time               `bson:"startAt" json:"startAt"`
-	TimeZone          string                  `bson:"timeZone" json:"timeZone"`
-	Organizer         string                  `bson:"organizer" json:"organizer"`
-	Location          string                  `bson:"location" json:"location"`
-	IsVirtual         bool                    `bson:"isVirtual" json:"isVirtual"`
-	MapURL            string                  `bson:"mapUrl" json:"mapUrl"`
-	VirtualURL        string                  `bson:"virtualUrl" json:"virtualUrl"`
-	Capacity          int                     `bson:"capacity" json:"capacity"`
-	MaybeHoldHours    int                     `bson:"maybeHoldHours" json:"maybeHoldHours"`
-	Template          string                  `bson:"template" json:"template"`
-	AccentColor       string                  `bson:"accentColor" json:"accentColor"`
-	IsDemo            bool                    `bson:"isDemo,omitempty" json:"isDemo"`
-	Sections          []Section               `bson:"sections,omitempty" json:"sections"`
-	PhotoKeys         []string                `bson:"photoKeys" json:"photoKeys"`
-	OwnerID           string                  `bson:"ownerId" json:"ownerId"`
-	CoupleUserIDs     []string                `bson:"coupleUserIds" json:"coupleUserIds"`
-	PaymentStatus     string                  `bson:"paymentStatus" json:"paymentStatus"` // unpaid, pending, paid
-	CheckoutID        string                  `bson:"checkoutId" json:"-"`
-	PublishedAt       *time.Time              `bson:"publishedAt" json:"publishedAt"`
-	CreatedAt         time.Time               `bson:"createdAt" json:"createdAt"`
-	UpdatedAt         time.Time               `bson:"updatedAt" json:"updatedAt"`
+	InvitationsEnabled bool                    `bson:"invitationsEnabled,omitempty" json:"invitationsEnabled"`
+	InvitationWebReady bool                    `bson:"invitationWebReady,omitempty" json:"-"`
+	InvitationHolds    map[string]int          `bson:"invitationHolds,omitempty" json:"-"`
+	InvitationMessage  string                  `bson:"invitationMessage,omitempty" json:"invitationMessage,omitempty"`
+	BackgroundImage    *ImageBackground        `bson:"backgroundImage,omitempty" json:"backgroundImage,omitempty"`
+	Opening            *Opening                `bson:"opening,omitempty" json:"opening,omitempty"`
+	Celebration        *Celebration            `bson:"celebration,omitempty" json:"celebration,omitempty"`
+	Wishlist           Wishlist                `bson:"wishlist,omitempty" json:"-"`
+	Music              *Music                  `bson:"music,omitempty" json:"music,omitempty"`
+	AudioKeys          []string                `bson:"audioKeys,omitempty" json:"audioKeys,omitempty"`
+	Payment            *Payment                `bson:"payment,omitempty" json:"-"`
+	PaymentSource      string                  `bson:"paymentSource,omitempty" json:"paymentSource,omitempty"`
+	TemplateID         string                  `bson:"templateId" json:"templateId"`
+	CapacityUnlimited  bool                    `bson:"capacityUnlimited" json:"capacityUnlimited"`
+	Seating            *SeatingPlan            `bson:"seating,omitempty" json:"-"`
+	DesignMode         string                  `bson:"designMode,omitempty" json:"designMode"`
+	CoupleVersion      int64                   `bson:"coupleVersion" json:"-"`
+	CoupleInvites      map[string]CoupleInvite `bson:"coupleInvites" json:"-"`
+	ResponseVersion    int64                   `bson:"responseVersion" json:"-"`
+	Responses          map[string]Response     `bson:"responses" json:"-"`
+	ResponseReceipts   map[string]bool         `bson:"responseReceipts" json:"-"`
+	ID                 string                  `bson:"_id" json:"id"`
+	Kind               string                  `bson:"kind" json:"kind"` // wedding or general
+	Slug               string                  `bson:"slug" json:"slug"`
+	Title              string                  `bson:"title" json:"title"`
+	Description        string                  `bson:"description" json:"description"`
+	StartAt            time.Time               `bson:"startAt" json:"startAt"`
+	TimeZone           string                  `bson:"timeZone" json:"timeZone"`
+	Organizer          string                  `bson:"organizer" json:"organizer"`
+	Location           string                  `bson:"location" json:"location"`
+	IsVirtual          bool                    `bson:"isVirtual" json:"isVirtual"`
+	MapURL             string                  `bson:"mapUrl" json:"mapUrl"`
+	VirtualURL         string                  `bson:"virtualUrl" json:"virtualUrl"`
+	Capacity           int                     `bson:"capacity" json:"capacity"`
+	MaybeHoldHours     int                     `bson:"maybeHoldHours" json:"maybeHoldHours"`
+	Template           string                  `bson:"template" json:"template"`
+	AccentColor        string                  `bson:"accentColor" json:"accentColor"`
+	IsDemo             bool                    `bson:"isDemo,omitempty" json:"isDemo"`
+	Sections           []Section               `bson:"sections,omitempty" json:"sections"`
+	PhotoKeys          []string                `bson:"photoKeys" json:"photoKeys"`
+	OwnerID            string                  `bson:"ownerId" json:"ownerId"`
+	CoupleUserIDs      []string                `bson:"coupleUserIds" json:"coupleUserIds"`
+	PaymentStatus      string                  `bson:"paymentStatus" json:"paymentStatus"` // unpaid, pending, paid
+	CheckoutID         string                  `bson:"checkoutId" json:"-"`
+	PublishedAt        *time.Time              `bson:"publishedAt" json:"publishedAt"`
+	CreatedAt          time.Time               `bson:"createdAt" json:"createdAt"`
+	UpdatedAt          time.Time               `bson:"updatedAt" json:"updatedAt"`
 }
 
 type Section struct {
@@ -82,6 +85,9 @@ type Section struct {
 }
 
 type Guest struct {
+	QueuePosition       int64      `bson:"queuePosition" json:"queuePosition"`
+	SendState           string     `bson:"sendState,omitempty" json:"sendState,omitempty"`
+	SendStartedAt       *time.Time `bson:"sendStartedAt,omitempty" json:"-"`
 	LastName            string     `bson:"lastName" json:"lastName"`
 	Family              string     `bson:"family" json:"family"`
 	Gender              string     `bson:"gender" json:"gender"`

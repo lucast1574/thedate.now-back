@@ -3,6 +3,7 @@ package httpapi
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"github.com/lucast1574/thedate.now-back/internal/mongostore"
 	"net/http"
 	"time"
 
@@ -35,7 +36,12 @@ func (s *server) importGuests(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	added, skipped := 0, 0
-	for _, row := range in.Guests {
+	position, err := (mongostore.InvitationQueue{DB: s.db}).Allocate(r.Context(), e.ID, len(in.Guests))
+	if err != nil {
+		bad(w, 500, "Could not reserve invitation order")
+		return
+	}
+	for index, row := range in.Guests {
 		token, err := randomToken()
 		if err != nil {
 			bad(w, 500, "Import interrupted; retry the file safely")
@@ -44,6 +50,7 @@ func (s *server) importGuests(w http.ResponseWriter, r *http.Request) {
 		key := sha256.Sum256([]byte(e.ID + ":" + row.Phone))
 		g := guestFromInput(row, "import-"+hex.EncodeToString(key[:]), e.ID, token)
 		g.CreatedAt = time.Now().UTC()
+		g.QueuePosition = position + int64(index)
 		result, err := s.db.Collection("guests").UpdateOne(r.Context(), bson.M{"eventId": e.ID, "phone": row.Phone}, bson.M{"$setOnInsert": g}, options.UpdateOne().SetUpsert(true))
 		if mongo.IsDuplicateKeyError(err) {
 			skipped++

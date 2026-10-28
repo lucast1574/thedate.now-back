@@ -55,7 +55,7 @@ func (s Responses) CommitResponse(ctx context.Context, e core.Event, id string, 
 	if receipt != "" {
 		set["responseReceipts."+receipt] = true
 	}
-	result, err := s.DB.Collection("events").UpdateOne(ctx, bson.M{"_id": e.ID, "responseVersion": e.ResponseVersion, "paymentStatus": "paid", "publishedAt": bson.M{"$ne": nil}}, bson.M{"$set": set, "$inc": increments})
+	result, err := s.DB.Collection("events").UpdateOne(ctx, bson.M{"_id": e.ID, "responseVersion": e.ResponseVersion, "paymentStatus": "paid", "publishedAt": bson.M{"$ne": nil}}, bson.M{"$set": set, "$inc": increments, "$unset": bson.M{"invitationHolds." + id: ""}})
 	if err != nil {
 		return false, err
 	}

@@ -25,6 +25,9 @@ func (r Response) Active(now time.Time) bool {
 }
 func Occupied(e Event, now time.Time) int {
 	total := 0
+	for _, seats := range e.InvitationHolds {
+		total += seats
+	}
 	for _, r := range e.Responses {
 		if r.Active(now) {
 			total += r.Seats
@@ -41,6 +44,9 @@ func DecideResponse(e Event, g Guest, choice, reason string, now time.Time) (Res
 	if choice != "going" && choice != "maybe" && choice != "not_going" {
 		return Response{}, errors.New("invalid response")
 	}
+	if e.InvitationsEnabled && g.SentAt == nil && e.InvitationHolds[g.ID] == 0 {
+		return Response{}, ErrUnavailable
+	}
 	if g.EventID != e.ID || g.Seats < 1 || g.Seats > 20 || len(reason) > 2000 {
 		return Response{}, errors.New("invalid guest response")
 	}
@@ -50,6 +56,7 @@ func DecideResponse(e Event, g Guest, choice, reason string, now time.Time) (Res
 		next.ExpiresAt = &expiry
 	}
 	used := Occupied(e, now)
+	used -= e.InvitationHolds[g.ID]
 	if old := e.Responses[g.ID]; old.Active(now) {
 		used -= old.Seats
 	}

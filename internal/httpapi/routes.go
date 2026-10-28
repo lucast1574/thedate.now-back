@@ -58,6 +58,8 @@ func (s *server) routes() http.Handler {
 	mux.HandleFunc("POST /events/{id}/photos", s.uploadPhoto)
 	mux.HandleFunc("GET /events/{id}/photos/{key}", s.ownerPhoto)
 	mux.HandleFunc("POST /events/{id}/send-invitations", s.sendInvitations)
+	mux.HandleFunc("POST /events/{id}/delivery", s.startDelivery)
+	mux.HandleFunc("GET /events/{id}/delivery", s.deliveryStatus)
 	mux.HandleFunc("POST /events/{id}/couple-invitations", s.inviteCouple)
 	mux.HandleFunc("POST /events/{id}/couple-accounts", s.createCoupleAccount)
 	mux.HandleFunc("GET /couple-invites/{token}", s.coupleInviteDetails)

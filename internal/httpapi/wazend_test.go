@@ -24,7 +24,7 @@ func TestConcurrentSendsClaimGuestBeforeProviderCall(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	e := core.Event{ID: "event", Kind: "general", Slug: "party", OwnerID: u.ID, PaymentStatus: "paid", PublishedAt: &now, StartAt: now}
+	e := core.Event{ID: "event", Kind: "general", Slug: "party", OwnerID: u.ID, PaymentStatus: "paid", PublishedAt: &now, StartAt: now, CapacityUnlimited: true}
 	_, err = db.Collection("events").InsertOne(ctx, e)
 	if err != nil {
 		t.Fatal(err)
@@ -47,7 +47,7 @@ func TestConcurrentSendsClaimGuestBeforeProviderCall(t *testing.T) {
 	t.Setenv("WAZEND_BASE_URL", provider.URL)
 	t.Setenv("WAZEND_API_KEY", "test")
 	t.Setenv("WAZEND_SESSION", "test")
-	s := &server{db: db, secret: []byte(strings.Repeat("x", 32))}
+	s := &server{db: db, secret: []byte(strings.Repeat("x", 32)), invitationReady: func(context.Context, core.Event) bool { return true }}
 	token, err := s.sign(u, "password")
 	if err != nil {
 		t.Fatal(err)

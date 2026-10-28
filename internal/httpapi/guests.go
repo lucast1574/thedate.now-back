@@ -7,6 +7,7 @@ import (
 	"github.com/lucast1574/thedate.now-back/internal/core"
 	"github.com/lucast1574/thedate.now-back/internal/mongostore"
 	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 	"net/http"
 	"regexp"
 	"time"
@@ -44,6 +45,11 @@ func (s *server) addGuest(w http.ResponseWriter, r *http.Request) {
 	}
 	g := guestFromInput(in, uuid.NewString(), e.ID, token)
 	g.CreatedAt = time.Now().UTC()
+	g.QueuePosition, err = (mongostore.InvitationQueue{DB: s.db}).Allocate(r.Context(), e.ID, 1)
+	if err != nil {
+		bad(w, 500, "Could not append guest to the invitation list")
+		return
+	}
 	if _, err = s.db.Collection("guests").InsertOne(r.Context(), g); err != nil {
 		bad(w, 500, "Could not add guest")
 		return
@@ -61,7 +67,7 @@ func (s *server) listGuests(w http.ResponseWriter, r *http.Request) {
 		reply(w, 200, []core.Guest{})
 		return
 	}
-	cur, err := s.db.Collection("guests").Find(r.Context(), bson.M{"eventId": e.ID})
+	cur, err := s.db.Collection("guests").Find(r.Context(), bson.M{"eventId": e.ID}, options.Find().SetSort(mongostore.GuestQueueSort()))
 	if err != nil {
 		bad(w, 500, "Could not list guests")
 		return
@@ -79,7 +85,10 @@ func (s *server) listGuests(w http.ResponseWriter, r *http.Request) {
 	}
 	views := make([]map[string]any, 0, len(guests))
 	for _, guest := range guests {
-		views = append(views, guestView(e, core.WithResponse(e, guest)))
+		view := guestView(e, core.WithResponse(e, guest))
+		view["queuePosition"], view["sendState"], view["invitationHeld"] = guest.QueuePosition, core.InvitationSendState(guest, time.Now().UTC()), e.InvitationHolds[guest.ID] > 0
+		view["createdAt"] = guest.CreatedAt
+		views = append(views, view)
 	}
 	reply(w, 200, views)
 }

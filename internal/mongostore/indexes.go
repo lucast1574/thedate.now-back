@@ -30,8 +30,8 @@ func EnsureIndexes(ctx context.Context, db *mongo.Database) error {
 	}
 	for collection, indexes := range map[string][]mongo.IndexModel{
 		"supportTickets": {{Keys: bson.D{{Key: "requesterId", Value: 1}, {Key: "requestId", Value: 1}}, Options: options.Index().SetUnique(true)}, {Keys: bson.D{{Key: "requesterId", Value: 1}, {Key: "createdAt", Value: -1}}}, {Keys: bson.D{{Key: "state", Value: 1}, {Key: "createdAt", Value: -1}}}},
-		"events":         {{Keys: bson.D{{Key: "ownerId", Value: 1}}}, {Keys: bson.D{{Key: "coupleUserIds", Value: 1}}}},
-		"guests":         {{Keys: bson.D{{Key: "eventId", Value: 1}, {Key: "sentAt", Value: 1}}}, {Keys: bson.D{{Key: "invitationMessageId", Value: 1}}}},
+		"events":         {{Keys: bson.D{{Key: "ownerId", Value: 1}}}, {Keys: bson.D{{Key: "coupleUserIds", Value: 1}}}, {Keys: bson.D{{Key: "invitationsEnabled", Value: 1}, {Key: "invitationCheckedAt", Value: 1}}}},
+		"guests":         {{Keys: bson.D{{Key: "eventId", Value: 1}, {Key: "sentAt", Value: 1}}}, {Keys: bson.D{{Key: "invitationMessageId", Value: 1}}}, {Keys: bson.D{{Key: "eventId", Value: 1}, {Key: "queuePosition", Value: 1}, {Key: "createdAt", Value: 1}, {Key: "_id", Value: 1}}}},
 		"coupleInvites":  {{Keys: bson.D{{Key: "tokenHash", Value: 1}}, Options: options.Index().SetUnique(true)}},
 		"deployments":    {{Keys: bson.D{{Key: "phase", Value: 1}, {Key: "finalized", Value: 1}, {Key: "nextAttemptAt", Value: 1}, {Key: "leaseUntil", Value: 1}}}},
 		"rateLimits":     {{Keys: bson.D{{Key: "expiresAt", Value: 1}}, Options: options.Index().SetExpireAfterSeconds(0)}},

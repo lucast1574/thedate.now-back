@@ -65,6 +65,14 @@ Frontend y API se publican siguiendo `rollout.md`; la actualización del rendere
 
 ## Personas y plano de mesas
 
+### Cola de invitaciones y preparación del enlace
+
+`POST /events/{id}/delivery` guarda la intención de enviar y prepara la publicación si hace falta; `GET` devuelve preparación, envíos, espera por aforo y resultados que requieren revisión. Solo propietario/admin inicia el envío. Un worker persistente procesa únicamente eventos explícitamente activados y futuros. Antes de contactar WhatsApp comprueba pago, publicación, despliegue listo y la página pública con la identidad del evento. Reiniciar el servidor o cerrar el navegador no pierde la intención.
+
+`mongostore.InvitationQueue` asigna posiciones crecientes: cada importación reserva un tramo y conserva el orden de sus filas; cada alta manual ocupa la siguiente posición. Los registros antiguos sin posición conservan prioridad por fecha/ID. La reserva de cupos vive en `invitationHolds` dentro del evento y usa `responseVersion`, igual que RSVP; una respuesta elimina su oferta en la misma escritura y la sustituye por su asistencia o reserva temporal. Una negativa, menos acompañantes o una reserva vencida deja espacio para la siguiente invitación. No se saltan grupos que todavía no caben completos.
+
+El claim de WhatsApp se persiste antes de enviar. Un resultado incierto conserva claim y cupos, sin reintento automático. Un rechazo HTTP 4xx confirmado libera los cupos y queda visible como fallo. El estado de envío en curso pasa a revisión si no se resuelve en dos minutos. No activar esta cola durante una convivencia de escritores antiguos que ignoren `invitationHolds`: desplegar y verificar primero la API nueva y después el frontend que permite iniciar la cola.
+
 `core/party.go` valida personas y convierte una invitación en slots estables: titular `guestID~0`, acompañantes `guestID~1…`. `Guest.Seats` es el máximo permitido (1–20); la respuesta canónica guarda el número real y los nombres. RSVP explícito `companions: []` confirma solo al titular. Respuestas nativas de WhatsApp conservan la lista registrada; si aún no se registró, reservan conservadoramente el máximo invitado. El enlace personal enviado por WhatsApp permite registrar nombres de acompañantes; no se interpreta texto libre como una lista.
 
 `capacityUnlimited` se exige como opción explícita en los formularios; eventos antiguos siguen limitados por `capacity`. Las reservas cuentan acompañantes y temporales no vencidos. Reducir aforo por debajo de reservas o personas asignadas falla.

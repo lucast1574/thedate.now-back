@@ -2,6 +2,7 @@ package httpapi
 
 import (
 	"context"
+	"github.com/lucast1574/thedate.now-back/internal/core"
 	"github.com/lucast1574/thedate.now-back/internal/mongostore"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
@@ -16,11 +17,12 @@ import (
 )
 
 type server struct {
-	product      string
-	verifyGoogle func(context.Context, string, string) (*idtoken.Payload, error)
-	db           *mongo.Database
-	secret       []byte
-	storage      *storage
+	invitationReady func(context.Context, core.Event) bool
+	product         string
+	verifyGoogle    func(context.Context, string, string) (*idtoken.Payload, error)
+	db              *mongo.Database
+	secret          []byte
+	storage         *storage
 }
 
 func Run() {
@@ -68,9 +70,10 @@ func Run() {
 	defer stop()
 	var workers sync.WaitGroup
 	for _, s := range servers {
-		workers.Add(2)
+		workers.Add(3)
 		go func(s *server) { defer workers.Done(); s.deploymentWorker(runCtx) }(s)
 		go func(s *server) { defer workers.Done(); s.emailWorker(runCtx) }(s)
+		go func(s *server) { defer workers.Done(); s.invitationWorker(runCtx) }(s)
 	}
 	port := env("PORT", "8080")
 	log.Printf("The Date API listening on :%s", port)
