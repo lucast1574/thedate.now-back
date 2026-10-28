@@ -65,6 +65,8 @@ Frontend y API se publican siguiendo `rollout.md`; la actualización del rendere
 
 ## Personas y plano de mesas
 
+Las nuevas altas e importaciones admiten únicamente titular sin acompañante (`seats: 1`) o titular con un +1 (`seats: 2`). `validGuest` impone este límite en el servidor. Los datos ya guardados y las respuestas canónicas mantienen su contrato anterior para no alterar invitaciones existentes.
+
 ### Cola de invitaciones y preparación del enlace
 
 `POST /events/{id}/delivery` guarda la intención de enviar y prepara la publicación si hace falta; `GET` devuelve preparación, envíos, espera por aforo y resultados que requieren revisión. Solo propietario/admin inicia el envío. Un worker persistente procesa únicamente eventos explícitamente activados y futuros. Antes de contactar WhatsApp comprueba pago, publicación, despliegue listo y la página pública con la identidad del evento. Reiniciar el servidor o cerrar el navegador no pierde la intención.

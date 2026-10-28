@@ -35,7 +35,7 @@ func (s *server) addGuest(w http.ResponseWriter, r *http.Request) {
 	}
 	var in guestInput
 	if decode(r, &in) != nil || !validGuest(in) {
-		bad(w, 400, "A name, international phone number and 1-20 seats are required")
+		bad(w, 400, "Indica nombre, WhatsApp y como máximo un acompañante por titular.")
 		return
 	}
 	token, err := randomToken()

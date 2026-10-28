@@ -16,7 +16,7 @@ type guestInput struct {
 }
 
 func validGuest(in guestInput) bool {
-	return core.ValidPerson(core.Person{Name: in.Name, LastName: in.LastName, Gender: in.Gender}) && len(in.Family) <= 80 && phonePattern.MatchString(in.Phone) && core.ValidParty(in.Companions, in.Seats)
+	return in.Seats <= 2 && core.ValidPerson(core.Person{Name: in.Name, LastName: in.LastName, Gender: in.Gender}) && len(in.Family) <= 80 && phonePattern.MatchString(in.Phone) && core.ValidParty(in.Companions, in.Seats)
 }
 func guestFromInput(in guestInput, id, eventID, token string) core.Guest {
 	return core.Guest{ID: id, EventID: eventID, Name: strings.TrimSpace(in.Name), LastName: strings.TrimSpace(in.LastName), Family: strings.TrimSpace(in.Family), Gender: in.Gender, Phone: in.Phone, Seats: in.Seats, Companions: in.Companions, Response: "pending", InviteToken: token}
