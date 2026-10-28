@@ -31,7 +31,7 @@ func (s *server) importGuests(w http.ResponseWriter, r *http.Request) {
 	}
 	for _, row := range in.Guests {
 		if !validGuest(row) {
-			bad(w, 400, "Check every name, international phone and seat count before importing")
+			bad(w, 400, "Revisa nombre, WhatsApp, máximo un acompañante y categoría de cada fila.")
 			return
 		}
 	}

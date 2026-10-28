@@ -43,7 +43,7 @@ func TestCouplePlansButOtherAccountsAndUnpaidEventsCannot(t *testing.T) {
 	if w := call(outsider, "GET", "/events/e/seating", ""); w.Code != 404 {
 		t.Fatal("outsider accessed plan")
 	}
-	w := call(couple, "POST", "/events/e/guests", `{"name":"Ana","lastName":"Rojas","phone":"+51987654321","seats":2,"gender":"woman","family":"Rojas"}`)
+	w := call(couple, "POST", "/events/e/guests", `{"name":"Ana","lastName":"Rojas","phone":"+51987654321","seats":2,"gender":"woman","family":"Familia de la novia"}`)
 	if w.Code != 201 {
 		t.Fatalf("couple add: %d %s", w.Code, w.Body.String())
 	}

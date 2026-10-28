@@ -65,6 +65,8 @@ Frontend y API se publican siguiendo `rollout.md`; la actualización del rendere
 
 ## Personas y plano de mesas
 
+Las categorías de nuevas altas/importaciones se validan y normalizan mediante `core.GuestCategory`: familia del novio/novia, amigos del novio/novia, amigos, compañeros de trabajo u otros; también se permite vacío. Se almacenan con su nombre canónico en `family`, sin crear categorías arbitrarias ni modificar etiquetas históricas.
+
 Las nuevas altas e importaciones admiten únicamente titular sin acompañante (`seats: 1`) o titular con un +1 (`seats: 2`). `validGuest` impone este límite en el servidor. Los datos ya guardados y las respuestas canónicas mantienen su contrato anterior para no alterar invitaciones existentes.
 
 ### Cola de invitaciones y preparación del enlace
