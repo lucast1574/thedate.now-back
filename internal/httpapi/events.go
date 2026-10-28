@@ -79,7 +79,10 @@ func (s *server) listEvents(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	filter := bson.M{"$or": bson.A{bson.M{"ownerId": u.ID}, bson.M{"coupleUserIds": u.ID}}}
-	if u.Role == "admin" {
+	if r.URL.Query().Get("scope") == "organization" {
+		filter["paymentStatus"] = "paid"
+		filter["isDemo"] = bson.M{"$ne": true}
+	} else if u.Role == "admin" {
 		filter = bson.M{"$or": bson.A{bson.M{"isDemo": bson.M{"$ne": true}}, bson.M{"ownerId": u.ID}}}
 	}
 	cur, err := s.db.Collection("events").Find(r.Context(), filter)
