@@ -35,7 +35,7 @@ func (s *server) invitationPageReady(ctx context.Context, e core.Event) bool {
 func (s *server) dispatchInvitations(ctx context.Context, e core.Event) {
 	config := wazendFor(e.Kind)
 	base, err := url.Parse(config.Base)
-	if !config.ready() || err != nil || base.Scheme != "https" || base.Host == "" {
+	if !config.ready() || err != nil || base.Scheme != "https" || base.Host == "" || !wazendSessionReady(ctx, config) {
 		return
 	}
 	ready := s.invitationPageReady(ctx, e)

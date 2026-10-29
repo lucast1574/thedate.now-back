@@ -59,6 +59,7 @@ func (s *server) routes() http.Handler {
 	mux.HandleFunc("GET /events/{id}/photos/{key}", s.ownerPhoto)
 	mux.HandleFunc("POST /events/{id}/send-invitations", s.sendInvitations)
 	mux.HandleFunc("POST /events/{id}/delivery", s.startDelivery)
+	mux.HandleFunc("POST /events/{id}/delivery/retry", s.retryDelivery)
 	mux.HandleFunc("GET /events/{id}/delivery", s.deliveryStatus)
 	mux.HandleFunc("POST /events/{id}/couple-invitations", s.inviteCouple)
 	mux.HandleFunc("POST /events/{id}/couple-accounts", s.createCoupleAccount)

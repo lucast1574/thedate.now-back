@@ -30,6 +30,10 @@ func TestDeliveryKeepsFileOrderAppendsManualAndWaitsForWebsiteAndCapacity(t *tes
 	var mu sync.Mutex
 	var names []string
 	provider := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet && r.URL.Path == "/api/sessions/test" {
+			_ = json.NewEncoder(w).Encode(map[string]string{"name": "test", "status": "WORKING"})
+			return
+		}
 		var input struct {
 			ChatID string `json:"chatId"`
 		}
@@ -116,7 +120,14 @@ func TestUnknownSendRetainsClaimAndSeatsWithoutRetry(t *testing.T) {
 		_, _ = db.Collection("guests").InsertOne(ctx, g)
 	}
 	var calls atomic.Int32
-	provider := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { calls.Add(1); w.WriteHeader(500) }))
+	provider := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet && r.URL.Path == "/api/sessions/test" {
+			_ = json.NewEncoder(w).Encode(map[string]string{"name": "test", "status": "WORKING"})
+			return
+		}
+		calls.Add(1)
+		w.WriteHeader(500)
+	}))
 	defer provider.Close()
 	previous := wazendClient
 	wazendClient = provider.Client()

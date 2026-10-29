@@ -36,6 +36,10 @@ func TestConcurrentSendsClaimGuestBeforeProviderCall(t *testing.T) {
 	}
 	var sends atomic.Int32
 	provider := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet && r.URL.Path == "/api/sessions/test" {
+			_ = json.NewEncoder(w).Encode(map[string]string{"name": "test", "status": "WORKING"})
+			return
+		}
 		sends.Add(1)
 		time.Sleep(20 * time.Millisecond)
 		_ = json.NewEncoder(w).Encode(map[string]string{"id": "message-1"})
