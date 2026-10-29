@@ -3,7 +3,6 @@ package httpapi
 import (
 	"crypto/rand"
 	"encoding/hex"
-	"github.com/google/uuid"
 	"github.com/lucast1574/thedate.now-back/internal/core"
 	"github.com/lucast1574/thedate.now-back/internal/mongostore"
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -43,15 +42,20 @@ func (s *server) addGuest(w http.ResponseWriter, r *http.Request) {
 		bad(w, 500, "Could not create invitation")
 		return
 	}
-	g := guestFromInput(in, uuid.NewString(), e.ID, token)
+	g := guestFromInput(in, core.GuestPhoneID(e.ID, in.Phone), e.ID, token)
 	g.CreatedAt = time.Now().UTC()
 	g.QueuePosition, err = (mongostore.InvitationQueue{DB: s.db}).Allocate(r.Context(), e.ID, 1)
 	if err != nil {
 		bad(w, 500, "Could not append guest to the invitation list")
 		return
 	}
-	if _, err = s.db.Collection("guests").InsertOne(r.Context(), g); err != nil {
+	added, err := (mongostore.GuestImports{DB: s.db}).Add(r.Context(), g)
+	if err != nil {
 		bad(w, 500, "Could not add guest")
+		return
+	}
+	if !added {
+		bad(w, 409, "Ya hay un invitado con este WhatsApp en tu lista.")
 		return
 	}
 	reply(w, 201, g)
