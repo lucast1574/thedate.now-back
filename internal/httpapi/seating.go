@@ -26,6 +26,18 @@ func (s *server) getSeating(w http.ResponseWriter, r *http.Request) {
 	if current.Seating != nil {
 		plan = *current.Seating
 	}
+	cur, err := s.db.Collection("guests").Find(r.Context(), bson.M{"eventId": e.ID})
+	if err != nil {
+		bad(w, 500, "Could not load guests")
+		return
+	}
+	defer cur.Close(r.Context())
+	var guests []core.Guest
+	if err = cur.All(r.Context(), &guests); err != nil {
+		bad(w, 500, "Could not load guests")
+		return
+	}
+	plan.Assignments = core.ConfirmedAssignments(plan, current, guests)
 	reply(w, 200, plan)
 }
 func (s *server) saveSeating(w http.ResponseWriter, r *http.Request) {

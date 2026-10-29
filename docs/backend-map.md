@@ -44,6 +44,8 @@ Las respuestas canónicas y sus recibos están dentro del documento del evento. 
 
 La colección `guests` conserva datos personales y del envío; su estado antiguo de RSVP sirve únicamente como fuente de migración. La lectura pública/privada combina el registro de invitado con la respuesta canónica. No lean `guests.response` directamente para estadísticas nuevas.
 
+La confirmación y el plano se guardan en la misma escritura condicional de `Responses.CommitResponse`. `core.SeatResponse` asigna solamente al titular que confirma y sus acompañantes registrados: conserva su mesa si caben, busca espacio en su categoría o crea una mesa de 10. Respeta capacidades editadas y las asignaciones de otras personas; una baja libera sus asientos sin reorganizar el salón. `SeatingMembers` excluye los +1 sin registrar; `ConfirmedAssignments` quita asignaciones provisionales antiguas al leer y al responder. Guardar el plano exige confirmados, fiestas completas juntas y capacidad por mesa/evento. No hay un límite de 100 mesas manuales; se mantienen los límites de seguridad de 5000 asignaciones y 50 asientos por mesa.
+
 ## Referencias
 
 - Implementación de referencia: `lucast1574/nexode-backend`, `src/core/dokploy/dokploy.service.ts` y `src/modules/compute/compute.service.ts`.

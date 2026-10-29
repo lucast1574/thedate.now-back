@@ -48,9 +48,23 @@ func (s Responses) Snapshot(ctx context.Context, id string) (core.Event, error) 
 func (s Responses) CommitResponse(ctx context.Context, e core.Event, id string, r core.Response, receipt string) (bool, error) {
 	set := bson.M{"responses." + id: r}
 	increments := bson.M{"responseVersion": 1}
-	if e.Seating != nil {
-		set["seating.assignments"] = core.ReconcileSeats(*e.Seating, id, r)
-		increments["seating.version"] = 1
+	cur, err := s.DB.Collection("guests").Find(ctx, bson.M{"eventId": e.ID})
+	if err != nil {
+		return false, err
+	}
+	defer cur.Close(ctx)
+	var guests []core.Guest
+	if err = cur.All(ctx, &guests); err != nil {
+		return false, err
+	}
+	if len(guests) > 0 || e.Seating != nil {
+		plan := core.SeatResponse(e, guests, id, r)
+		// Legacy callers without stored metadata can still release obsolete seats.
+		if len(guests) == 0 {
+			plan.Assignments = core.ReconcileSeats(*e.Seating, id, r)
+		}
+		plan.Version++
+		set["seating"] = plan
 	}
 	if receipt != "" {
 		set["responseReceipts."+receipt] = true

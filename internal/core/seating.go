@@ -31,7 +31,7 @@ func ValidateSeating(plan SeatingPlan, e Event, guests []Guest) error {
 	if err := ValidateVenueAreas(plan); err != nil {
 		return err
 	}
-	if plan.Width != 1600 || plan.Height != 1000 || len(plan.Tables) > 100 || len(plan.Assignments) > 5000 || plan.Version < 0 {
+	if plan.Width != 1600 || plan.Height != 1000 || len(plan.Assignments) > 5000 || plan.Version < 0 {
 		return errors.New("invalid plan size")
 	}
 	tables := map[string]int{}
@@ -47,10 +47,14 @@ func ValidateSeating(plan SeatingPlan, e Event, guests []Guest) error {
 	allowed := map[string]bool{}
 	for _, g := range guests {
 		g = WithResponse(e, g)
-		if g.Response == "not_going" {
+		if g.Response != "going" {
 			continue
 		}
-		for _, m := range PartyMembers(g) {
+		table := plan.Assignments[g.ID+"~0"]
+		for _, m := range SeatingMembers(g) {
+			if plan.Assignments[m.ID] != table {
+				return errors.New("el titular y sus acompañantes deben estar juntos")
+			}
 			allowed[m.ID] = true
 		}
 	}
@@ -73,7 +77,7 @@ func ReconcileSeats(plan SeatingPlan, guestID string, response Response) map[str
 	assignments := map[string]string{}
 	allowed := map[string]bool{}
 	for n := 0; n < response.Seats; n++ {
-		allowed[guestID+"~"+strconv.Itoa(n)] = response.Choice != "not_going"
+		allowed[guestID+"~"+strconv.Itoa(n)] = response.Choice == "going"
 	}
 	for id, table := range plan.Assignments {
 		if !strings.HasPrefix(id, guestID+"~") || allowed[id] {

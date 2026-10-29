@@ -52,7 +52,7 @@ func TestUnlimitedCapacityStillChecksPartyAllowance(t *testing.T) {
 	}
 }
 func TestSeatingRejectsUnknownPeopleOverbookingAndInvalidGeometry(t *testing.T) {
-	guests := []Guest{{ID: "g", Name: "Ana", Seats: 2, Response: "going"}, {ID: "declined", Name: "No", Seats: 1, Response: "not_going"}}
+	guests := []Guest{{ID: "g", Name: "Ana", Seats: 2, Response: "going", Companions: []Person{{Name: "Luis"}}}, {ID: "declined", Name: "No", Seats: 1, Response: "not_going"}}
 	e := Event{Capacity: 2}
 	p := DefaultSeating()
 	p.Tables = []SeatingTable{{ID: "t", Name: "Mesa 1", Shape: "round", Capacity: 2, X: 10, Y: 10}}

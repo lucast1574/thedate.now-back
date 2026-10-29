@@ -60,6 +60,13 @@ func TestCouplePlansButOtherAccountsAndUnpaidEventsCannot(t *testing.T) {
 	p.Assignments = map[string]string{g.ID + "~0": "t", g.ID + "~1": "t"}
 	raw, _ := json.Marshal(p)
 	w = call(couple, "PATCH", "/events/e/seating", string(raw))
+	if w.Code != 400 {
+		t.Fatalf("pending guests seated: %d", w.Code)
+	}
+	if _, err := db.Collection("events").UpdateByID(ctx, e.ID, bson.M{"$set": bson.M{"responses." + g.ID: core.Response{Choice: "going", Seats: 2, Companions: []core.Person{{Name: "Luis"}}, PartyRegistered: true}}}); err != nil {
+		t.Fatal(err)
+	}
+	w = call(couple, "PATCH", "/events/e/seating", string(raw))
 	if w.Code != 200 {
 		t.Fatalf("plan %d %s", w.Code, w.Body.String())
 	}
