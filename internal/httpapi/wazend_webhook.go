@@ -83,8 +83,13 @@ func (s *server) wazendWebhook(w http.ResponseWriter, r *http.Request) {
 		bad(w, 400, "Invalid event response")
 		return
 	}
+	messageID := wazendMessageID(event.Payload.EventCreationKey.ID)
+	if messageID == "" {
+		bad(w, 400, "Invalid message ID")
+		return
+	}
 	var g core.Guest
-	if err := s.db.Collection("guests").FindOne(r.Context(), bson.M{"invitationMessageId": event.Payload.EventCreationKey.ID}).Decode(&g); err != nil {
+	if err := s.db.Collection("guests").FindOne(r.Context(), wazendMessageFilter(messageID)).Decode(&g); err != nil {
 		reply(w, 200, map[string]string{"status": "unmatched"})
 		return
 	}

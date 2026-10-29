@@ -19,8 +19,8 @@ func eventMessage(e core.Event, g core.Guest) map[string]any {
 		"event": map[string]any{
 			"name":               invitationBrand(e.Kind) + " · " + e.Title,
 			"description":        core.InvitationMessage(e.InvitationMessage, link) + core.WhatsAppCelebration(e.Celebration),
-			"startTime":          e.StartAt.UTC().Format(time.RFC3339),
-			"endTime":            e.StartAt.Add(4 * time.Hour).UTC().Format(time.RFC3339),
+			"startTime":          e.StartAt.Unix(),
+			"endTime":            e.StartAt.Add(4 * time.Hour).Unix(),
 			"location":           map[string]string{"name": e.Location},
 			"extraGuestsAllowed": false,
 		},
@@ -33,19 +33,19 @@ func extractMessageID(raw []byte) string {
 		return ""
 	}
 	if id, ok := obj["id"].(string); ok {
-		return id
+		return wazendMessageID(id)
 	}
 	if id, ok := obj["id"].(map[string]any); ok {
 		if serial, ok := id["_serialized"].(string); ok {
-			return serial
+			return wazendMessageID(serial)
 		}
 		if value, ok := id["id"].(string); ok {
-			return value
+			return wazendMessageID(value)
 		}
 	}
 	if key, ok := obj["key"].(map[string]any); ok {
 		if id, ok := key["id"].(string); ok {
-			return id
+			return wazendMessageID(id)
 		}
 	}
 	return ""

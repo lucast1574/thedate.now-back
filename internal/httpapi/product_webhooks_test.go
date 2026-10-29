@@ -25,7 +25,11 @@ func TestSharedWebhookUpdatesOnlyTheMatchingProduct(t *testing.T) {
 	now := time.Now().UTC()
 	for _, s := range servers {
 		e := core.Event{ID: "event-" + s.product, Kind: s.product, Capacity: 10, PaymentStatus: "paid", PublishedAt: &now}
-		g := core.Guest{ID: "guest-" + s.product, EventID: e.ID, Seats: 1, Response: "pending", InvitationMessageID: "message-" + s.product}
+		messageID := "message-" + s.product
+		if s.product == "general" {
+			messageID = "true_51999111222@c.us_" + messageID
+		}
+		g := core.Guest{ID: "guest-" + s.product, EventID: e.ID, Seats: 1, Response: "pending", InvitationMessageID: messageID}
 		if _, err := s.db.Collection("events").InsertOne(context.Background(), e); err != nil {
 			t.Fatal(err)
 		}
@@ -34,7 +38,7 @@ func TestSharedWebhookUpdatesOnlyTheMatchingProduct(t *testing.T) {
 		}
 	}
 	for _, target := range []string{"wedding", "general"} {
-		body := fmt.Sprintf(`{"id":"response-%s","session":"test-session","event":"event.response","payload":{"eventCreationKey":{"id":"message-%s"},"eventResponse":{"response":"GOING"}}}`, target, target)
+		body := fmt.Sprintf(`{"id":"response-%s","session":"test-session","event":"event.response","payload":{"eventCreationKey":{"id":"false_51999888777@c.us_message-%s"},"eventResponse":{"response":"GOING"}}}`, target, target)
 		mac := hmac.New(sha512.New, []byte(key))
 		mac.Write([]byte(body))
 		r := httptest.NewRequest("POST", "/webhooks/wazend", strings.NewReader(body))
