@@ -28,20 +28,12 @@ func PartnerBenefit(kind string) int64 {
 	}
 	return 200
 }
-func QuoteEvent(kind string, owner User, referrer User, mode string) CheckoutQuote {
+func QuoteEvent(kind string, owner User) CheckoutQuote {
 	p, _ := ProductFor(kind)
-	q := CheckoutQuote{Amount: p.PriceCents, Mode: "public"}
+	q := CheckoutQuote{Amount: p.PriceCents, Mode: "direct"}
 	if ProfessionalFor(kind, owner) {
-		q.Mode = "self"
-		q.Amount -= PartnerBenefit(kind)
-		if mode == "client" {
-			q.Mode = "client"
-			q.Amount = p.PriceCents
-			q.PartnerID = owner.ID
-			q.Benefit = PartnerBenefit(kind)
-		}
-	} else if ProfessionalFor(kind, referrer) && referrer.ID != owner.ID {
-		q.PartnerID = referrer.ID
+		q.Mode = "professional"
+		q.PartnerID = owner.ID
 		q.Benefit = PartnerBenefit(kind)
 	}
 	return q

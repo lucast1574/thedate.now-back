@@ -24,14 +24,14 @@ func TestProfessionalRepeatedEventsHoldConcurrentReleaseAndRefund(t *testing.T) 
 	if err != nil {
 		t.Fatal(err)
 	}
-	q := core.CheckoutQuote{Amount: 2000, PartnerID: "pro", Benefit: 500, Mode: "client"}
-	e := core.Event{ID: "first", Kind: "wedding", Title: "Boda", PaymentSource: "stripe", Payment: &core.Payment{SessionID: "cs", AmountCents: 2000, Live: true, PaidAt: now}}
+	q := core.QuoteEvent("wedding", core.User{ID: "pro", Role: "planner"})
+	e := core.Event{ID: "first", Kind: "wedding", Title: "Boda", OwnerID: "pro", CheckoutQuotes: map[string]core.CheckoutQuote{"cs": q}, PaymentSource: "stripe", Payment: &core.Payment{SessionID: "cs", AmountCents: 2000, Live: true, PaidAt: now}}
 	var wg sync.WaitGroup
 	for range 12 {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			if err := repo.ConvertPartner(ctx, e, q); err != nil {
+			if err := repo.Convert(ctx, "pro", e); err != nil {
 				t.Error(err)
 			}
 		}()
@@ -39,7 +39,7 @@ func TestProfessionalRepeatedEventsHoldConcurrentReleaseAndRefund(t *testing.T) 
 	wg.Wait()
 	other := e
 	other.ID = "second"
-	if err = repo.ConvertPartner(ctx, other, q); err != nil {
+	if err = repo.Convert(ctx, "pro", other); err != nil {
 		t.Fatal(err)
 	}
 	if _, err = repo.PartnerEntries(ctx, "pro", now); err != nil {
@@ -65,7 +65,7 @@ func TestProfessionalRepeatedEventsHoldConcurrentReleaseAndRefund(t *testing.T) 
 		t.Fatalf("double credit %+v", w)
 	}
 	e.Payment.RefundedCents = 2000
-	if err = repo.ConvertPartner(ctx, e, q); err != nil {
+	if err = repo.Convert(ctx, "pro", e); err != nil {
 		t.Fatal(err)
 	}
 	w, _ = repo.Wallet(ctx, "pro")
@@ -73,7 +73,7 @@ func TestProfessionalRepeatedEventsHoldConcurrentReleaseAndRefund(t *testing.T) 
 		t.Fatal("refund")
 	}
 	e.Payment.RefundedCents = 0
-	if err = repo.ConvertPartner(ctx, e, q); err != nil {
+	if err = repo.Convert(ctx, "pro", e); err != nil {
 		t.Fatal(err)
 	}
 	_, _ = repo.PartnerEntries(ctx, "pro", now.Add(9*24*time.Hour))
@@ -182,5 +182,29 @@ func TestCancelledBalanceAttemptCannotDebitAfterRetry(t *testing.T) {
 	wallet, err := repo.Wallet(ctx, u.ID)
 	if err != nil || wallet.Balance != 0 {
 		t.Fatalf("wallet=%+v err=%v", wallet, err)
+	}
+}
+
+func TestNormalBuyerQuoteDoesNotCreditProfessionalReferrer(t *testing.T) {
+	db := testutil.Mongo(t)
+	ctx := context.Background()
+	repo := mongostore.Affiliates{DB: db}
+	for _, user := range []bson.M{{"_id": "buyer", "role": "user", "referredBy": "pro"}, {"_id": "pro", "role": "planner", "affiliateBalanceCents": int64(0)}} {
+		if _, err := db.Collection("users").InsertOne(ctx, user); err != nil {
+			t.Fatal(err)
+		}
+	}
+	q := core.QuoteEvent("wedding", core.User{ID: "buyer", Role: "user"})
+	e := core.Event{ID: "normal", OwnerID: "buyer", Kind: "wedding", CheckoutQuotes: map[string]core.CheckoutQuote{"cs": q}, PaymentSource: "stripe", Payment: &core.Payment{SessionID: "cs", AmountCents: 2000, Live: true, PaidAt: time.Now().Add(-8 * 24 * time.Hour)}}
+	if err := repo.Convert(ctx, "buyer", e); err != nil {
+		t.Fatal(err)
+	}
+	entries, err := repo.PartnerEntries(ctx, "pro", time.Now())
+	if err != nil || len(entries) != 0 {
+		t.Fatalf("unexpected entries: %+v %v", entries, err)
+	}
+	wallet, err := repo.Wallet(ctx, "pro")
+	if err != nil || wallet.Balance != 0 {
+		t.Fatalf("unexpected credit: %+v %v", wallet, err)
 	}
 }

@@ -33,8 +33,8 @@ func (s Affiliates) Convert(ctx context.Context, owner string, e core.Event) err
 		if quote.PartnerID != "" {
 			return s.ConvertPartner(ctx, e, quote)
 		}
-		// A professional discount cannot also generate a referral commission.
-		if quote.Mode == "self" {
+		// New direct purchases do not generate referral credit; keep historical quotes intact.
+		if quote.Mode == "self" || quote.Mode == "direct" {
 			return nil
 		}
 	}

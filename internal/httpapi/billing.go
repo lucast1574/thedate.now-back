@@ -57,11 +57,7 @@ func (s *server) checkout(w http.ResponseWriter, r *http.Request) {
 		bad(w, 400, "Invalid payment option")
 		return
 	}
-	var referrer core.User
-	if u.ReferredBy != "" {
-		_ = s.db.Collection("users").FindOne(r.Context(), bson.M{"_id": u.ReferredBy}).Decode(&referrer)
-	}
-	quote := core.QuoteEvent(e.Kind, u, referrer, request.Mode)
+	quote := core.QuoteEvent(e.Kind, u)
 	if request.Mode == "cancel_balance" {
 		s.cancelBalance(w, r, e, u)
 		return
@@ -118,9 +114,6 @@ func (s *server) checkout(w http.ResponseWriter, r *http.Request) {
 		CustomerEmail:     stripe.String(owner.Email),
 	}
 	params.Context = r.Context()
-	if quote.Mode == "client" {
-		params.CustomerEmail = nil
-	}
 	params.SetIdempotencyKey("thedate-event:v3:" + e.ID + ":" + e.CheckoutID + ":" + quote.Mode)
 	checkout, err := client.New(params)
 	if err != nil {
