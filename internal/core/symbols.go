@@ -26,7 +26,7 @@ func validFlyerIcon(name string) bool {
 func validElementBinding(el FlyerElement) bool {
 	switch el.Binding {
 	case "":
-	case "guest_name", "dress_code", "adults_notice", "restrictions":
+	case "guest_name", "dress_code", "adults_notice", "restrictions", "couple_names", "event_title", "event_date":
 		if el.Type != "text" {
 			return false
 		}
@@ -35,13 +35,17 @@ func validElementBinding(el FlyerElement) bool {
 			return false
 		}
 	case "location":
-		if el.Type != "text" || !validLocationStyle(el.LocationStyle) || len(el.Address) > 500 || len(el.Link) > 2048 || (el.Link != "" && !GoogleMapsURL(el.Link)) {
+		if el.Type != "text" || !validLocationStyle(el.LocationStyle) || len(el.Address) > 500 || len(el.Link) > 2048 || (el.Link != "" && !GoogleMapsURL(el.Link) && !(el.EventBound && ValidHTTPSURL(el.Link))) {
+			return false
+		}
+	case "map":
+		if el.Type != "text" || el.LocationStyle != "" || el.Address != "" || (el.Link != "" && !GoogleMapsURL(el.Link)) {
 			return false
 		}
 	default:
 		return false
 	}
-	return (el.Binding == "gift_link" && el.LocationStyle == "" && el.Address == "") || el.Binding == "location" || (el.LocationStyle == "" && el.Address == "" && el.Link == "")
+	return (el.Binding == "gift_link" && el.LocationStyle == "" && el.Address == "") || el.Binding == "location" || el.Binding == "map" || (el.LocationStyle == "" && el.Address == "" && el.Link == "")
 }
 
 func validLocationStyle(style string) bool {

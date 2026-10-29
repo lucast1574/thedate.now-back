@@ -31,6 +31,10 @@ func (s *server) activateDemo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	in = core.NormalizeEvent(in)
+	if err := core.ValidateProductContent(e.Kind, in.Title, in.Celebration, e.Sections); err != nil {
+		bad(w, 400, err.Error())
+		return
+	}
 	if in.MaybeHoldHours == 0 {
 		in.MaybeHoldHours = 48
 	}

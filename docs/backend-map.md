@@ -27,6 +27,10 @@ No se presenta esta arquitectura como una garantía de perfección: sus invarian
 
 ## Diferencias de producto
 
+`ValidateProductContent` se ejecuta al crear, editar metadatos, guardar diseño y activar un demo. The Date rechaza campos `partnerOne/partnerTwo`, elementos `couple_names` y expresiones explícitas de boda, pero conserva cumpleaños, bautizos y otros eventos. Es una defensa estructural y de intención explícita, no una clasificación infalible de contenido diseñado manualmente. El tipo de un evento existente no se cambia desde metadatos/diseño; plantilla, dominio y precio se resuelven con el producto persistido. `save` y los dominios operativos siguen reservados en `ValidateSlug`, también en cambios de dirección.
+
+`Responses.CommitEvent` guarda cambios de slug antes de publicar con el mismo control de versión del evento y condición `publishedAt=nil`/envíos inactivos. Una publicación concurrente bloquea el cambio aunque no incremente `responseVersion`. Los nombres de novios y coordenadas están en `Celebration`; los bindings de texto conectados, pistas de enlace y mapa en `FlyerElement`, con límites validados por `ValidElementExtras`. `Section.When` permite preparar regalos/restricciones sin mostrar contenido vacío a los invitados. Los diseños antiguos no se migran ni se reordenan automáticamente.
+
 | Regla | Save the Date | The Date |
 | --- | --- | --- |
 | Tipo | `wedding` | `general` |

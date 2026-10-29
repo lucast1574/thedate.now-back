@@ -23,6 +23,10 @@ func (s *server) createEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err = core.ValidateEvent(in, true); err != nil {
+		if errors.Is(err, core.ErrWeddingContent) {
+			bad(w, 400, err.Error())
+			return
+		}
 		bad(w, 400, "Invalid event details")
 		return
 	}
@@ -155,6 +159,10 @@ func (s *server) updateEvent(w http.ResponseWriter, r *http.Request) {
 		bad(w, 400, "Invalid event details")
 		return
 	}
+	if err := core.ValidateProductContent(e.Kind, in.Title, in.Celebration, e.Sections); err != nil {
+		bad(w, 400, err.Error())
+		return
+	}
 	hold := in.MaybeHoldHours
 	if hold == 0 {
 		hold = e.MaybeHoldHours
@@ -168,6 +176,10 @@ func (s *server) updateEvent(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if errors.Is(err, errCapacity) {
 			bad(w, 409, "Capacity cannot be lower than active reservations")
+		} else if errors.Is(err, core.ErrPublishedAddress) {
+			bad(w, 409, err.Error())
+		} else if mongo.IsDuplicateKeyError(err) {
+			bad(w, 409, "Ese enlace ya está en uso. Elige otro.")
 		} else {
 			bad(w, 500, "Could not update event")
 		}

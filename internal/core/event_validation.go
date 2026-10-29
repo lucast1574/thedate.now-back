@@ -7,6 +7,13 @@ import (
 )
 
 func ValidateEvent(in EventInput, creating bool) error {
+	var sections []Section
+	if in.InitialDesign != nil {
+		sections = in.InitialDesign.Sections
+	}
+	if err := ValidateProductContent(in.Kind, in.Title, in.Celebration, sections); err != nil {
+		return err
+	}
 	if !ValidInitialDesign(in, creating) {
 		return errors.New("invalid initial invitation design")
 	}
@@ -19,7 +26,7 @@ func ValidateEvent(in EventInput, creating bool) error {
 	if _, err := ProductFor(in.Kind); err != nil {
 		return err
 	}
-	if creating && ValidateSlug(in.Slug) != nil {
+	if (creating || in.Slug != "") && ValidateSlug(in.Slug) != nil {
 		return errors.New("invalid slug")
 	}
 	if TemplateID(in.Kind, in.Template, in.DesignMode, in.TemplateID) == "" {

@@ -80,7 +80,13 @@ func (s Responses) CommitEvent(ctx context.Context, e core.Event, in core.EventI
 	if in.Celebration != nil {
 		set["celebration"] = in.Celebration
 	}
-	result, err := s.DB.Collection("events").UpdateOne(ctx, bson.M{"_id": e.ID, "responseVersion": e.ResponseVersion}, bson.M{"$set": set, "$inc": bson.M{"responseVersion": 1}})
+	filter := bson.M{"_id": e.ID, "responseVersion": e.ResponseVersion}
+	if in.Slug != e.Slug {
+		set["slug"] = in.Slug
+		filter["publishedAt"] = nil
+		filter["invitationsEnabled"] = bson.M{"$ne": true}
+	}
+	result, err := s.DB.Collection("events").UpdateOne(ctx, filter, bson.M{"$set": set, "$inc": bson.M{"responseVersion": 1}})
 	if err != nil {
 		return false, err
 	}

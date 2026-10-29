@@ -27,6 +27,10 @@ func (s *server) updateDesign(w http.ResponseWriter, r *http.Request) {
 		bad(w, 400, "Invalid invitation design")
 		return
 	}
+	if err := core.ValidateProductContent(e.Kind, in.Title, in.Celebration, in.Sections); err != nil {
+		bad(w, 400, err.Error())
+		return
+	}
 	fields := bson.M{"music": in.Music, "title": strings.TrimSpace(in.Title), "description": in.Description, "template": in.Template, "templateId": core.TemplateID(e.Kind, in.Template, in.DesignMode, in.TemplateID), "accentColor": in.AccentColor, "sections": in.Sections, "designMode": in.DesignMode, "updatedAt": time.Now().UTC()}
 	if in.BackgroundImage != nil || in.ClearBackgroundImage {
 		fields["backgroundImage"] = in.BackgroundImage

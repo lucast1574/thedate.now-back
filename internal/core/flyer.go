@@ -11,6 +11,18 @@ type FlyerCanvas struct {
 	Elements           []FlyerElement   `bson:"elements" json:"elements"`
 }
 type FlyerElement struct {
+	EventBound          bool                 `bson:"eventBound,omitempty" json:"eventBound,omitempty"`
+	NameFormat          string               `bson:"nameFormat,omitempty" json:"nameFormat,omitempty"`
+	ActionHint          bool                 `bson:"actionHint,omitempty" json:"actionHint,omitempty"`
+	HintText            string               `bson:"hintText,omitempty" json:"hintText,omitempty"`
+	HintIcon            string               `bson:"hintIcon,omitempty" json:"hintIcon,omitempty"`
+	HintStyle           string               `bson:"hintStyle,omitempty" json:"hintStyle,omitempty"`
+	MapLatitude         *float64             `bson:"mapLatitude,omitempty" json:"mapLatitude,omitempty"`
+	MapLongitude        *float64             `bson:"mapLongitude,omitempty" json:"mapLongitude,omitempty"`
+	MapZoom             float64              `bson:"mapZoom,omitempty" json:"mapZoom,omitempty"`
+	MapStyle            string               `bson:"mapStyle,omitempty" json:"mapStyle,omitempty"`
+	MapRadius           float64              `bson:"mapRadius,omitempty" json:"mapRadius,omitempty"`
+	MapSoftness         float64              `bson:"mapSoftness,omitempty" json:"mapSoftness,omitempty"`
 	DressExcludedColors []DressExcludedColor `bson:"dressExcludedColors,omitempty" json:"dressExcludedColors,omitempty"`
 	RestrictionStyle    string               `bson:"restrictionStyle,omitempty" json:"restrictionStyle,omitempty"`
 	RestrictionIcon     string               `bson:"restrictionIcon,omitempty" json:"restrictionIcon,omitempty"`
@@ -65,7 +77,7 @@ func ValidCanvas(c *FlyerCanvas, photos []string) bool {
 			return false
 		}
 		seen[el.ID] = true
-		if !validElementBinding(el) || !ValidDressCode(el, photos) || !ValidRestrictions(el) {
+		if !validElementBinding(el) || !ValidDressCode(el, photos) || !ValidRestrictions(el) || !ValidElementExtras(el) {
 			return false
 		}
 		if el.Font != "serif" && el.Font != "sans" && el.Font != "mono" && el.Font != "script" {

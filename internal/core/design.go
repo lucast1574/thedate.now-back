@@ -50,6 +50,9 @@ func ValidDesign(in DesignInput, photos []string) bool {
 	}
 	seen := map[string]bool{}
 	for _, section := range in.Sections {
+		if section.When != "" && section.When != "gifts" && section.When != "restrictions" {
+			return false
+		}
 		if len(section.ID) > 64 || section.ID == "" || seen[section.ID] || !sectionIcons[section.Icon] || len(section.Heading) > 120 || len(section.Body) > 2000 {
 			return false
 		}

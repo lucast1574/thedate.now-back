@@ -75,6 +75,7 @@ type Event struct {
 }
 
 type Section struct {
+	When      string        `bson:"when,omitempty" json:"when,omitempty"`
 	GuestText *FlyerElement `bson:"guestText,omitempty" json:"guestText,omitempty"`
 	Canvas    *FlyerCanvas  `bson:"canvas,omitempty" json:"canvas,omitempty"`
 	ID        string        `bson:"id" json:"id"`

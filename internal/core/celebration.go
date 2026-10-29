@@ -16,6 +16,10 @@ type Opening struct {
 	ButtonLabel     string           `bson:"buttonLabel" json:"buttonLabel"`
 }
 type Celebration struct {
+	PartnerOne          string               `bson:"partnerOne,omitempty" json:"partnerOne,omitempty"`
+	PartnerTwo          string               `bson:"partnerTwo,omitempty" json:"partnerTwo,omitempty"`
+	MapLatitude         *float64             `bson:"mapLatitude,omitempty" json:"mapLatitude,omitempty"`
+	MapLongitude        *float64             `bson:"mapLongitude,omitempty" json:"mapLongitude,omitempty"`
 	RestrictionText     string               `bson:"restrictionText,omitempty" json:"restrictionText,omitempty"`
 	RestrictionIcon     string               `bson:"restrictionIcon,omitempty" json:"restrictionIcon,omitempty"`
 	DressExcludedColors []DressExcludedColor `bson:"dressExcludedColors,omitempty" json:"dressExcludedColors,omitempty"`
@@ -27,6 +31,9 @@ type Celebration struct {
 }
 
 func ValidCelebration(c *Celebration) bool {
+	if c != nil && (len(c.PartnerOne) > 120 || len(c.PartnerTwo) > 120 || (c.MapLatitude == nil) != (c.MapLongitude == nil) || (c.MapLatitude != nil && (!bounded(*c.MapLatitude, -85, 85) || !bounded(*c.MapLongitude, -180, 180)))) {
+		return false
+	}
 	return c == nil || (len(c.AdultsMessage) <= 500 && len(c.DressCode) <= 120 && len(c.DressNote) <= 500 && len(c.RestrictionText) <= 1000 && ValidRestrictions(FlyerElement{Binding: "restrictions", RestrictionIcon: c.RestrictionIcon}) && ValidDressCode(FlyerElement{Binding: "dress_code", DressExcludedColors: c.DressExcludedColors}, nil))
 }
 func ValidOpening(o *Opening) bool {

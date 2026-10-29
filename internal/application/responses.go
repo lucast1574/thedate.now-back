@@ -61,6 +61,9 @@ func (s Responses) UpdateEvent(ctx context.Context, id string, in core.EventInpu
 		if !in.CapacityUnlimited && (core.Occupied(e, s.Now()) > in.Capacity || (e.Seating != nil && len(e.Seating.Assignments) > in.Capacity)) {
 			return core.ErrCapacity
 		}
+		if in.Slug != e.Slug && (e.PublishedAt != nil || e.InvitationsEnabled || core.ValidateSlug(in.Slug) != nil) {
+			return core.ErrPublishedAddress
+		}
 		saved, err := s.Repository.CommitEvent(ctx, e, in, s.Now())
 		if err != nil {
 			return err
