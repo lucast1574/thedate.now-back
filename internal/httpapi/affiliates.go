@@ -41,6 +41,10 @@ func (s *server) affiliateOverview(w http.ResponseWriter, r *http.Request) {
 		bad(w, 401, "Sign in required")
 		return
 	}
+	if !s.professionalAffiliate(u) {
+		bad(w, 403, "Professional account required")
+		return
+	}
 	repo := mongostore.Affiliates{DB: s.db}
 	entries, e := repo.PartnerEntries(r.Context(), u.ID, time.Now().UTC())
 	if e != nil {
@@ -78,6 +82,10 @@ func (s *server) affiliateWithdraw(w http.ResponseWriter, r *http.Request) {
 		bad(w, 401, "Sign in required")
 		return
 	}
+	if !s.professionalAffiliate(u) {
+		bad(w, 403, "Professional account required")
+		return
+	}
 	var in struct {
 		Amount  int64  `json:"amountCents"`
 		Method  string `json:"method"`
@@ -98,4 +106,11 @@ func (s *server) affiliateWithdraw(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	reply(w, 201, entry)
+}
+
+func (s *server) professionalAffiliate(u core.User) bool {
+	if s.product != "" {
+		return core.ProfessionalFor(s.product, u)
+	}
+	return u.Role == "planner" || u.Role == "organizer"
 }

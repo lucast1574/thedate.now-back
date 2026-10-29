@@ -22,6 +22,9 @@ func TestDefaultAffiliateLinksRegistrationAttributionAndCredit(t *testing.T) {
 	}
 	s := &server{db: db, secret: []byte(strings.Repeat("x", 32))}
 	referrer := decodeLogin(t, routeRequest(t, s, "", "POST", "/auth/register", `{"email":"affiliate@example.test","password":"test-password-123","name":"Affiliate","role":"planner"}`, 201))
+	if _, err := db.Collection("users").UpdateByID(ctx, referrer.User.ID, bson.M{"$set": bson.M{"role": "planner"}}); err != nil {
+		t.Fatal(err)
+	}
 	type overview struct {
 		Enabled   bool   `json:"enabled"`
 		Code      string `json:"code"`
