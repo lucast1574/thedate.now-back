@@ -60,7 +60,7 @@ func TestDefaultAffiliateLinksRegistrationAttributionAndCredit(t *testing.T) {
 	if got := readWallet(); got.Available != 10000 || got.Code != first.Code {
 		t.Fatal("commission missing, duplicated or link changed")
 	}
-	routeRequest(t, s, referrer.Token, "POST", "/affiliates/withdrawals", `{"amountCents":4999,"method":"bank","details":"test account"}`, 400)
+	routeRequest(t, s, referrer.Token, "POST", "/affiliates/withdrawals", `{"amountCents":999,"method":"bank","details":"test account"}`, 400)
 	routeRequest(t, s, referrer.Token, "POST", "/affiliates/withdrawals", `{"amountCents":20000,"method":"bank","details":"test account"}`, 409)
 	routeRequest(t, s, referrer.Token, "POST", "/affiliates/withdrawals", `{"amountCents":5000,"method":"bank","details":"test account"}`, 201)
 	if readWallet().Available != 5000 {

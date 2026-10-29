@@ -31,6 +31,10 @@ func (s *server) activateDemo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	in = core.NormalizeEvent(in)
+	if s.db.Collection("events").FindOne(r.Context(), bson.M{"kind": in.Kind, "slug": in.Slug, "paymentStatus": "paid", "_id": bson.M{"$ne": e.ID}}).Err() == nil {
+		bad(w, 409, "Ese enlace ya pertenece a un evento pagado. Elige otro.")
+		return
+	}
 	if err := core.ValidateProductContent(e.Kind, in.Title, in.Celebration, e.Sections); err != nil {
 		bad(w, 400, err.Error())
 		return

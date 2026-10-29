@@ -74,3 +74,12 @@ go run golang.org/x/vuln/cmd/govulncheck@latest ./...
 ```
 
 Las pruebas de integraciÃ³n usan MongoDB 7 standalone y proveedores HTTP falsos. Verifican seguridad de sesiones, pagos firmados, concurrencia, replays, accesos de pareja, envÃ­o Ãºnico y recuperaciÃ³n de publicaciÃ³n. No sustituyen una validaciÃ³n del despliegue en Dokploy real.
+
+
+## Profesionales y direcciones de invitación (octubre 2026)
+
+- Precio público: boda USD20 y evento general USD10. Planner de bodas: USD15; organizador de eventos: USD8. El checkout `client` cobra el precio público y atribuye USD5 / USD2 al profesional; el checkout propio descontado excluye comisión. Las cotizaciones quedan persistidas por sesión; sesiones generales anteriores de USD5 conservan su importe.
+- Comisión por evento real pagado con Stripe live, disponible siete días después del cargo. Reintentos y liberaciones concurrentes usan escrituras condicionales. Reembolsos reducen la comisión proporcionalmente; disputas la retienen. Un ajuste puede dejar saldo negativo si ya se gastó o retiró. No se genera comisión por saldo, prueba o cortesía. Referidos generales anteriores mantienen la regla del primer pago al 10%.
+- Retiro mínimo USD10; aprobación y liquidación siguen siendo administrativas. El saldo puede cubrir un evento completo, sin pago mixto. Una reserva persistida permite reintentar sin volver a descontar; cancelar solo es posible antes del débito, mediante un marcador que bloquea intentos antiguos.
+- `EnsurePaidAddressIndex` crea primero el índice único parcial `paid_invitation_address` para eventos pagados y retira únicamente el índice general antiguo. Los borradores sin pagar no reservan nombres. Si un pago concurrente pierde el nombre solicitado, se activa con dirección alternativa y aviso editable antes de publicar. Nunca se cambia una dirección publicada.
+- Validación: suite con proveedores falsos y MongoDB 7 aislado; no ejecutar cobros live ni envíos para comprobar estas reglas.

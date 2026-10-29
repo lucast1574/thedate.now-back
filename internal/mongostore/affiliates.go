@@ -29,6 +29,15 @@ func (s Affiliates) Convert(ctx context.Context, owner string, e core.Event) err
 	if e.Payment == nil || e.PaymentSource != "stripe" {
 		return nil
 	}
+	if quote, ok := e.CheckoutQuotes[e.Payment.SessionID]; ok {
+		if quote.PartnerID != "" {
+			return s.ConvertPartner(ctx, e, quote)
+		}
+		// A professional discount cannot also generate a referral commission.
+		if quote.Mode == "self" {
+			return nil
+		}
+	}
 	var user struct {
 		ReferredBy string           `bson:"referredBy"`
 		Conversion *core.Conversion `bson:"affiliateConversion"`
@@ -127,7 +136,7 @@ func mapField(live bool) string {
 }
 func (s Affiliates) Reserve(ctx context.Context, id string, w core.Withdrawal) error {
 	if w.AmountCents < core.MinimumWithdrawalCents {
-		return errors.New("minimum withdrawal is USD 50")
+		return errors.New("minimum withdrawal is USD 10")
 	}
 	r, err := s.DB.Collection("users").UpdateOne(ctx, bson.M{"_id": id, "affiliateEnabled": true, "affiliateBalanceCents": bson.M{"$gte": w.AmountCents}, "withdrawals." + w.ID: bson.M{"$exists": false}}, bson.M{"$inc": bson.M{"affiliateBalanceCents": -w.AmountCents}, "$set": bson.M{"withdrawals." + w.ID: w}})
 	if err != nil {

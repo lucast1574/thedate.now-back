@@ -16,8 +16,7 @@ func EnsureIndexes(ctx context.Context, db *mongo.Database) error {
 	if err != nil {
 		return err
 	}
-	_, err = db.Collection("events").Indexes().CreateOne(ctx, mongo.IndexModel{Keys: bson.D{{Key: "kind", Value: 1}, {Key: "slug", Value: 1}}, Options: options.Index().SetUnique(true)})
-	if err != nil {
+	if err = EnsurePaidAddressIndex(ctx, db); err != nil {
 		return err
 	}
 	_, err = db.Collection("guests").Indexes().CreateOne(ctx, mongo.IndexModel{Keys: bson.D{{Key: "inviteToken", Value: 1}}, Options: options.Index().SetUnique(true)})

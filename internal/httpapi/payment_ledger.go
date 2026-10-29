@@ -10,6 +10,7 @@ import (
 	"github.com/stripe/stripe-go/v86/dispute"
 	"github.com/stripe/stripe-go/v86/paymentintent"
 	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
 	"net/http"
 	"os"
 	"strings"
@@ -38,9 +39,16 @@ func (s *server) recordPayment(ctx context.Context, e core.Event, checkout *stri
 	if verified.LatestCharge.Disputed {
 		refunded = checkout.AmountTotal
 	}
-	p := core.Payment{SessionID: checkout.ID, IntentID: intent, AmountCents: checkout.AmountTotal, RefundedCents: refunded, Currency: "USD", Live: checkout.Livemode, PaidAt: time.Unix(checkout.Created, 0).UTC()}
+	paidAt := time.Now().UTC()
+	if verified.LatestCharge.Created > 0 {
+		paidAt = time.Unix(verified.LatestCharge.Created, 0).UTC()
+	}
+	p := core.Payment{SessionID: checkout.ID, IntentID: intent, AmountCents: checkout.AmountTotal, RefundedCents: refunded, Currency: "USD", Live: checkout.Livemode, PaidAt: paidAt}
 	filter := bson.M{"_id": e.ID, "paymentSource": bson.M{"$ne": "courtesy"}, "$or": bson.A{bson.M{"checkoutId": checkout.ID}, bson.M{"checkoutIds": checkout.ID}}, "payment": bson.M{"$exists": false}}
 	_, err = s.db.Collection("events").UpdateOne(ctx, filter, bson.M{"$set": bson.M{"payment": p, "paymentSource": "stripe", "paymentStatus": "paid", "updatedAt": time.Now().UTC()}})
+	if mongo.IsDuplicateKeyError(err) && e.PublishedAt == nil {
+		_, err = s.db.Collection("events").UpdateOne(ctx, filter, bson.M{"$set": bson.M{"payment": p, "paymentSource": "stripe", "paymentStatus": "paid", "slug": mongostore.PaidAddressFallback(e), "addressChangedAfterPayment": true, "updatedAt": time.Now().UTC()}})
+	}
 	if err != nil {
 		return err
 	}

@@ -65,7 +65,13 @@ func (s *server) stripeWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	product, productErr := core.ProductFor(paidEvent.Kind)
-	if productErr != nil || checkout.AmountTotal != product.PriceCents || checkout.Currency != stripe.CurrencyUSD || checkout.Mode != stripe.CheckoutSessionModePayment {
+	expected := product.PriceCents
+	if quote, ok := paidEvent.CheckoutQuotes[checkout.ID]; ok {
+		expected = quote.Amount
+	} else if paidEvent.Kind == "general" && checkout.AmountTotal == 500 {
+		expected = 500
+	}
+	if productErr != nil || checkout.AmountTotal != expected || checkout.Currency != stripe.CurrencyUSD || checkout.Mode != stripe.CheckoutSessionModePayment {
 		bad(w, 400, "Unexpected payment amount or currency")
 		return
 	}

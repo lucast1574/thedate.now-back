@@ -42,6 +42,16 @@ func (s *server) affiliateOverview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	repo := mongostore.Affiliates{DB: s.db}
+	entries, e := repo.PartnerEntries(r.Context(), u.ID, time.Now().UTC())
+	if e != nil {
+		bad(w, 500, "Could not load partner events")
+		return
+	}
+	pending := int64(0)
+	for _, entry := range entries {
+		pending += entry.Amount - entry.Credited
+	}
+	managed, _ := s.db.Collection("events").CountDocuments(r.Context(), bson.M{"ownerId": u.ID, "isDemo": bson.M{"$ne": true}})
 	wallet, e := repo.Wallet(r.Context(), u.ID)
 	if e == nil && u.Role != "admin" {
 		wallet, e = repo.EnableDefaults(r.Context(), u.ID)
@@ -60,7 +70,7 @@ func (s *server) affiliateOverview(w http.ResponseWriter, r *http.Request) {
 		bad(w, 500, "Could not load referrals")
 		return
 	}
-	reply(w, 200, map[string]any{"code": wallet.Code, "enabled": wallet.Enabled, "availableCents": wallet.Balance, "earnedCents": wallet.Earned, "referrals": count, "conversions": len(wallet.Entries), "withdrawals": rows, "commissionBps": core.CommissionBPS, "minimumWithdrawalCents": core.MinimumWithdrawalCents})
+	reply(w, 200, map[string]any{"partnerEvents": entries, "pendingCents": pending, "managedEvents": managed, "code": wallet.Code, "enabled": wallet.Enabled, "availableCents": wallet.Balance, "earnedCents": wallet.Earned, "referrals": count, "conversions": len(wallet.Entries), "withdrawals": rows, "commissionBps": core.CommissionBPS, "minimumWithdrawalCents": core.MinimumWithdrawalCents})
 }
 func (s *server) affiliateWithdraw(w http.ResponseWriter, r *http.Request) {
 	u, e := s.user(r)
@@ -74,10 +84,14 @@ func (s *server) affiliateWithdraw(w http.ResponseWriter, r *http.Request) {
 		Details string `json:"details"`
 	}
 	if decode(r, &in) != nil || in.Amount < core.MinimumWithdrawalCents || in.Amount > 100000000 || len(in.Method) < 2 || len(in.Method) > 40 || len(in.Details) < 5 || len(in.Details) > 500 || u.Role == "admin" {
-		bad(w, 400, "Valid payment details and minimum USD 50 required")
+		bad(w, 400, "Valid payment details and minimum USD 10 required")
 		return
 	}
 	now := time.Now().UTC()
+	if _, err := (mongostore.Affiliates{DB: s.db}).PartnerEntries(r.Context(), u.ID, now); err != nil {
+		bad(w, 500, "Could not release available credit")
+		return
+	}
 	entry := core.Withdrawal{ID: uuid.NewString(), AmountCents: in.Amount, Method: in.Method, Details: in.Details, Status: "pending", CreatedAt: now, UpdatedAt: now}
 	if e = (mongostore.Affiliates{DB: s.db}).Reserve(r.Context(), u.ID, entry); e != nil {
 		bad(w, 409, "Insufficient available balance")

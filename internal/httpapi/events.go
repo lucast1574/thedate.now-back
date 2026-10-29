@@ -35,6 +35,10 @@ func (s *server) createEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	in = core.NormalizeEvent(in)
+	if s.db.Collection("events").FindOne(r.Context(), bson.M{"kind": in.Kind, "slug": in.Slug, "paymentStatus": "paid"}).Err() == nil {
+		bad(w, 409, "Ese enlace ya pertenece a un evento pagado. Elige otro.")
+		return
+	}
 	if in.MaybeHoldHours == 0 {
 		in.MaybeHoldHours = 48
 	}

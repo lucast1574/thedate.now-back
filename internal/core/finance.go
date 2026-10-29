@@ -3,7 +3,7 @@ package core
 import "time"
 
 const CommissionBPS int64 = 1000
-const MinimumWithdrawalCents int64 = 5000
+const MinimumWithdrawalCents int64 = 1000
 
 type Payment struct {
 	SessionID     string    `bson:"sessionId" json:"sessionId"`

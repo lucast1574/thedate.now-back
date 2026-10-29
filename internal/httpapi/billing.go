@@ -1,6 +1,8 @@
 package httpapi
 
 import (
+	"encoding/json"
+	"io"
 	"net/http"
 	"os"
 	"strings"
@@ -39,9 +41,41 @@ func (s *server) checkout(w http.ResponseWriter, r *http.Request) {
 		bad(w, 503, "Payments are not configured yet")
 		return
 	}
+	if s.db.Collection("events").FindOne(r.Context(), bson.M{"kind": e.Kind, "slug": e.Slug, "paymentStatus": "paid", "_id": bson.M{"$ne": e.ID}}).Err() == nil {
+		bad(w, 409, "Ese enlace acaba de reservarse con otro pago. Cambia el nombre antes de continuar.")
+		return
+	}
 
+	var request struct {
+		Mode string `json:"mode"`
+	}
+	if err := json.NewDecoder(io.LimitReader(r.Body, 4096)).Decode(&request); err != nil && err != io.EOF {
+		bad(w, 400, "Invalid payment option")
+		return
+	}
+	if request.Mode != "" && request.Mode != "self" && request.Mode != "client" && request.Mode != "balance" && request.Mode != "cancel_balance" {
+		bad(w, 400, "Invalid payment option")
+		return
+	}
+	var referrer core.User
+	if u.ReferredBy != "" {
+		_ = s.db.Collection("users").FindOne(r.Context(), bson.M{"_id": u.ReferredBy}).Decode(&referrer)
+	}
+	quote := core.QuoteEvent(e.Kind, u, referrer, request.Mode)
+	if request.Mode == "cancel_balance" {
+		s.cancelBalance(w, r, e, u)
+		return
+	}
+	if request.Mode == "balance" {
+		s.payWithBalance(w, r, e, u, quote)
+		return
+	}
+	if e.PaymentStatus == "balance_pending" {
+		bad(w, 409, "El pago con saldo está en proceso. Recarga para reconciliarlo.")
+		return
+	}
 	product, _ := core.ProductFor(e.Kind)
-	amount, label := product.PriceCents, product.Label
+	amount, label := quote.Amount, product.Label
 	base := env("EVENT_STUDIO_URL", "https://crea.thedate.now")
 	if e.Kind == "wedding" {
 		base = env("WEDDING_STUDIO_URL", "https://studio.save.thedate.now")
@@ -58,7 +92,7 @@ func (s *server) checkout(w http.ResponseWriter, r *http.Request) {
 			bad(w, 409, "Payment already completed; waiting for confirmation")
 			return
 		}
-		if current.Status == stripe.CheckoutSessionStatusOpen && current.AmountTotal == amount && current.Livemode == stripeLive() {
+		if current.Status == stripe.CheckoutSessionStatusOpen && current.AmountTotal == amount && current.Livemode == stripeLive() && e.CheckoutQuotes[current.ID] == quote {
 			reply(w, 200, map[string]string{"url": current.URL})
 			return
 		}
@@ -84,13 +118,16 @@ func (s *server) checkout(w http.ResponseWriter, r *http.Request) {
 		CustomerEmail:     stripe.String(owner.Email),
 	}
 	params.Context = r.Context()
-	params.SetIdempotencyKey("thedate-event:v2:" + e.ID + ":" + e.CheckoutID)
+	if quote.Mode == "client" {
+		params.CustomerEmail = nil
+	}
+	params.SetIdempotencyKey("thedate-event:v3:" + e.ID + ":" + e.CheckoutID + ":" + quote.Mode)
 	checkout, err := client.New(params)
 	if err != nil {
 		bad(w, 502, "Could not start checkout")
 		return
 	}
-	result, err := s.db.Collection("events").UpdateOne(r.Context(), bson.M{"_id": e.ID, "paymentStatus": bson.M{"$ne": "paid"}}, bson.M{"$set": bson.M{"paymentStatus": "pending", "checkoutId": checkout.ID, "updatedAt": time.Now().UTC()}, "$addToSet": bson.M{"checkoutIds": checkout.ID}})
+	result, err := s.db.Collection("events").UpdateOne(r.Context(), bson.M{"_id": e.ID, "paymentStatus": bson.M{"$nin": bson.A{"paid", "balance_pending"}}}, bson.M{"$set": bson.M{"paymentStatus": "pending", "checkoutId": checkout.ID, "checkoutQuotes." + checkout.ID: quote, "updatedAt": time.Now().UTC()}, "$addToSet": bson.M{"checkoutIds": checkout.ID}})
 	if err != nil {
 		bad(w, 500, "Could not store checkout")
 		return

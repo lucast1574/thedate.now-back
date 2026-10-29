@@ -39,7 +39,7 @@ func TestProductsShareCapabilitiesAndKeepTheirConfiguration(t *testing.T) {
 	if !wedding.AllowVirtual || !wedding.AllowCouples || wedding.Role != "planner" || wedding.PriceCents != 2000 {
 		t.Fatal("wedding policy")
 	}
-	if !general.AllowVirtual || !general.AllowCouples || general.Role != "organizer" || general.PriceCents != 500 {
+	if !general.AllowVirtual || !general.AllowCouples || general.Role != "organizer" || general.PriceCents != 1000 {
 		t.Fatal("general policy")
 	}
 	if !CanCreateEvent("wedding", "organizer") || !CanCreateEvent("general", "planner") || CanCreateEvent("unknown", "admin") {
