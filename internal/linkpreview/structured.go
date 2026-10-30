@@ -32,7 +32,12 @@ func findProduct(value any, depth int) Metadata {
 			description, _ := node["description"].(string)
 			return Metadata{Title: name, Description: description, ImageURL: productImage(node["image"], 0)}
 		}
-		return findProduct(node["@graph"], depth+1)
+		for _, key := range []string{"@graph", "mainEntity", "hasVariant"} {
+			if found := findProduct(node[key], depth+1); found.Title != "" {
+				return found
+			}
+		}
+		return Metadata{}
 	}
 	return Metadata{}
 }
@@ -40,7 +45,7 @@ func findProduct(value any, depth int) Metadata {
 func isProduct(value any) bool {
 	switch kind := value.(type) {
 	case string:
-		return kind == "Product" || strings.TrimSuffix(kind, "/") == "https://schema.org/Product" || strings.TrimSuffix(kind, "/") == "http://schema.org/Product"
+		return kind == "Product" || kind == "ProductGroup" || strings.TrimSuffix(kind, "/") == "https://schema.org/Product" || strings.TrimSuffix(kind, "/") == "http://schema.org/Product"
 	case []any:
 		for _, entry := range kind {
 			if name, ok := entry.(string); ok && isProduct(name) {

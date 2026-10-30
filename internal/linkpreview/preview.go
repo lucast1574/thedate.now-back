@@ -2,16 +2,8 @@ package linkpreview
 
 import (
 	"bytes"
-	"context"
-	"errors"
-	_ "golang.org/x/image/webp"
 	"golang.org/x/net/html"
-	"image"
-	_ "image/gif"
-	_ "image/jpeg"
-	_ "image/png"
 	"io"
-	"net/http"
 	"net/url"
 	"strings"
 	"unicode/utf8"
@@ -34,9 +26,11 @@ func truncate(value string, max int) string {
 }
 func Parse(body io.Reader, base string) Metadata {
 	out := Metadata{URL: base}
-	z := html.NewTokenizer(body)
+	content, _ := io.ReadAll(io.LimitReader(body, 4<<20))
+	z := html.NewTokenizer(bytes.NewReader(content))
 	title := false
 	structured := Metadata{}
+	inBody := false
 	for {
 		kind := z.Next()
 		if kind == html.ErrorToken {
@@ -44,19 +38,22 @@ func Parse(body io.Reader, base string) Metadata {
 		}
 		token := z.Token()
 		if kind == html.StartTagToken && token.Data == "body" {
-			break
+			inBody = true
 		}
 		if kind == html.StartTagToken && token.Data == "script" {
 			for _, attr := range token.Attr {
 				if attr.Key == "type" && strings.EqualFold(strings.TrimSpace(attr.Val), "application/ld+json") {
 					if z.Next() == html.TextToken {
-						if product := productMetadata(string(z.Text())); product.Title != "" {
+						if product := productMetadata(string(z.Text())); product.Title != "" && structured.Title == "" {
 							structured = product
 						}
 					}
 					break
 				}
 			}
+		}
+		if inBody {
+			continue
 		}
 		if kind == html.StartTagToken && token.Data == "title" {
 			title = true
@@ -81,7 +78,7 @@ func Parse(body io.Reader, base string) Metadata {
 			}
 		}
 		switch key {
-		case "og:title":
+		case "og:title", "twitter:title":
 			out.Title = value
 		case "og:description":
 			out.Description = value
@@ -97,9 +94,12 @@ func Parse(body io.Reader, base string) Metadata {
 			}
 		}
 	}
+	if structured.Title == "" && (out.Title == "" || out.ImageURL == "") {
+		structured = microdata(content)
+	}
 	if structured.Title != "" {
 		out.Title = structured.Title
-		if out.ImageURL == "" {
+		if structured.ImageURL != "" {
 			out.ImageURL = structured.ImageURL
 		}
 		if out.Description == "" {
@@ -116,57 +116,4 @@ func Parse(body io.Reader, base string) Metadata {
 	out.Title = truncate(out.Title, 240)
 	out.Description = truncate(out.Description, 1000)
 	return out
-}
-func Fetch(ctx context.Context, raw string) (Metadata, error) {
-	if !ValidURL(raw) {
-		return Metadata{}, errors.New("Usa un enlace HTTPS público de la tienda.")
-	}
-	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, raw, nil)
-	req.Header.Set("User-Agent", "TheDate/1.0 (+https://thedate.now; product preview)")
-	req.Header.Set("Accept", "text/html")
-	client := Client()
-	defer client.CloseIdleConnections()
-	res, err := client.Do(req)
-	if err != nil {
-		return Metadata{}, errors.New("La tienda no comparte una vista previa. Completa los datos manualmente.")
-	}
-	defer res.Body.Close()
-	if res.StatusCode != 200 || !strings.Contains(res.Header.Get("Content-Type"), "text/html") {
-		return Metadata{}, errors.New("No pudimos leer el artículo. Puedes completar sus datos.")
-	}
-	// Metadata lives at the start of the document. A large storefront body must
-	// not discard an otherwise readable product head; parsing stays bounded.
-	data := Parse(io.LimitReader(res.Body, 1<<20), res.Request.URL.String())
-	data.URL = raw
-	return data, nil
-}
-func Image(ctx context.Context, raw string) ([]byte, string, error) {
-	if !ValidURL(raw) {
-		return nil, "", errors.New("invalid image URL")
-	}
-	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, raw, nil)
-	req.Header.Set("User-Agent", "TheDate/1.0")
-	client := Client()
-	defer client.CloseIdleConnections()
-	res, err := client.Do(req)
-	if err != nil {
-		return nil, "", err
-	}
-	defer res.Body.Close()
-	if res.StatusCode != 200 {
-		return nil, "", errors.New("image unavailable")
-	}
-	body, err := io.ReadAll(io.LimitReader(res.Body, (2<<20)+1))
-	if err != nil || len(body) > 2<<20 {
-		return nil, "", errors.New("image too large")
-	}
-	mime := http.DetectContentType(body)
-	if mime != "image/jpeg" && mime != "image/png" && mime != "image/webp" && mime != "image/gif" {
-		return nil, "", errors.New("unsupported image")
-	}
-	config, _, err := image.DecodeConfig(bytes.NewReader(body))
-	if err != nil || config.Width <= 0 || config.Height <= 0 || config.Width > 16000 || config.Height > 16000 || int64(config.Width)*int64(config.Height) > 40000000 {
-		return nil, "", errors.New("image dimensions too large")
-	}
-	return body, mime, nil
 }
