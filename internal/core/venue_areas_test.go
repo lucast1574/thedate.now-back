@@ -8,7 +8,7 @@ import (
 
 func TestVenueAreasStayInsidePlanAndRoundTrip(t *testing.T) {
 	p := DefaultSeating()
-	p.Areas = []VenueArea{{ID: "stage", Name: "Escenario", Kind: "stage", X: 590, Y: 100, Width: 420, Height: 140}}
+	p.Areas = []VenueArea{{ID: "stage", Name: "Escenario", Kind: "stage", X: 590, Y: 100, Width: 420, Height: 140, Rotation: 45}}
 	if err := ValidateSeating(p, Event{Capacity: 50}, nil); err != nil {
 		t.Fatal(err)
 	}
@@ -35,6 +35,7 @@ func TestVenueAreasRejectInvalidGeometryAndIdentity(t *testing.T) {
 	base := VenueArea{ID: "stage", Name: "Escenario", Kind: "stage", X: 590, Y: 100, Width: 420, Height: 140}
 	for _, change := range []func(*VenueArea){
 		func(a *VenueArea) { a.X = 1500 }, func(a *VenueArea) { a.Y = -1 }, func(a *VenueArea) { a.Width = math.NaN() },
+		func(a *VenueArea) { a.Rotation = math.NaN() }, func(a *VenueArea) { a.Rotation = 181 }, func(a *VenueArea) { a.Rotation = -181 },
 		func(a *VenueArea) { a.Height = 601 }, func(a *VenueArea) { a.Kind = "foreign" }, func(a *VenueArea) { a.Name = " " },
 	} {
 		p := DefaultSeating()
