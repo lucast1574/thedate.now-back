@@ -19,20 +19,6 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
-type wazendEvent struct {
-	ID      string `json:"id"`
-	Session string `json:"session"`
-	Event   string `json:"event"`
-	Payload struct {
-		EventCreationKey struct {
-			ID string `json:"id"`
-		} `json:"eventCreationKey"`
-		EventResponse struct {
-			Response string `json:"response"`
-		} `json:"eventResponse"`
-	} `json:"payload"`
-}
-
 func validWazendSignature(body []byte, signature, secret string) bool {
 	provided, err := hex.DecodeString(strings.TrimPrefix(signature, "sha512="))
 	if err != nil {
@@ -74,16 +60,16 @@ func (s *server) wazendWebhook(w http.ResponseWriter, r *http.Request) {
 		bad(w, 400, "Invalid event")
 		return
 	}
-	if event.Event != "event.response" {
+	if event.Event != "event.response" && event.Event != "poll.vote" {
 		reply(w, 200, map[string]string{"status": "ignored"})
 		return
 	}
-	response := map[string]string{"GOING": "going", "NOT_GOING": "not_going", "MAYBE": "maybe"}[event.Payload.EventResponse.Response]
-	if response == "" || event.Payload.EventCreationKey.ID == "" {
-		bad(w, 400, "Invalid event response")
+	response, rawID, timestamp := event.choice()
+	if response == "" {
+		reply(w, 200, map[string]string{"status": "ignored"})
 		return
 	}
-	messageID := wazendMessageID(event.Payload.EventCreationKey.ID)
+	messageID := wazendMessageID(rawID)
 	if messageID == "" {
 		bad(w, 400, "Invalid message ID")
 		return
@@ -104,8 +90,8 @@ func (s *server) wazendWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	receipt := sha256.Sum256([]byte("wazend:" + event.ID))
-	err = s.responses().Apply(r.Context(), e.ID, g, response, "", hex.EncodeToString(receipt[:]))
-	if errors.Is(err, core.ErrDuplicate) {
+	err = s.responses().ApplyProvider(r.Context(), e.ID, g, response, hex.EncodeToString(receipt[:]), timestamp)
+	if errors.Is(err, core.ErrDuplicate) || errors.Is(err, core.ErrResponseFinalized) {
 		reply(w, 200, map[string]string{"status": "duplicate"})
 		return
 	}

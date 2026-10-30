@@ -40,6 +40,11 @@ func TestConcurrentSendsClaimGuestBeforeProviderCall(t *testing.T) {
 			_ = json.NewEncoder(w).Encode(map[string]string{"name": "test", "status": "WORKING"})
 			return
 		}
+		if r.URL.Path == "/api/sendText" {
+			_ = json.NewEncoder(w).Encode(map[string]string{"id": "text-checkpoint"})
+			return
+		}
+
 		sends.Add(1)
 		time.Sleep(20 * time.Millisecond)
 		_ = json.NewEncoder(w).Encode(map[string]string{"id": "message-1"})

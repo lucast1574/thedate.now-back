@@ -78,8 +78,8 @@ func TestWazendBrandsAndDedicatedSessions(t *testing.T) {
 		e := core.Event{Kind: kind, Slug: "our-day", Title: "A day"}
 		g := core.Guest{Name: "Ana"}
 		raw, _ := json.Marshal(eventMessage(e, g))
-		if !strings.Contains(string(raw), invitationBrand(kind)) {
-			t.Fatal("missing brand")
+		if !strings.Contains(string(raw), wazendFor(kind).Session) {
+			t.Fatal("wrong product session in invitation")
 		}
 	}
 }

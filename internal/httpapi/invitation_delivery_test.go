@@ -34,6 +34,11 @@ func TestDeliveryKeepsFileOrderAppendsManualAndWaitsForWebsiteAndCapacity(t *tes
 			_ = json.NewEncoder(w).Encode(map[string]string{"name": "test", "status": "WORKING"})
 			return
 		}
+		if r.URL.Path == "/api/sendText" {
+			_ = json.NewEncoder(w).Encode(map[string]string{"id": "text-checkpoint"})
+			return
+		}
+
 		var input struct {
 			ChatID string `json:"chatId"`
 		}

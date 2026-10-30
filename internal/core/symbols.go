@@ -26,7 +26,7 @@ func validFlyerIcon(name string) bool {
 func validElementBinding(el FlyerElement) bool {
 	switch el.Binding {
 	case "":
-	case "guest_name", "dress_code", "adults_notice", "restrictions", "couple_names", "event_title", "event_date":
+	case "guest_name", "dress_code", "adults_notice", "restrictions", "couple_names", "event_title", "event_date", "calendar_link":
 		if el.Type != "text" {
 			return false
 		}

@@ -74,8 +74,8 @@ func TestCouplePlansButOtherAccountsAndUnpaidEventsCannot(t *testing.T) {
 		t.Fatal("stale plan not rejected")
 	}
 	w = call(core.User{}, "POST", "/public/rsvp/"+stored.InviteToken, `{"response":"going","companions":[{"name":"Luis","lastName":"Rojas","gender":"man"}]}`)
-	// RSVP is token-based; the user header has no bearing on this public route.
-	if w.Code != 200 {
+	// A completed party is read-only even with a valid personal token.
+	if w.Code != 409 {
 		t.Fatalf("rsvp %d %s", w.Code, w.Body.String())
 	}
 	w = call(couple, "GET", "/events/e/guests", "")

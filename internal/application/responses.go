@@ -23,6 +23,15 @@ func (s Responses) Apply(ctx context.Context, eventID string, g core.Guest, choi
 	return s.ApplyParty(ctx, eventID, g, choice, reason, receipt, nil)
 }
 func (s Responses) ApplyParty(ctx context.Context, eventID string, g core.Guest, choice, reason, receipt string, companions *[]core.Person) error {
+	return s.applyParty(ctx, eventID, g, choice, reason, receipt, companions, false, 0)
+}
+func (s Responses) FinalizeParty(ctx context.Context, eventID string, g core.Guest, choice, reason string, companions *[]core.Person) error {
+	return s.applyParty(ctx, eventID, g, choice, reason, "", companions, true, 0)
+}
+func (s Responses) ApplyProvider(ctx context.Context, eventID string, g core.Guest, choice, receipt string, timestamp int64) error {
+	return s.applyParty(ctx, eventID, g, choice, "", receipt, nil, false, timestamp)
+}
+func (s Responses) applyParty(ctx context.Context, eventID string, g core.Guest, choice, reason, receipt string, companions *[]core.Person, finalize bool, timestamp int64) error {
 	for attempt := 0; attempt < 32; attempt++ {
 		if err := ctx.Err(); err != nil {
 			return err
@@ -34,9 +43,20 @@ func (s Responses) ApplyParty(ctx context.Context, eventID string, g core.Guest,
 		if receipt != "" && e.ResponseReceipts[receipt] {
 			return core.ErrDuplicate
 		}
+		if (finalize || receipt != "") && core.ResponseCompleted(e.Responses[g.ID]) {
+			return core.ErrResponseFinalized
+		}
+		if timestamp > 0 && e.Responses[g.ID].ProviderTimestamp >= timestamp {
+			return core.ErrDuplicate
+		}
 		next, err := core.DecidePartyResponse(e, g, choice, reason, companions, s.Now())
 		if err != nil {
 			return err
+		}
+		next.Finalized = finalize
+		next.ProviderTimestamp = e.Responses[g.ID].ProviderTimestamp
+		if timestamp > 0 {
+			next.ProviderTimestamp = timestamp
 		}
 		saved, err := s.Repository.CommitResponse(ctx, e, g.ID, next, receipt)
 		if err != nil {

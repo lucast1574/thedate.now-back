@@ -58,8 +58,8 @@ func TestCelebrationDesignRoundTripAndWhatsAppNotice(t *testing.T) {
 				t.Fatal("settings missing from public invitation")
 			}
 			raw, _ := json.Marshal(eventMessage(saved, core.Guest{Name: "Ana", Seats: 1, InviteToken: strings.Repeat("a", 48)}))
-			if !strings.Contains(string(raw), "Solo adultos, con cariño.") {
-				t.Fatal("WhatsApp notice missing")
+			if strings.Contains(string(raw), "Solo adultos, con cariño.") {
+				t.Fatal("website-only notice leaked into WhatsApp")
 			}
 			saved.Celebration.WhatsAppNotice = false
 			raw, _ = json.Marshal(eventMessage(saved, core.Guest{}))

@@ -13,18 +13,10 @@ var wazendClient = &http.Client{Timeout: 20 * time.Second}
 
 func eventMessage(e core.Event, g core.Guest) map[string]any {
 	host, _ := core.InvitationHost(e.Kind, e.Slug)
-	link := "https://" + host + "/rsvp/" + g.InviteToken
-	return map[string]any{
-		"chatId": strings.TrimPrefix(g.Phone, "+") + "@c.us",
-		"event": map[string]any{
-			"name":               invitationBrand(e.Kind) + " · " + e.Title,
-			"description":        core.InvitationMessage(e.InvitationMessage, link) + core.WhatsAppCelebration(e.Celebration),
-			"startTime":          e.StartAt.Unix(),
-			"endTime":            e.StartAt.Add(4 * time.Hour).Unix(),
-			"location":           map[string]string{"name": e.Location},
-			"extraGuestsAllowed": false,
-		},
-	}
+	return map[string]any{"session": wazendFor(e.Kind).Session, "chatId": strings.TrimPrefix(g.Phone, "+") + "@c.us", "text": core.InvitationMessage(e.InvitationMessage, "https://"+host+"/rsvp/"+g.InviteToken), "linkPreview": false}
+}
+func invitationPoll(e core.Event, g core.Guest) map[string]any {
+	return map[string]any{"session": wazendFor(e.Kind).Session, "chatId": strings.TrimPrefix(g.Phone, "+") + "@c.us", "poll": map[string]any{"name": "¿Nos acompañas?", "options": []string{"Sí", "No", "Tal vez"}, "multipleAnswers": false}}
 }
 
 func extractMessageID(raw []byte) string {

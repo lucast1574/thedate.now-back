@@ -1,10 +1,7 @@
 package httpapi
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
-	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -42,7 +39,7 @@ func (s *server) dispatchInvitations(ctx context.Context, e core.Event) {
 	if _, err := s.db.Collection("events").UpdateByID(ctx, e.ID, bson.M{"$set": bson.M{"invitationWebReady": ready}}); err != nil || !ready {
 		return
 	}
-	endpoint := strings.TrimSuffix(base.String(), "/") + "/api/" + url.PathEscape(config.Session) + "/events"
+	endpoint := strings.TrimSuffix(base.String(), "/") + "/api/sendPoll"
 	latest, err := (mongostore.Responses{DB: s.db}).Snapshot(ctx, e.ID)
 	if err != nil {
 		return
@@ -53,7 +50,7 @@ func (s *server) dispatchInvitations(ctx context.Context, e core.Event) {
 			resolved = append(resolved, id)
 		}
 	}
-	cur, err := s.db.Collection("guests").Find(ctx, bson.M{"eventId": e.ID, "_id": bson.M{"$nin": resolved}, "sentAt": nil, "sendClaim": bson.M{"$exists": false}}, options.Find().SetSort(mongostore.GuestQueueSort()).SetLimit(5))
+	cur, err := s.db.Collection("guests").Find(ctx, bson.M{"eventId": e.ID, "_id": bson.M{"$nin": resolved}, "sentAt": nil, "sendClaim": bson.M{"$exists": false}}, options.Find().SetSort(mongostore.GuestQueueSort()).SetLimit(2))
 	if err != nil {
 		return
 	}
@@ -88,32 +85,23 @@ func (s *server) sendOneInvitation(ctx context.Context, e core.Event, g core.Gue
 		}
 		return err == nil && result.MatchedCount == 1
 	}
-	body, _ := json.Marshal(eventMessage(e, g))
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(body))
-	if err != nil {
-		finish(bson.M{"sendState": "unknown"}, false)
-		return
-	}
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("X-Api-Key", key)
-	resp, err := wazendClient.Do(req)
-	if err != nil {
-		finish(bson.M{"sendState": "unknown"}, false)
-		return
-	}
-	data, readErr := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
-	resp.Body.Close()
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		rejected := resp.StatusCode >= 400 && resp.StatusCode < 500
-		state := "unknown"
-		if rejected {
-			state = "failed"
+	config := wazendFor(e.Kind)
+	if g.InvitationTextMessageID == "" {
+		textID, state := postInvitationMessage(ctx, strings.TrimSuffix(config.Base, "/")+"/api/sendText", key, eventMessage(e, g))
+		if state != "sent" {
+			finish(bson.M{"sendState": state}, state == "failed")
+			return
 		}
-		finish(bson.M{"sendState": state}, rejected)
+		if !finish(bson.M{"invitationTextMessageId": textID}, false) {
+			return
+		}
+	}
+	messageID, state := postInvitationMessage(ctx, endpoint, key, invitationPoll(e, g))
+	if state != "sent" {
+		finish(bson.M{"sendState": state}, state == "failed")
 		return
 	}
-	messageID := extractMessageID(data)
-	if readErr != nil || messageID == "" || !finish(bson.M{"sentAt": time.Now().UTC(), "invitationMessageId": messageID, "sendState": "sent"}, false) {
+	if !finish(bson.M{"sentAt": time.Now().UTC(), "invitationMessageId": messageID, "sendState": "sent"}, false) {
 		finish(bson.M{"sendState": "unknown"}, false)
 	}
 }

@@ -7,19 +7,25 @@ import (
 )
 
 var ErrCapacity = errors.New("event capacity reached")
+var ErrResponseFinalized = errors.New("response already completed")
 var ErrDuplicate = errors.New("response receipt already processed")
 var ErrUnavailable = errors.New("event is not published and paid")
 
 type Response struct {
-	Companions      []Person   `bson:"companions" json:"-"`
-	PartyRegistered bool       `bson:"partyRegistered" json:"-"`
-	Seats           int        `bson:"seats" json:"-"`
-	Choice          string     `bson:"choice" json:"-"`
-	Reason          string     `bson:"reason" json:"-"`
-	ExpiresAt       *time.Time `bson:"expiresAt" json:"-"`
-	RespondedAt     time.Time  `bson:"respondedAt" json:"-"`
+	Finalized         bool       `bson:"finalized,omitempty" json:"-"`
+	ProviderTimestamp int64      `bson:"providerTimestamp,omitempty" json:"-"`
+	Companions        []Person   `bson:"companions" json:"-"`
+	PartyRegistered   bool       `bson:"partyRegistered" json:"-"`
+	Seats             int        `bson:"seats" json:"-"`
+	Choice            string     `bson:"choice" json:"-"`
+	Reason            string     `bson:"reason" json:"-"`
+	ExpiresAt         *time.Time `bson:"expiresAt" json:"-"`
+	RespondedAt       time.Time  `bson:"respondedAt" json:"-"`
 }
 
+func ResponseCompleted(r Response) bool {
+	return r.Finalized || (r.Choice == "going" && r.PartyRegistered)
+}
 func (r Response) Active(now time.Time) bool {
 	return r.Choice == "going" || (r.Choice == "maybe" && r.ExpiresAt != nil && r.ExpiresAt.After(now))
 }
@@ -38,6 +44,9 @@ func Occupied(e Event, now time.Time) int {
 
 // DecideResponse is pure: IO, retries and persistence belong to the application.
 func DecideResponse(e Event, g Guest, choice, reason string, now time.Time) (Response, error) {
+	if e.Responses[g.ID].Finalized {
+		return Response{}, ErrResponseFinalized
+	}
 	if e.PaymentStatus != "paid" || e.PublishedAt == nil {
 		return Response{}, ErrUnavailable
 	}

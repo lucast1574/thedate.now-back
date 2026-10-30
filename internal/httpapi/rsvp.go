@@ -27,7 +27,7 @@ func (s *server) rsvpDetails(w http.ResponseWriter, r *http.Request) {
 	}
 	g = core.WithResponse(e, g)
 	s.completeLegacyEvent(r.Context(), &e)
-	reply(w, 200, map[string]any{"event": publicEventView(e), "guestName": core.GuestFullName(g), "seats": g.Seats, "companions": g.Companions, "attendingSeats": g.AttendingSeats, "partyRegistered": g.PartyRegistered, "response": g.Response, "maybeReason": g.MaybeReason, "maybeExpiresAt": g.MaybeExpiresAt, "eventTitle": e.Title, "kind": e.Kind, "slug": e.Slug, "startAt": e.StartAt, "timeZone": e.TimeZone, "organizer": e.Organizer, "location": e.Location, "isVirtual": e.IsVirtual, "mapUrl": e.MapURL, "virtualUrl": e.VirtualURL})
+	reply(w, 200, map[string]any{"event": publicEventView(e), "finalized": core.ResponseCompleted(e.Responses[g.ID]), "guestName": core.GuestFullName(g), "seats": g.Seats, "companions": g.Companions, "attendingSeats": g.AttendingSeats, "partyRegistered": g.PartyRegistered, "response": g.Response, "maybeReason": g.MaybeReason, "maybeExpiresAt": g.MaybeExpiresAt, "eventTitle": e.Title, "kind": e.Kind, "slug": e.Slug, "startAt": e.StartAt, "timeZone": e.TimeZone, "organizer": e.Organizer, "location": e.Location, "isVirtual": e.IsVirtual, "mapUrl": e.MapURL, "virtualUrl": e.VirtualURL})
 }
 
 func (s *server) rsvp(w http.ResponseWriter, r *http.Request) {
@@ -54,8 +54,10 @@ func (s *server) rsvp(w http.ResponseWriter, r *http.Request) {
 		bad(w, 403, "Invitation is not published")
 		return
 	}
-	if err := s.responses().ApplyParty(r.Context(), e.ID, g, in.Response, in.Reason, "", in.Companions); err != nil {
-		if errors.Is(err, errCapacity) {
+	if err := s.responses().FinalizeParty(r.Context(), e.ID, g, in.Response, in.Reason, in.Companions); err != nil {
+		if errors.Is(err, core.ErrResponseFinalized) {
+			bad(w, 409, "Response already completed")
+		} else if errors.Is(err, errCapacity) {
 			bad(w, 409, "There are not enough seats available")
 		} else {
 			bad(w, 500, "Could not save response")

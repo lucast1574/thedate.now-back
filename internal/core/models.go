@@ -90,28 +90,29 @@ type Section struct {
 }
 
 type Guest struct {
-	QueuePosition       int64      `bson:"queuePosition" json:"queuePosition"`
-	SendState           string     `bson:"sendState,omitempty" json:"sendState,omitempty"`
-	SendStartedAt       *time.Time `bson:"sendStartedAt,omitempty" json:"-"`
-	LastName            string     `bson:"lastName" json:"lastName"`
-	Family              string     `bson:"family" json:"family"`
-	Gender              string     `bson:"gender" json:"gender"`
-	Companions          []Person   `bson:"companions" json:"companions"`
-	AttendingSeats      int        `bson:"-" json:"attendingSeats"`
-	PartyRegistered     bool       `bson:"-" json:"partyRegistered"`
-	ID                  string     `bson:"_id" json:"id"`
-	EventID             string     `bson:"eventId" json:"eventId"`
-	Name                string     `bson:"name" json:"name"`
-	Phone               string     `bson:"phone" json:"phone"`
-	Seats               int        `bson:"seats" json:"seats"`
-	Response            string     `bson:"response" json:"response"` // pending, going, not_going, maybe
-	MaybeReason         string     `bson:"maybeReason" json:"maybeReason"`
-	MaybeExpiresAt      *time.Time `bson:"maybeExpiresAt" json:"maybeExpiresAt"`
-	InviteToken         string     `bson:"inviteToken" json:"-"`
-	InvitationMessageID string     `bson:"invitationMessageId" json:"-"`
-	SentAt              *time.Time `bson:"sentAt" json:"sentAt"`
-	RespondedAt         *time.Time `bson:"respondedAt" json:"respondedAt"`
-	CreatedAt           time.Time  `bson:"createdAt" json:"createdAt"`
+	InvitationTextMessageID string     `bson:"invitationTextMessageId,omitempty" json:"-"`
+	QueuePosition           int64      `bson:"queuePosition" json:"queuePosition"`
+	SendState               string     `bson:"sendState,omitempty" json:"sendState,omitempty"`
+	SendStartedAt           *time.Time `bson:"sendStartedAt,omitempty" json:"-"`
+	LastName                string     `bson:"lastName" json:"lastName"`
+	Family                  string     `bson:"family" json:"family"`
+	Gender                  string     `bson:"gender" json:"gender"`
+	Companions              []Person   `bson:"companions" json:"companions"`
+	AttendingSeats          int        `bson:"-" json:"attendingSeats"`
+	PartyRegistered         bool       `bson:"-" json:"partyRegistered"`
+	ID                      string     `bson:"_id" json:"id"`
+	EventID                 string     `bson:"eventId" json:"eventId"`
+	Name                    string     `bson:"name" json:"name"`
+	Phone                   string     `bson:"phone" json:"phone"`
+	Seats                   int        `bson:"seats" json:"seats"`
+	Response                string     `bson:"response" json:"response"` // pending, going, not_going, maybe
+	MaybeReason             string     `bson:"maybeReason" json:"maybeReason"`
+	MaybeExpiresAt          *time.Time `bson:"maybeExpiresAt" json:"maybeExpiresAt"`
+	InviteToken             string     `bson:"inviteToken" json:"-"`
+	InvitationMessageID     string     `bson:"invitationMessageId" json:"-"`
+	SentAt                  *time.Time `bson:"sentAt" json:"sentAt"`
+	RespondedAt             *time.Time `bson:"respondedAt" json:"respondedAt"`
+	CreatedAt               time.Time  `bson:"createdAt" json:"createdAt"`
 }
 
 type CoupleInvite struct {
