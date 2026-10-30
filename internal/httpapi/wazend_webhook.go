@@ -122,7 +122,7 @@ func requestRSVPFollowup(e core.Event, g core.Guest, text string) {
 		return
 	}
 	host, _ := core.InvitationHost(e.Kind, e.Slug)
-	message := map[string]string{"session": config.Session, "chatId": strings.TrimPrefix(g.Phone, "+") + "@c.us", "text": invitationBrand(e.Kind) + " · " + text + "https://" + host + "/rsvp/" + g.InviteToken}
+	message := map[string]string{"session": config.Session, "chatId": strings.TrimPrefix(g.Phone, "+") + "@c.us", "text": invitationBrand(e.Kind) + " · " + text + "https://" + host + "/rsvp/" + g.InviteToken + "/respuesta"}
 	body, _ := json.Marshal(message)
 	req, err := http.NewRequest(http.MethodPost, strings.TrimSuffix(base.String(), "/")+"/api/sendText", bytes.NewReader(body))
 	if err != nil {
