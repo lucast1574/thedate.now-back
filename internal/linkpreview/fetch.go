@@ -18,9 +18,7 @@ func Fetch(ctx context.Context, raw string) (Metadata, error) {
 	ctx, cancel := context.WithTimeout(ctx, 12*time.Second)
 	defer cancel()
 	raw = NormalizeURL(raw)
-	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, raw, nil)
-	req.Header.Set("User-Agent", "TheDate/1.0 (+https://thedate.now; product preview)")
-	req.Header.Set("Accept", "text/html")
+	req := previewRequest(ctx, raw)
 	client := Client()
 	defer client.CloseIdleConnections()
 	res, err := client.Do(req)
@@ -48,4 +46,18 @@ func Fetch(ctx context.Context, raw string) (Metadata, error) {
 		return Metadata{}, errors.New("La tienda no compartió la ficha de este producto. Conserva el enlace y completa su nombre e imagen.")
 	}
 	return data, nil
+}
+
+func previewRequest(ctx context.Context, raw string) *http.Request {
+	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, raw, nil)
+	agent := "TheDate/1.0 (+https://thedate.now; product preview)"
+	// Mercado Libre serves product Open Graph through its share-preview profile.
+	// Keep TheDate identified; no account cookies or private API are involved.
+	if mercadoHost(req.URL.Hostname()) {
+		agent = "WhatsApp/2.24.7.81 TheDate/1.0 (+https://thedate.now; product link preview)"
+	}
+	req.Header.Set("User-Agent", agent)
+	req.Header.Set("Accept", "text/html")
+	req.Header.Set("Accept-Language", "es-PE,es;q=0.9,en;q=0.7")
+	return req
 }

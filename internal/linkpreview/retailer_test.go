@@ -71,3 +71,19 @@ func TestProductMicrodataAndBodyMetadataIsolation(t *testing.T) {
 		t.Fatal(m)
 	}
 }
+
+func TestMercadoLibreUsesPublicShareMetadataProfile(t *testing.T) {
+	req := previewRequest(context.Background(), "https://www.mercadolibre.com.pe/up/MPEU3667914835?pdp_filters=item_id:MPE913032834")
+	if !strings.Contains(req.UserAgent(), "WhatsApp/") || !strings.Contains(req.UserAgent(), "TheDate/") || req.Header.Get("Authorization") != "" || req.Header.Get("Cookie") != "" {
+		t.Fatal(req.Header)
+	}
+	req = previewRequest(context.Background(), "https://mercadolibre.com.pe.evil.test/product")
+	if strings.Contains(req.UserAgent(), "WhatsApp/") {
+		t.Fatal("profile leaked to unrelated host")
+	}
+	source := `<title>Microondas Freestanding Eléctrico Electrolux 25l Emdy25s2mxb</title><meta property="og:title" content="Microondas Freestanding Eléctrico Electrolux 25l Emdy25s2mxb"/><meta property="og:image" content="https://http2.mlstatic.com/D_NQ_NP_879774-MPE101077547301_122025-OO.png"/>`
+	data := Parse(strings.NewReader(source), "https://www.mercadolibre.com.pe/up/MPEU3667914835")
+	if !strings.Contains(data.Title, "Electrolux 25l") || data.ImageURL != "https://http2.mlstatic.com/D_NQ_NP_879774-MPE101077547301_122025-OO.png" {
+		t.Fatal(data)
+	}
+}
