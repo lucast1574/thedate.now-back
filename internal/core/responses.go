@@ -24,7 +24,7 @@ type Response struct {
 }
 
 func ResponseCompleted(r Response) bool {
-	return r.Finalized || (r.Choice == "going" && r.PartyRegistered)
+	return r.Choice == "not_going" || (r.Choice == "going" && (r.Finalized || r.PartyRegistered))
 }
 func (r Response) Active(now time.Time) bool {
 	return r.Choice == "going" || (r.Choice == "maybe" && r.ExpiresAt != nil && r.ExpiresAt.After(now))
@@ -44,7 +44,7 @@ func Occupied(e Event, now time.Time) int {
 
 // DecideResponse is pure: IO, retries and persistence belong to the application.
 func DecideResponse(e Event, g Guest, choice, reason string, now time.Time) (Response, error) {
-	if e.Responses[g.ID].Finalized {
+	if previous := e.Responses[g.ID]; previous.Finalized && previous.Choice != "maybe" {
 		return Response{}, ErrResponseFinalized
 	}
 	if e.PaymentStatus != "paid" || e.PublishedAt == nil {
@@ -63,6 +63,9 @@ func DecideResponse(e Event, g Guest, choice, reason string, now time.Time) (Res
 	if choice == "maybe" {
 		expiry := now.Add(time.Duration(e.MaybeHoldHours) * time.Hour)
 		next.ExpiresAt = &expiry
+		if previous := e.Responses[g.ID]; previous.Choice == "maybe" && previous.ExpiresAt != nil {
+			next.ExpiresAt = previous.ExpiresAt
+		}
 	}
 	used := Occupied(e, now)
 	used -= e.InvitationHolds[g.ID]

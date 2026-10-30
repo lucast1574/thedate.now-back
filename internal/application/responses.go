@@ -49,11 +49,15 @@ func (s Responses) applyParty(ctx context.Context, eventID string, g core.Guest,
 		if timestamp > 0 && e.Responses[g.ID].ProviderTimestamp >= timestamp {
 			return core.ErrDuplicate
 		}
-		next, err := core.DecidePartyResponse(e, g, choice, reason, companions, s.Now())
+		nextReason := reason
+		if choice == "maybe" && nextReason == "" {
+			nextReason = e.Responses[g.ID].Reason
+		}
+		next, err := core.DecidePartyResponse(e, g, choice, nextReason, companions, s.Now())
 		if err != nil {
 			return err
 		}
-		next.Finalized = finalize
+		next.Finalized = (finalize && choice != "maybe") || choice == "not_going"
 		next.ProviderTimestamp = e.Responses[g.ID].ProviderTimestamp
 		if timestamp > 0 {
 			next.ProviderTimestamp = timestamp
