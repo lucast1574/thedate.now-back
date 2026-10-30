@@ -11,6 +11,7 @@ import (
 )
 
 func TestPollFollowupUsesSeparateResponsePage(t *testing.T) {
+	t.Setenv("PERSONAL_INVITATION_LINKS", "true")
 	var messages []map[string]string
 	provider := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var message map[string]string
@@ -36,7 +37,7 @@ func TestPollFollowupUsesSeparateResponsePage(t *testing.T) {
 		g := core.Guest{Phone: "+51999111222", InviteToken: strings.Repeat("a", 48)}
 		requestRSVPFollowup(e, g, "Complete your party: ")
 		host, _ := core.InvitationHost(kind, e.Slug)
-		if len(messages) == 0 || !strings.HasSuffix(messages[len(messages)-1]["text"], "https://"+host+"/rsvp/"+g.InviteToken+"/respuesta") {
+		if len(messages) == 0 || !strings.HasSuffix(messages[len(messages)-1]["text"], "https://"+host+core.GuestInvitationPath(g)+"/respuesta") {
 			t.Fatal("Followup must open the response page")
 		}
 		if strings.Contains(eventMessage(e, g)["text"].(string), "/respuesta") {

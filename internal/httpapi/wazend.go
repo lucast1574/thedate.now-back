@@ -13,7 +13,7 @@ var wazendClient = &http.Client{Timeout: 20 * time.Second}
 
 func eventMessage(e core.Event, g core.Guest) map[string]any {
 	host, _ := core.InvitationHost(e.Kind, e.Slug)
-	return map[string]any{"session": wazendFor(e.Kind).Session, "chatId": strings.TrimPrefix(g.Phone, "+") + "@c.us", "text": core.InvitationMessage(e.InvitationMessage, "https://"+host+"/rsvp/"+g.InviteToken), "linkPreview": false}
+	return map[string]any{"session": wazendFor(e.Kind).Session, "chatId": strings.TrimPrefix(g.Phone, "+") + "@c.us", "text": core.InvitationMessage(e.InvitationMessage, "https://"+host+guestInvitationPath(g)), "linkPreview": false}
 }
 func invitationPoll(e core.Event, g core.Guest) map[string]any {
 	return map[string]any{"session": wazendFor(e.Kind).Session, "chatId": strings.TrimPrefix(g.Phone, "+") + "@c.us", "poll": map[string]any{"name": "¿Nos acompañas?", "options": []string{"Sí", "No", "Tal vez"}, "multipleAnswers": false}}

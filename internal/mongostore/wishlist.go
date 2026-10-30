@@ -25,7 +25,6 @@ func (s Wishlists) Commit(ctx context.Context, id string, version int64, next co
 		filter["paymentStatus"] = "paid"
 		filter["isDemo"] = bson.M{"$ne": true}
 		filter["publishedAt"] = bson.M{"$ne": nil}
-		filter["wishlist.enabled"] = true
 	}
 	result, err := s.DB.Collection("events").UpdateOne(ctx, filter, bson.M{"$set": bson.M{"wishlist": next, "updatedAt": time.Now().UTC()}})
 	return err == nil && result.MatchedCount == 1, err

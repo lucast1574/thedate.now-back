@@ -55,7 +55,7 @@ func EditWishlist(old Wishlist, in Wishlist) (Wishlist, error) {
 	for _, item := range old.Items {
 		existing[item.ID] = item
 	}
-	next := Wishlist{Version: old.Version + 1, Enabled: in.Enabled, Items: make([]Gift, 0, len(in.Items))}
+	next := Wishlist{Version: old.Version + 1, Enabled: len(in.Items) > 0, Items: make([]Gift, 0, len(in.Items))}
 	kept := map[string]bool{}
 	for _, item := range in.Items {
 		prior := existing[item.ID]
@@ -78,7 +78,7 @@ func EditWishlist(old Wishlist, in Wishlist) (Wishlist, error) {
 }
 func DecideGift(e Event, g Guest, id string, release bool, now time.Time) (Wishlist, error) {
 	old := e.Wishlist
-	if e.RevokedGuestTokens[g.InviteToken] || !old.Enabled || e.PaymentStatus != "paid" || e.PublishedAt == nil || e.IsDemo || g.EventID != e.ID || g.ID == "" {
+	if e.RevokedGuestTokens[g.InviteToken] || e.PaymentStatus != "paid" || e.PublishedAt == nil || e.IsDemo || g.EventID != e.ID || g.ID == "" {
 		return old, ErrGiftDisabled
 	}
 	next := old

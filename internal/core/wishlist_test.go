@@ -50,7 +50,7 @@ func TestWishlistEligibilityAndEditsCannotForgeAssignments(t *testing.T) {
 		t.Fatal(err)
 	}
 	g.EventID = e.ID
-	for _, change := range []func(*Event){func(e *Event) { e.PaymentStatus = "unpaid" }, func(e *Event) { e.PublishedAt = nil }, func(e *Event) { e.Wishlist.Enabled = false }, func(e *Event) { e.IsDemo = true }} {
+	for _, change := range []func(*Event){func(e *Event) { e.PaymentStatus = "unpaid" }, func(e *Event) { e.PublishedAt = nil }, func(e *Event) { e.IsDemo = true }} {
 		copy := e
 		change(&copy)
 		if _, err := DecideGift(copy, g, "a", false, time.Now()); !errors.Is(err, ErrGiftDisabled) {

@@ -88,7 +88,7 @@ func TestWishlistEndpointsScopeTokensProtectNamesAndPreserveClaims(t *testing.T)
 	if w = call("POST", "/events/e/wishlist/metadata", `{"url":"https://127.0.0.1/private"}`, auth); w.Code != 422 {
 		t.Fatal("private metadata destination", w.Code)
 	}
-	for key, value := range map[string]any{"paymentStatus": "unpaid", "publishedAt": nil, "wishlist.enabled": false, "isDemo": true} {
+	for key, value := range map[string]any{"paymentStatus": "unpaid", "publishedAt": nil, "isDemo": true} {
 		db.Collection("events").UpdateByID(ctx, e.ID, bson.M{"$set": bson.M{key: value}})
 		if w = call("GET", "/public/wishlist/"+bob.InviteToken, "", ""); w.Code != 404 {
 			t.Fatal("eligibility bypass", key, w.Code)
