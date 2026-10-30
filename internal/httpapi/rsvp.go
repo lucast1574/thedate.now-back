@@ -25,6 +25,10 @@ func (s *server) rsvpDetails(w http.ResponseWriter, r *http.Request) {
 		bad(w, 404, "Invitation not found")
 		return
 	}
+	if e.RevokedGuestTokens[g.InviteToken] {
+		bad(w, 404, "Invitation not found")
+		return
+	}
 	g = core.WithResponse(e, g)
 	s.completeLegacyEvent(r.Context(), &e)
 	reply(w, 200, map[string]any{"event": publicEventView(e), "finalized": core.ResponseCompleted(e.Responses[g.ID]), "guestName": core.GuestFullName(g), "seats": g.Seats, "companions": g.Companions, "attendingSeats": g.AttendingSeats, "partyRegistered": g.PartyRegistered, "response": g.Response, "maybeReason": g.MaybeReason, "maybeExpiresAt": g.MaybeExpiresAt, "eventTitle": e.Title, "kind": e.Kind, "slug": e.Slug, "startAt": e.StartAt, "timeZone": e.TimeZone, "organizer": e.Organizer, "location": e.Location, "isVirtual": e.IsVirtual, "mapUrl": e.MapURL, "virtualUrl": e.VirtualURL})

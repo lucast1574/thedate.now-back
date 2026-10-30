@@ -78,7 +78,7 @@ func EditWishlist(old Wishlist, in Wishlist) (Wishlist, error) {
 }
 func DecideGift(e Event, g Guest, id string, release bool, now time.Time) (Wishlist, error) {
 	old := e.Wishlist
-	if !old.Enabled || e.PaymentStatus != "paid" || e.PublishedAt == nil || e.IsDemo || g.EventID != e.ID || g.ID == "" {
+	if e.RevokedGuestTokens[g.InviteToken] || !old.Enabled || e.PaymentStatus != "paid" || e.PublishedAt == nil || e.IsDemo || g.EventID != e.ID || g.ID == "" {
 		return old, ErrGiftDisabled
 	}
 	next := old

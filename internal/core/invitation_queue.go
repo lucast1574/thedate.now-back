@@ -12,7 +12,7 @@ func InvitationSendState(g Guest, now time.Time) string {
 // An unanswered invitation keeps its offered seats until its guest responds.
 // Never skip a household merely because a smaller one would fit first.
 func CanOfferInvitation(e Event, g Guest, now time.Time) bool {
-	if e.IsDemo || e.PaymentStatus != "paid" || e.PublishedAt == nil || g.EventID != e.ID || g.Seats < 1 {
+	if e.RevokedGuestTokens[g.InviteToken] || e.IsDemo || e.PaymentStatus != "paid" || e.PublishedAt == nil || g.EventID != e.ID || g.Seats < 1 {
 		return false
 	}
 	if r, ok := e.Responses[g.ID]; ok && r.Choice != "" && r.Choice != "pending" {

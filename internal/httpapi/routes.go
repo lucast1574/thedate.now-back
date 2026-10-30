@@ -51,6 +51,8 @@ func (s *server) routes() http.Handler {
 	mux.HandleFunc("GET /events/{id}/seating", s.getSeating)
 	mux.HandleFunc("PATCH /events/{id}/seating", s.saveSeating)
 	mux.HandleFunc("POST /events/{id}/guests", s.addGuest)
+	mux.HandleFunc("PATCH /events/{id}/guests/{guestId}", s.manageGuest)
+	mux.HandleFunc("DELETE /events/{id}/guests/{guestId}", s.manageGuest)
 	mux.HandleFunc("POST /events/{id}/guests/import", s.importGuests)
 	mux.HandleFunc("POST /events/{id}/audio", s.uploadAudio)
 	mux.HandleFunc("GET /events/{id}/audio/{key}", s.ownerAudio)

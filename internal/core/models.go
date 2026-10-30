@@ -25,6 +25,7 @@ type User struct {
 }
 
 type Event struct {
+	RevokedGuestTokens         map[string]bool          `bson:"revokedGuestTokens,omitempty" json:"-"`
 	AddressChangedAfterPayment bool                     `bson:"addressChangedAfterPayment,omitempty" json:"addressChangedAfterPayment,omitempty"`
 	BalanceReservationID       string                   `bson:"balanceReservationId,omitempty" json:"-"`
 	BalanceAmount              int64                    `bson:"balanceAmount,omitempty" json:"-"`
@@ -90,6 +91,7 @@ type Section struct {
 }
 
 type Guest struct {
+	SendClaim               string     `bson:"sendClaim,omitempty" json:"-"`
 	InvitationTextMessageID string     `bson:"invitationTextMessageId,omitempty" json:"-"`
 	QueuePosition           int64      `bson:"queuePosition" json:"queuePosition"`
 	SendState               string     `bson:"sendState,omitempty" json:"sendState,omitempty"`

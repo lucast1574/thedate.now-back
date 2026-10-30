@@ -91,7 +91,15 @@ func (s *server) wazendWebhook(w http.ResponseWriter, r *http.Request) {
 	}
 	receipt := sha256.Sum256([]byte("wazend:" + event.ID))
 	err = s.responses().ApplyProvider(r.Context(), e.ID, g, response, hex.EncodeToString(receipt[:]), timestamp)
-	if errors.Is(err, core.ErrDuplicate) || errors.Is(err, core.ErrResponseFinalized) {
+	if errors.Is(err, core.ErrResponseFinalized) {
+		if noticeErr := s.notifyClosedResponse(r.Context(), e.ID, g, response, hex.EncodeToString(receipt[:]), timestamp); noticeErr != nil {
+			bad(w, 500, "Could not record response notice")
+			return
+		}
+		reply(w, 200, map[string]string{"status": "finalized"})
+		return
+	}
+	if errors.Is(err, core.ErrDuplicate) {
 		reply(w, 200, map[string]string{"status": "duplicate"})
 		return
 	}
