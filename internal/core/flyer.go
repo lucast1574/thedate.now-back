@@ -3,6 +3,8 @@ package core
 import "math"
 
 type FlyerCanvas struct {
+	Font               string           `bson:"font,omitempty" json:"font,omitempty"`
+	Art                string           `bson:"art,omitempty" json:"art,omitempty"`
 	BackgroundImage    *ImageBackground `bson:"backgroundImage,omitempty" json:"backgroundImage,omitempty"`
 	BackgroundOverride bool             `bson:"backgroundOverride,omitempty" json:"backgroundOverride,omitempty"`
 	Width              float64          `bson:"width" json:"width"`
@@ -11,6 +13,10 @@ type FlyerCanvas struct {
 	Elements           []FlyerElement   `bson:"elements" json:"elements"`
 }
 type FlyerElement struct {
+	PhotoTreatment      string               `bson:"photoTreatment,omitempty" json:"photoTreatment,omitempty"`
+	PhotoFit            string               `bson:"photoFit,omitempty" json:"photoFit,omitempty"`
+	Locked              bool                 `bson:"locked,omitempty" json:"locked,omitempty"`
+	GroupID             string               `bson:"groupId,omitempty" json:"groupId,omitempty"`
 	EventBound          bool                 `bson:"eventBound,omitempty" json:"eventBound,omitempty"`
 	NameFormat          string               `bson:"nameFormat,omitempty" json:"nameFormat,omitempty"`
 	ActionHint          bool                 `bson:"actionHint,omitempty" json:"actionHint,omitempty"`
@@ -68,12 +74,12 @@ func ValidCanvas(c *FlyerCanvas, photos []string) bool {
 	if c == nil {
 		return true
 	}
-	if !ValidBackground(c.BackgroundImage, photos) || !bounded(c.Width, 320, 1200) || !bounded(c.Height, 240, 2000) || !validColor(c.Background) || len(c.Elements) > 60 {
+	if (c.Font != "" && c.Font != "serif" && c.Font != "sans" && c.Font != "script" && c.Font != "mono") || !validCanvasArt(c.Art) || !ValidBackground(c.BackgroundImage, photos) || !bounded(c.Width, 320, 1200) || !bounded(c.Height, 240, 2000) || !validColor(c.Background) || len(c.Elements) > 60 {
 		return false
 	}
 	seen := map[string]bool{}
 	for _, el := range c.Elements {
-		if el.ID == "" || len(el.ID) > 64 || seen[el.ID] || !bounded(el.X, 0, c.Width) || !bounded(el.Y, 0, c.Height) || !bounded(el.Width, 16, c.Width) || !bounded(el.Height, 16, c.Height) || el.X+el.Width > c.Width+0.01 || el.Y+el.Height > c.Height+0.01 || !bounded(el.Rotation, -180, 180) || !bounded(el.FontSize, 8, 160) || !validColor(el.Color) {
+		if !validPhotoPresentation(el) || len(el.GroupID) > 64 || el.ID == "" || len(el.ID) > 64 || seen[el.ID] || !bounded(el.X, 0, c.Width) || !bounded(el.Y, 0, c.Height) || !bounded(el.Width, 16, c.Width) || !bounded(el.Height, 16, c.Height) || el.X+el.Width > c.Width+0.01 || el.Y+el.Height > c.Height+0.01 || !bounded(el.Rotation, -180, 180) || !bounded(el.FontSize, 8, 160) || !validColor(el.Color) {
 			return false
 		}
 		seen[el.ID] = true
@@ -104,4 +110,12 @@ func ValidCanvas(c *FlyerCanvas, photos []string) bool {
 		}
 	}
 	return true
+}
+
+func validCanvasArt(art string) bool {
+	switch art {
+	case "", "botanical", "romance", "gala", "editorial", "fiesta", "coastal":
+		return true
+	}
+	return false
 }
