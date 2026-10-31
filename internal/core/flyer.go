@@ -13,6 +13,7 @@ type FlyerCanvas struct {
 	Elements           []FlyerElement   `bson:"elements" json:"elements"`
 }
 type FlyerElement struct {
+	DressPaletteStyle   string               `bson:"dressPaletteStyle,omitempty" json:"dressPaletteStyle,omitempty"`
 	PhotoTreatment      string               `bson:"photoTreatment,omitempty" json:"photoTreatment,omitempty"`
 	PhotoFit            string               `bson:"photoFit,omitempty" json:"photoFit,omitempty"`
 	Locked              bool                 `bson:"locked,omitempty" json:"locked,omitempty"`

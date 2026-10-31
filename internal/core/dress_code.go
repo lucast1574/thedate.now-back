@@ -12,7 +12,12 @@ type DressExcludedColor struct {
 
 func ValidDressCode(el FlyerElement, photos []string) bool {
 	if el.Binding != "dress_code" {
-		return el.DressStyle == "" && el.DressIcon == "" && el.DressPhotoKey == "" && len(el.DressExcludedColors) == 0
+		return el.DressPaletteStyle == "" && el.DressStyle == "" && el.DressIcon == "" && el.DressPhotoKey == "" && len(el.DressExcludedColors) == 0
+	}
+	switch el.DressPaletteStyle {
+	case "", "fabric", "petal", "bar", "jewel", "wave", "ticket":
+	default:
+		return false
 	}
 	switch el.DressStyle {
 	case "", "text", "icon", "image", "icon-text", "image-text", "icon-image", "all":
