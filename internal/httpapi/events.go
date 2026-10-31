@@ -204,6 +204,7 @@ func (s *server) publicEvent(w http.ResponseWriter, r *http.Request) {
 		bad(w, 404, "Invitation not found")
 		return
 	}
+	e = core.PublishedEvent(e)
 	s.completeLegacyEvent(r.Context(), &e)
 	reply(w, 200, publicEventView(e))
 }

@@ -1,5 +1,25 @@
 # Puesta en marcha y límites operativos
 
+## Borrador de diseño y versión publicada
+
+Desplegar primero la API que entiende `publishedDesign` y después los dos estudios.
+Guardar desde el editor modifica los campos editables y aumenta `designVersion`;
+las lecturas públicas usan la instantánea `publishedDesign`. Los eventos antiguos
+conservan su diseño público mediante una captura atómica antes de la primera
+edición. La primera publicación captura el diseño al completar el despliegue;
+actualizar el renderizador conserva esa captura.
+
+`POST /events/{id}/design/publish` publica la revisión indicada en `expectedVersion`.
+Solo propietario/admin, con evento pagado y previamente publicado, pueden usarlo.
+Las escrituras concurrentes devuelven 409. Los clientes antiguos deben recargar
+antes de editar una invitación publicada; no pueden guardar sin revisión.
+
+Después de aceptar borradores, no revertir a una API que ignore `publishedDesign`:
+expondría los campos editables. Usar una corrección compatible o preparar una
+migración inversa que preserve por separado la captura pública y el borrador.
+Las fechas, aforo, respuestas y demás datos operativos mantienen su propio flujo;
+esta separación corresponde al contenido visual del editor y su biblioteca.
+
 ## Cuentas independientes por marca
 
 `ISOLATE_PRODUCTS=true` monta `/products/general/` y `/products/wedding/`.
