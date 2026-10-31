@@ -42,6 +42,11 @@ func (s *server) publish(w http.ResponseWriter, r *http.Request) {
 		bad(w, 503, "Invitation deployment is not configured")
 		return
 	}
+	saved, err := (mongostore.Designs{DB: s.db}).Publish(r.Context(), e, time.Now().UTC())
+	if err != nil || !saved {
+		bad(w, 409, "No se pudo publicar. Vuelve a intentarlo.")
+		return
+	}
 	d, err := (mongostore.Deployments{DB: s.db}).Queue(r.Context(), e, image)
 	if err != nil {
 		bad(w, 500, "Could not queue deployment")
