@@ -35,6 +35,17 @@ func productSecret(master []byte, product string) []byte {
 }
 
 func productRoutes(servers []*server) http.Handler {
+	return securityHeaders(productHandler(servers))
+}
+
+func securityHeaders(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Strict-Transport-Security", "max-age=31536000")
+		next.ServeHTTP(w, r)
+	})
+}
+
+func productHandler(servers []*server) http.Handler {
 	if len(servers) == 1 && servers[0].product == "" {
 		return servers[0].routes()
 	}
