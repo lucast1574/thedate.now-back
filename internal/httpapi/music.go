@@ -72,8 +72,13 @@ func (s *server) publicAudio(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var e core.Event
-	err := s.db.Collection("events").FindOne(r.Context(), bson.M{"kind": kind, "slug": slug, "paymentStatus": "paid", "publishedAt": bson.M{"$ne": nil}, "music.source": "mp3", "music.value": key}).Decode(&e)
+	err := s.db.Collection("events").FindOne(r.Context(), bson.M{"kind": kind, "slug": slug, "paymentStatus": "paid", "publishedAt": bson.M{"$ne": nil}}).Decode(&e)
 	if err != nil {
+		bad(w, 404, "Audio not found")
+		return
+	}
+	e = core.PublishedEvent(e)
+	if e.Music == nil || e.Music.Source != "mp3" || e.Music.Value != key {
 		bad(w, 404, "Audio not found")
 		return
 	}

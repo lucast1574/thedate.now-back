@@ -12,6 +12,7 @@ import (
 var wazendClient = &http.Client{Timeout: 20 * time.Second}
 
 func eventMessage(e core.Event, g core.Guest) map[string]any {
+	e = core.PublishedEvent(e)
 	host, _ := core.InvitationHost(e.Kind, e.Slug)
 	return map[string]any{"session": wazendFor(e.Kind).Session, "chatId": strings.TrimPrefix(g.Phone, "+") + "@c.us", "text": core.InvitationMessage(e.InvitationMessage, "https://"+host+guestInvitationPath(g)), "linkPreview": false}
 }

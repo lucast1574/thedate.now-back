@@ -38,6 +38,7 @@ func (s *server) routes() http.Handler {
 	mux.HandleFunc("POST /events", s.createEvent)
 	mux.HandleFunc("PATCH /events/{id}", s.updateEvent)
 	mux.HandleFunc("PATCH /events/{id}/design", s.updateDesign)
+	mux.HandleFunc("POST /events/{id}/design/publish", s.publishDesign)
 	mux.HandleFunc("POST /maps/resolve", s.resolveMapsURL)
 	mux.HandleFunc("GET /events/{id}/wishlist", s.getWishlist)
 	mux.HandleFunc("PATCH /events/{id}/wishlist", s.saveWishlist)

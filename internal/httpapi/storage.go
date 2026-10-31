@@ -10,11 +10,13 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"slices"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/lucast1574/thedate.now-back/internal/core"
+	"github.com/lucast1574/thedate.now-back/internal/mongostore"
 	"github.com/minio/minio-go/v7"
 	miniocreds "github.com/minio/minio-go/v7/pkg/credentials"
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -110,9 +112,9 @@ func (s *server) uploadPhoto(w http.ResponseWriter, r *http.Request) {
 		bad(w, 502, "Could not save image")
 		return
 	}
-	result, attachErr := s.db.Collection("events").UpdateOne(r.Context(), bson.M{"_id": e.ID, "photoKeys.39": bson.M{"$exists": false}}, bson.M{"$push": bson.M{"photoKeys": key}, "$set": bson.M{"updatedAt": time.Now().UTC()}})
+	attached, attachErr := mongostore.AttachPhoto(r.Context(), s.db, e.ID, key, time.Now().UTC())
 	err = attachErr
-	if err != nil || result.MatchedCount != 1 {
+	if err != nil || !attached {
 		_ = s.storage.client.RemoveObject(r.Context(), s.storage.bucket(e.Kind), key, minio.RemoveObjectOptions{})
 		bad(w, 409, "Could not attach image; maximum 40 photos per event")
 		return
@@ -133,6 +135,11 @@ func (s *server) publicPhoto(w http.ResponseWriter, r *http.Request) {
 	var e core.Event
 	filter := bson.M{"kind": kind, "slug": slug, "paymentStatus": "paid", "publishedAt": bson.M{"$ne": nil}, "photoKeys": key}
 	if err := s.db.Collection("events").FindOne(r.Context(), filter).Decode(&e); err != nil {
+		bad(w, 404, "Image not found")
+		return
+	}
+	e = core.PublishedEvent(e)
+	if !slices.Contains(e.PhotoKeys, key) {
 		bad(w, 404, "Image not found")
 		return
 	}

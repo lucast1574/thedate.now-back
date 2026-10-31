@@ -5,18 +5,19 @@ import "strings"
 var sectionIcons = map[string]bool{"heart": true, "sparkle": true, "flower": true, "ring": true, "music": true, "star": true, "calendar": true, "none": true, "frame": true, "arch": true, "leaf": true, "sunburst": true}
 
 type DesignInput struct {
-	BackgroundImage      *ImageBackground `json:"backgroundImage"`
-	ClearBackgroundImage bool             `json:"clearBackgroundImage"`
-	Opening              *Opening         `json:"opening"`
-	Celebration          *Celebration     `json:"celebration"`
-	Music                *Music           `json:"music"`
-	TemplateID           string           `json:"templateId"`
-	DesignMode           string           `json:"designMode"`
-	Title                string           `json:"title"`
-	Description          string           `json:"description"`
-	Template             string           `json:"template"`
-	AccentColor          string           `json:"accentColor"`
-	Sections             []Section        `json:"sections"`
+	ExpectedVersion      *int64           `bson:"-" json:"expectedVersion,omitempty"`
+	BackgroundImage      *ImageBackground `bson:"backgroundImage" json:"backgroundImage"`
+	ClearBackgroundImage bool             `bson:"-" json:"clearBackgroundImage"`
+	Opening              *Opening         `bson:"opening" json:"opening"`
+	Celebration          *Celebration     `bson:"celebration" json:"celebration"`
+	Music                *Music           `bson:"music" json:"music"`
+	TemplateID           string           `bson:"templateId" json:"templateId"`
+	DesignMode           string           `bson:"designMode" json:"designMode"`
+	Title                string           `bson:"title" json:"title"`
+	Description          string           `bson:"description" json:"description"`
+	Template             string           `bson:"template" json:"template"`
+	AccentColor          string           `bson:"accentColor" json:"accentColor"`
+	Sections             []Section        `bson:"sections" json:"sections"`
 }
 
 func validColor(color string) bool {

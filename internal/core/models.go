@@ -25,6 +25,9 @@ type User struct {
 }
 
 type Event struct {
+	PublishedDesign            *DesignSnapshot          `bson:"publishedDesign,omitempty" json:"-"`
+	DesignVersion              int64                    `bson:"designVersion" json:"designVersion"`
+	PublishedDesignVersion     int64                    `bson:"publishedDesignVersion" json:"publishedDesignVersion"`
 	RevokedGuestTokens         map[string]bool          `bson:"revokedGuestTokens,omitempty" json:"-"`
 	AddressChangedAfterPayment bool                     `bson:"addressChangedAfterPayment,omitempty" json:"addressChangedAfterPayment,omitempty"`
 	BalanceReservationID       string                   `bson:"balanceReservationId,omitempty" json:"-"`
