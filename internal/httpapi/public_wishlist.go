@@ -30,7 +30,6 @@ func (s *server) giftInvitation(r *http.Request) (core.Event, core.Guest, error)
 	return e, g, err
 }
 func publicWishlist(e core.Event, g core.Guest) map[string]any {
-	e = core.PublishedEvent(e)
 	items := []map[string]any{}
 	for _, item := range e.Wishlist.Items {
 		items = append(items, map[string]any{"id": item.ID, "title": item.Title, "url": item.URL, "description": item.Description, "hasImage": item.ImageURL != "", "reserved": item.GuestID != "", "mine": g.ID != "" && item.GuestID == g.ID, "delivered": g.ID != "" && item.GuestID == g.ID && item.Delivered})

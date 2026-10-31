@@ -3,11 +3,11 @@ package httpapi
 import (
 	"context"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/lucast1574/thedate.now-back/internal/core"
-	"github.com/lucast1574/thedate.now-back/internal/mongostore"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
@@ -31,25 +31,22 @@ func (s *server) updateDesign(w http.ResponseWriter, r *http.Request) {
 		bad(w, 400, err.Error())
 		return
 	}
-	if (e.PublishedAt != nil && in.ExpectedVersion == nil) || (in.ExpectedVersion != nil && *in.ExpectedVersion != e.DesignVersion) {
-		bad(w, 409, "El diseño cambió en otra sesión. Vuelve a abrir el editor para revisar la versión actual; tu copia local se conserva.")
-		return
+	fields := bson.M{"music": in.Music, "title": strings.TrimSpace(in.Title), "description": in.Description, "template": in.Template, "templateId": core.TemplateID(e.Kind, in.Template, in.DesignMode, in.TemplateID), "accentColor": in.AccentColor, "sections": in.Sections, "designMode": in.DesignMode, "updatedAt": time.Now().UTC()}
+	if in.BackgroundImage != nil || in.ClearBackgroundImage {
+		fields["backgroundImage"] = in.BackgroundImage
 	}
-	next := core.EditedDesign(e, in)
-	if core.SameDesign(e, next) {
-		reply(w, 200, map[string]any{"status": "unchanged", "designVersion": e.DesignVersion})
-		return
+	if in.Opening != nil {
+		fields["opening"] = in.Opening
 	}
-	saved, err := (mongostore.Designs{DB: s.db}).Save(r.Context(), e, next, time.Now().UTC())
+	if in.Celebration != nil {
+		fields["celebration"] = in.Celebration
+	}
+	_, err = s.db.Collection("events").UpdateByID(r.Context(), e.ID, bson.M{"$set": fields})
 	if err != nil {
 		bad(w, 500, "Could not save design")
 		return
 	}
-	if !saved {
-		bad(w, 409, "El diseño cambió mientras guardabas. Tu copia local se conserva; vuelve a abrir el editor.")
-		return
-	}
-	reply(w, 200, map[string]any{"status": "updated", "designVersion": e.DesignVersion + 1})
+	reply(w, 200, map[string]string{"status": "updated"})
 }
 
 func (s *server) ensureDemos(ctx context.Context, u core.User) error {

@@ -90,25 +90,13 @@ func (s Responses) CommitEvent(ctx context.Context, e core.Event, in core.EventI
 	if in.Celebration != nil {
 		set["celebration"] = in.Celebration
 	}
-	preservePublishedDesign(e, set)
-	next := e
-	next.Title, next.Description, next.Template, next.TemplateID = in.Title, in.Description, in.Template, in.TemplateID
-	next.DesignMode, next.AccentColor = in.DesignMode, in.AccentColor
-	if in.Celebration != nil {
-		next.Celebration = in.Celebration
-	}
-	designIncrement := 0
-	if !core.SameDesign(e, next) {
-		designIncrement = 1
-	}
-	filter := designVersionFilter(e)
-	filter["responseVersion"] = e.ResponseVersion
+	filter := bson.M{"_id": e.ID, "responseVersion": e.ResponseVersion}
 	if in.Slug != e.Slug {
 		set["slug"] = in.Slug
 		filter["publishedAt"] = nil
 		filter["invitationsEnabled"] = bson.M{"$ne": true}
 	}
-	result, err := s.DB.Collection("events").UpdateOne(ctx, filter, bson.M{"$set": set, "$inc": bson.M{"responseVersion": 1, "designVersion": designIncrement}})
+	result, err := s.DB.Collection("events").UpdateOne(ctx, filter, bson.M{"$set": set, "$inc": bson.M{"responseVersion": 1}})
 	if err != nil {
 		return false, err
 	}

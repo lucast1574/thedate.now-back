@@ -35,16 +35,9 @@ func TestSentInvitationKeepsItsLinkAndReadsLatestDesign(t *testing.T) {
 	if before.Code != 200 || !strings.Contains(before.Body.String(), `"guestName":"Ana Rojas"`) {
 		t.Fatal("personal name missing")
 	}
-	payload := `{"expectedVersion":0,"title":"A new title","template":"classic","accentColor":"#995d72","sections":[{"id":"personal","icon":"none","heading":"For you","body":"","guestText":{"id":"name","type":"text","binding":"guest_name","text":"Hola, {{nombre_invitado}}","x":0,"y":40,"width":720,"height":160,"rotation":15,"color":"#995d72","font":"script","fontSize":48,"align":"center"}}]}`
+	payload := `{"title":"A new title","template":"classic","accentColor":"#995d72","sections":[{"id":"personal","icon":"none","heading":"For you","body":"","guestText":{"id":"name","type":"text","binding":"guest_name","text":"Hola, {{nombre_invitado}}","x":0,"y":40,"width":720,"height":160,"rotation":15,"color":"#995d72","font":"script","fontSize":48,"align":"center"}}]}`
 	if w := request("PATCH", "/events/event/design", payload); w.Code != 200 {
 		t.Fatalf("published save rejected: %s", w.Body.String())
-	}
-	private := request("GET", "/public/rsvp/"+g.InviteToken, "")
-	if strings.Contains(private.Body.String(), "A new title") {
-		t.Fatal("draft leaked through personal invitation")
-	}
-	if w := request("POST", "/events/event/design/publish", `{"expectedVersion":1}`); w.Code != 200 {
-		t.Fatalf("publication failed: %s", w.Body.String())
 	}
 	after := request("GET", "/public/rsvp/"+g.InviteToken, "")
 	var view map[string]any

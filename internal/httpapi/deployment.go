@@ -50,7 +50,7 @@ func (s *server) publish(w http.ResponseWriter, r *http.Request) {
 	reply(w, http.StatusAccepted, s.publicationView(r.Context(), e, d))
 }
 func (s *server) deploymentStatus(w http.ResponseWriter, r *http.Request) {
-	e, err := s.ownedEvent(r)
+	e, err := s.managedEvent(r)
 	if err != nil {
 		bad(w, 404, "Event not found")
 		return
