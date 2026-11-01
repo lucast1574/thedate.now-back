@@ -9,6 +9,8 @@ func (s *server) routes() http.Handler {
 	mux.HandleFunc("POST /auth/login", s.login)
 	mux.HandleFunc("POST /auth/google", s.googleLogin)
 	mux.HandleFunc("GET /auth/me", s.me)
+	mux.HandleFunc("POST /devices", s.registerMobileDevice)
+	mux.HandleFunc("DELETE /devices/{installation}", s.removeMobileDevice)
 	mux.HandleFunc("GET /support/tickets", s.listSupportTickets)
 	mux.HandleFunc("POST /support/tickets", s.createSupportTicket)
 	mux.HandleFunc("GET /support/tickets/{id}/images/{index}", s.supportImage)

@@ -17,6 +17,7 @@ import (
 )
 
 type server struct {
+	mobileSender    mobileSender
 	invitationReady func(context.Context, core.Event) bool
 	product         string
 	verifyGoogle    func(context.Context, string, string) (*idtoken.Payload, error)
@@ -70,9 +71,13 @@ func Run() {
 	defer stop()
 	var workers sync.WaitGroup
 	for _, s := range servers {
-		workers.Add(3)
+		if err := s.configureMobile(runCtx); err != nil {
+			log.Fatal("Invalid mobile notification configuration")
+		}
+		workers.Add(4)
 		go func(s *server) { defer workers.Done(); s.deploymentWorker(runCtx) }(s)
 		go func(s *server) { defer workers.Done(); s.emailWorker(runCtx) }(s)
+		go func(s *server) { defer workers.Done(); s.mobileWorker(runCtx) }(s)
 		go func(s *server) { defer workers.Done(); s.invitationWorker(runCtx) }(s)
 	}
 	port := env("PORT", "8080")

@@ -39,5 +39,8 @@ func EnsureIndexes(ctx context.Context, db *mongo.Database) error {
 			return err
 		}
 	}
+	if err = EnsureMobileIndexes(ctx, db); err != nil {
+		return err
+	}
 	return EnsureEmailIndexes(ctx, db)
 }
