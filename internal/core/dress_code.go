@@ -15,7 +15,7 @@ func ValidDressCode(el FlyerElement, photos []string) bool {
 		return el.DressPaletteStyle == "" && el.DressStyle == "" && el.DressIcon == "" && el.DressPhotoKey == "" && len(el.DressExcludedColors) == 0
 	}
 	switch el.DressPaletteStyle {
-	case "", "fabric", "petal", "bar", "jewel", "wave", "ticket":
+	case "", "fabric", "petal", "bar", "jewel", "wave", "ticket", "circle", "square", "arch", "diamond", "hexagon", "leaf", "splash":
 	default:
 		return false
 	}

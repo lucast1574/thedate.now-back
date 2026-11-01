@@ -7,7 +7,7 @@ import (
 )
 
 func TestDressPaletteValidationAndPersistence(t *testing.T) {
-	for _, style := range []string{"", "fabric", "petal", "bar", "jewel", "wave", "ticket"} {
+	for _, style := range []string{"", "fabric", "petal", "bar", "jewel", "wave", "ticket", "circle", "square", "arch", "diamond", "hexagon", "leaf", "splash"} {
 		original := FlyerElement{Binding: "dress_code", DressPaletteStyle: style}
 		if !ValidDressCode(original, nil) {
 			t.Fatal("valid palette rejected", style)
