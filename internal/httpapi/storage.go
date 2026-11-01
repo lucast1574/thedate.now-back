@@ -8,6 +8,7 @@ import (
 	_ "image/jpeg"
 	_ "image/png"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"slices"
@@ -43,7 +44,8 @@ func newStorage(ctx context.Context) (*storage, error) {
 	for _, bucket := range []string{s.weddings, s.events} {
 		exists, err := client.BucketExists(ctx, bucket)
 		if err != nil {
-			return nil, err
+			log.Print("Photo storage is unavailable at startup; media requests will fail until the configured service recovers")
+			return s, nil
 		}
 		if !exists {
 			if err := client.MakeBucket(ctx, bucket, minio.MakeBucketOptions{}); err != nil {
