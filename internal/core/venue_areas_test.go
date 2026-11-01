@@ -90,8 +90,24 @@ func TestRotatedVenueAreasCanTouchAllRoomEdgesAndRoundTrip(t *testing.T) {
 		}
 	}
 	p := DefaultSeating()
-	p.Areas = []VenueArea{{ID: "stage", Name: "Escenario", Kind: "stage", X: -141, Y: 140, Width: 420, Height: 140, Rotation: 90}}
+	p.Areas = []VenueArea{{ID: "stage", Name: "Escenario", Kind: "stage", X: -211, Y: 140, Width: 420, Height: 140, Rotation: 90}}
 	if ValidateVenueAreas(p) == nil {
 		t.Fatal("rotated area beyond left wall accepted")
+	}
+}
+
+func TestResponsiveRotatedVenueCentersPersist(t *testing.T) {
+	p := DefaultSeating()
+	for _, position := range [][2]float64{{-180, 200}, {1350, 200}, {100, -60}, {100, 880}} {
+		p.Areas = []VenueArea{{ID: "stage", Name: "Escenario", Kind: "stage", X: position[0], Y: position[1], Width: 420, Height: 140, Rotation: 90}}
+		if err := ValidateVenueAreas(p); err != nil {
+			t.Fatal(position, err)
+		}
+	}
+	for _, position := range [][2]float64{{-211, 200}, {1391, 200}, {100, -71}, {100, 931}} {
+		p.Areas[0].X, p.Areas[0].Y = position[0], position[1]
+		if ValidateVenueAreas(p) == nil {
+			t.Fatal("off-room center accepted", position)
+		}
 	}
 }

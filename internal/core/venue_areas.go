@@ -2,7 +2,6 @@ package core
 
 import (
 	"errors"
-	"math"
 	"strings"
 )
 
@@ -40,11 +39,9 @@ func venueAreaInsideRoom(area VenueArea, plan SeatingPlan) bool {
 	if bounded(area.X, 0, plan.Width-area.Width) && bounded(area.Y, 0, plan.Height-area.Height) {
 		return true
 	}
-	radians := area.Rotation * math.Pi / 180
-	cos, sin := math.Abs(math.Cos(radians)), math.Abs(math.Sin(radians))
-	offsetX := (area.Width*cos + area.Height*sin - area.Width) / 2
-	offsetY := (area.Width*sin + area.Height*cos - area.Height) / 2
-	const epsilon = 1e-7
-	return bounded(area.X, offsetX-epsilon, plan.Width-area.Width-offsetX+epsilon) &&
-		bounded(area.Y, offsetY-epsilon, plan.Height-area.Height-offsetY+epsilon)
+	// CSS rotation uses pixels on a responsive, non-uniformly scaled canvas.
+	// Its visible extents depend on the viewport; the client clamps those.
+	// Persist valid centers so edge positions survive across screen sizes.
+	return area.Rotation != 0 && bounded(area.X+area.Width/2, 0, plan.Width) &&
+		bounded(area.Y+area.Height/2, 0, plan.Height)
 }
