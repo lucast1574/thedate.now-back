@@ -62,3 +62,36 @@ func TestVenueAreasRejectInvalidGeometryAndIdentity(t *testing.T) {
 		t.Fatal("too many areas accepted")
 	}
 }
+
+func TestRotatedVenueAreasCanTouchAllRoomEdgesAndRoundTrip(t *testing.T) {
+	for _, rotation := range []float64{0, 15, 45, 90, -90, 135, 180, -45} {
+		radians := rotation * math.Pi / 180
+		offsetX := (420*math.Abs(math.Cos(radians)) + 140*math.Abs(math.Sin(radians)) - 420) / 2
+		offsetY := (420*math.Abs(math.Sin(radians)) + 140*math.Abs(math.Cos(radians)) - 140) / 2
+		for _, x := range []float64{offsetX, 1600 - 420 - offsetX} {
+			for _, y := range []float64{offsetY, 1000 - 140 - offsetY} {
+				p := DefaultSeating()
+				p.Areas = []VenueArea{{ID: "stage", Name: "Escenario", Kind: "stage", X: x, Y: y, Width: 420, Height: 140, Rotation: rotation}}
+				if err := ValidateSeating(p, Event{Capacity: 50}, nil); err != nil {
+					t.Fatalf("angle %v position %v,%v: %v", rotation, x, y, err)
+				}
+				encoded, err := bson.Marshal(p)
+				if err != nil {
+					t.Fatal(err)
+				}
+				var saved SeatingPlan
+				if err := bson.Unmarshal(encoded, &saved); err != nil {
+					t.Fatal(err)
+				}
+				if saved.Areas[0] != p.Areas[0] {
+					t.Fatal("position changed during persistence")
+				}
+			}
+		}
+	}
+	p := DefaultSeating()
+	p.Areas = []VenueArea{{ID: "stage", Name: "Escenario", Kind: "stage", X: -141, Y: 140, Width: 420, Height: 140, Rotation: 90}}
+	if ValidateVenueAreas(p) == nil {
+		t.Fatal("rotated area beyond left wall accepted")
+	}
+}
