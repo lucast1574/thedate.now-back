@@ -73,12 +73,14 @@ func (s *server) deploymentWorker(ctx context.Context) {
 	releaseTicker := time.NewTicker(time.Minute)
 	defer releaseTicker.Stop()
 	s.refreshRenderer(ctx)
+	s.retireExpiredEvents(ctx)
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-releaseTicker.C:
 			s.refreshRenderer(ctx)
+			s.retireExpiredEvents(ctx)
 		case <-ticker.C:
 			s.deploymentStep(ctx)
 		}
@@ -102,7 +104,14 @@ func (s *server) deploymentStep(parent context.Context) {
 	}
 	var e core.Event
 	err = s.db.Collection("events").FindOne(ctx, bson.M{"_id": d.EventID, "paymentStatus": "paid", "isDemo": bson.M{"$ne": true}}).Decode(&e)
-	if err == nil && d.Phase != "ready" {
+	if err == nil && core.EventClosed(e, time.Now().UTC()) {
+		err = provider.StopInvitation(ctx, d)
+		if err == nil {
+			d.Phase = "stopped"
+			err = repo.Save(ctx, d, claim)
+		}
+	}
+	if err == nil && d.Phase != "ready" && d.Phase != "stopped" {
 		d, err = application.Advance(ctx, provider, e, d, func(next core.Deployment) error { return repo.Save(ctx, next, claim) })
 	}
 	finishCtx, finishCancel := context.WithTimeout(context.Background(), 10*time.Second)

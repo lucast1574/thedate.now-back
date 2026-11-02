@@ -86,6 +86,9 @@ func (s Responses) commitResponse(ctx context.Context, e core.Event, id string, 
 	return result.MatchedCount == 1, nil
 }
 func (s Responses) CommitEvent(ctx context.Context, e core.Event, in core.EventInput, now time.Time) (bool, error) {
+	if core.EventClosed(e, now) {
+		return false, core.ErrEventClosed
+	}
 	set := bson.M{"invitationMessage": in.InvitationMessage, "title": in.Title, "description": in.Description, "startAt": in.StartAt, "timeZone": in.TimeZone, "organizer": in.Organizer, "location": in.Location, "isVirtual": in.IsVirtual, "mapUrl": in.MapURL, "virtualUrl": in.VirtualURL, "capacity": in.Capacity, "capacityUnlimited": in.CapacityUnlimited, "maybeHoldHours": in.MaybeHoldHours, "template": in.Template, "templateId": in.TemplateID, "designMode": in.DesignMode, "accentColor": in.AccentColor, "updatedAt": now}
 	if in.Celebration != nil {
 		set["celebration"] = in.Celebration
@@ -103,6 +106,7 @@ func (s Responses) CommitEvent(ctx context.Context, e core.Event, in core.EventI
 	}
 	filter := designVersionFilter(e)
 	filter["responseVersion"] = e.ResponseVersion
+	filter["startAt"], filter["timeZone"] = e.StartAt, e.TimeZone
 	if in.Slug != e.Slug {
 		set["slug"] = in.Slug
 		filter["publishedAt"] = nil

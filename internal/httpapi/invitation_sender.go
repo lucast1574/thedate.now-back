@@ -15,7 +15,7 @@ import (
 )
 
 func (s *server) invitationPageReady(ctx context.Context, e core.Event) bool {
-	if e.IsDemo || e.PaymentStatus != "paid" || e.PublishedAt == nil {
+	if core.EventClosed(e, time.Now().UTC()) || e.IsDemo || e.PaymentStatus != "paid" || e.PublishedAt == nil {
 		return false
 	}
 	if s.invitationReady != nil {
@@ -70,6 +70,9 @@ func (s *server) dispatchInvitations(ctx context.Context, e core.Event) {
 }
 
 func (s *server) sendOneInvitation(ctx context.Context, e core.Event, g core.Guest, endpoint, key string) {
+	if !s.invitationSendOpen(ctx, e.ID) {
+		return
+	}
 	claim := uuid.NewString()
 	claimed, err := s.db.Collection("guests").UpdateOne(ctx, bson.M{"_id": g.ID, "sentAt": nil, "sendClaim": bson.M{"$exists": false}}, bson.M{"$set": bson.M{"sendClaim": claim, "sendState": "sending", "sendStartedAt": time.Now().UTC()}})
 	if err != nil || claimed.MatchedCount != 1 {
@@ -86,6 +89,10 @@ func (s *server) sendOneInvitation(ctx context.Context, e core.Event, g core.Gue
 		return err == nil && result.MatchedCount == 1
 	}
 	config := wazendFor(e.Kind)
+	if !s.invitationSendOpen(ctx, e.ID) {
+		finish(bson.M{"sendState": "failed"}, true)
+		return
+	}
 	if g.InvitationTextMessageID == "" {
 		textID, state := postInvitationMessage(ctx, strings.TrimSuffix(config.Base, "/")+"/api/sendText", key, eventMessage(e, g))
 		if state != "sent" {
@@ -95,6 +102,10 @@ func (s *server) sendOneInvitation(ctx context.Context, e core.Event, g core.Gue
 		if !finish(bson.M{"invitationTextMessageId": textID}, false) {
 			return
 		}
+	}
+	if !s.invitationSendOpen(ctx, e.ID) {
+		finish(bson.M{"sendState": "failed"}, true)
+		return
 	}
 	messageID, state := postInvitationMessage(ctx, endpoint, key, invitationPoll(e, g))
 	if state != "sent" {
@@ -113,7 +124,7 @@ func (s *server) sendInvitations(w http.ResponseWriter, r *http.Request) {
 		bad(w, 404, "Event not found")
 		return
 	}
-	if e.IsDemo || e.PaymentStatus != "paid" {
+	if core.EventClosed(e, time.Now().UTC()) || e.IsDemo || e.PaymentStatus != "paid" {
 		bad(w, 403, "Pay before sending invitations")
 		return
 	}

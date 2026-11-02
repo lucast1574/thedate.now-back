@@ -44,7 +44,7 @@ func Occupied(e Event, now time.Time) int {
 
 // DecideResponse is pure: IO, retries and persistence belong to the application.
 func DecideResponse(e Event, g Guest, choice, reason string, now time.Time) (Response, error) {
-	if e.RevokedGuestTokens[g.InviteToken] {
+	if EventClosed(e, now) || e.RevokedGuestTokens[g.InviteToken] {
 		return Response{}, ErrUnavailable
 	}
 	if previous := e.Responses[g.ID]; previous.Finalized && previous.Choice != "maybe" {

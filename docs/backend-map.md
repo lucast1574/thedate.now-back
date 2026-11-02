@@ -191,3 +191,10 @@ Los planos de asientos incluyen `areas` opcionales para escenario, pista, bar, b
 Cada base de producto admite `admin`, `user` y su rol profesional (`planner` en bodas, `organizer` en eventos). `EnsureProductRoles` normaliza roles retirados al arrancar, conserva administradores y asignaciones y revoca únicamente las sesiones de cuentas normalizadas. Registrarse crea `user`; `POST /profile/professional` activa el rol profesional del producto sin conceder administración. Las operaciones de colaboradores exigen ese rol o admin, propiedad y pago para enviar invitaciones.
 
 `demo_activation.go` convierte la demo propia en evento mediante una escritura condicional; preserva el identificador, secciones, fotos, audio y apertura. Reintentos no crean eventos duplicados. El checkout vuelve al editor y únicamente el webhook verificado confirma el pago.
+
+
+## Cierre al terminar el día
+
+`core.EventClosingAt/EventClosed` decide el cierre a la medianoche local siguiente, con tzdata incluido en el binario. Las demos se conservan; las dos marcas usan la misma regla. `eventWriteGuard` protege todas las escrituras autenticadas del evento usando su fecha persistida. La actualización de fecha también se valida en aplicación y repositorio; los envíos comprueban de nuevo el evento antes de cada mensaje. RSVP, regalos y aceptación de colaboradores dejan de mutar el evento.
+
+`event_retirement.go` revisa los eventos al arrancar y cada minuto. Comparte el lease de despliegue mediante `ClaimClosure`; detiene únicamente la aplicación cuya pertenencia al proyecto dedicado del evento se verificó. Conserva documentos, medios y snapshot publicado. La fase `stopped` queda fuera de la actualización automática de renderers. Los listados de eventos terminados devuelven su diseño publicado para consulta y descarga privada. No genera comunicaciones al usuario.

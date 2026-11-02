@@ -27,6 +27,9 @@ func preservePublishedDesign(e core.Event, set bson.M) {
 }
 
 func (s Designs) Save(ctx context.Context, e, next core.Event, now time.Time) (bool, error) {
+	if core.EventClosed(e, now) {
+		return false, core.ErrEventClosed
+	}
 	raw, err := bson.Marshal(core.SnapshotDesign(next).DesignInput)
 	if err != nil {
 		return false, err
@@ -45,6 +48,9 @@ func (s Designs) Save(ctx context.Context, e, next core.Event, now time.Time) (b
 }
 
 func (s Designs) Publish(ctx context.Context, e core.Event, now time.Time) (bool, error) {
+	if core.EventClosed(e, now) {
+		return false, core.ErrEventClosed
+	}
 	filter := designVersionFilter(e)
 	filter["paymentStatus"], filter["isDemo"] = "paid", bson.M{"$ne": true}
 	result, err := s.DB.Collection("events").UpdateOne(ctx, filter, bson.M{"$set": bson.M{"publishedDesign": core.SnapshotDesign(e), "publishedDesignVersion": e.DesignVersion, "updatedAt": now}})

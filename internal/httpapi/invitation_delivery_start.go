@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/lucast1574/thedate.now-back/internal/core"
 	"github.com/lucast1574/thedate.now-back/internal/dokploy"
 	"github.com/lucast1574/thedate.now-back/internal/mongostore"
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -24,7 +25,7 @@ func (s *server) beginDelivery(w http.ResponseWriter, r *http.Request, retry boo
 		bad(w, 403, "Activa tu evento antes de enviar invitaciones.")
 		return
 	}
-	if !e.StartAt.After(time.Now().UTC()) {
+	if core.EventClosed(e, time.Now().UTC()) {
 		bad(w, 409, "La fecha del evento ya pasó. Puedes seguir consultando las respuestas.")
 		return
 	}

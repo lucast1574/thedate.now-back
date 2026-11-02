@@ -20,7 +20,7 @@ var accessPhone = regexp.MustCompile(`^\+[1-9][0-9]{7,14}$`)
 
 func (s *server) wishlistAccess(w http.ResponseWriter, r *http.Request) {
 	e, err := s.catalogEvent(r)
-	if err != nil {
+	if err != nil || core.EventClosed(e, time.Now().UTC()) {
 		bad(w, 404, "La lista no está disponible.")
 		return
 	}
@@ -64,6 +64,9 @@ func (s *server) wishlistAccess(w http.ResponseWriter, r *http.Request) {
 	reply(w, 202, map[string]string{"status": "requested"})
 }
 func sendGiftAccess(r *http.Request, e core.Event, g core.Guest, giftID string) {
+	if core.EventClosed(e, time.Now().UTC()) {
+		return
+	}
 	config := wazendFor(e.Kind)
 	base, err := url.Parse(config.Base)
 	if !config.ready() || err != nil || base.Scheme != "https" {

@@ -87,7 +87,7 @@ func (s *server) listEvents(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	filter := bson.M{"$or": bson.A{bson.M{"ownerId": u.ID}, bson.M{"coupleUserIds": u.ID}}}
-	if r.URL.Query().Get("scope") == "organization" {
+	if scope := r.URL.Query().Get("scope"); scope == "organization" || scope == "sharing" {
 		filter["paymentStatus"] = "paid"
 		filter["isDemo"] = bson.M{"$ne": true}
 	} else if u.Role == "admin" {
@@ -105,6 +105,9 @@ func (s *server) listEvents(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	for i := range events {
+		if core.EventClosed(events[i], time.Now().UTC()) {
+			events[i] = core.PublishedEvent(events[i])
+		}
 		s.completeLegacyEvent(r.Context(), &events[i])
 	}
 	reply(w, 200, events)
@@ -178,7 +181,9 @@ func (s *server) updateEvent(w http.ResponseWriter, r *http.Request) {
 	in.MaybeHoldHours = hold
 	err = s.responses().UpdateEvent(r.Context(), e.ID, in)
 	if err != nil {
-		if errors.Is(err, errCapacity) {
+		if errors.Is(err, core.ErrEventClosed) {
+			bad(w, 409, "Esta acción no está disponible.")
+		} else if errors.Is(err, errCapacity) {
 			bad(w, 409, "Capacity cannot be lower than active reservations")
 		} else if errors.Is(err, core.ErrPublishedAddress) {
 			bad(w, 409, err.Error())
@@ -190,21 +195,4 @@ func (s *server) updateEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	reply(w, 200, map[string]string{"status": "updated"})
-}
-
-func (s *server) publicEvent(w http.ResponseWriter, r *http.Request) {
-	kind, slug := r.PathValue("kind"), r.PathValue("slug")
-	if (kind != "wedding" && kind != "general") || core.ValidateSlug(slug) != nil {
-		bad(w, 404, "Invitation not found")
-		return
-	}
-	var e core.Event
-	err := s.db.Collection("events").FindOne(r.Context(), bson.M{"kind": kind, "slug": slug, "paymentStatus": "paid", "publishedAt": bson.M{"$ne": nil}}).Decode(&e)
-	if err != nil {
-		bad(w, 404, "Invitation not found")
-		return
-	}
-	e = core.PublishedEvent(e)
-	s.completeLegacyEvent(r.Context(), &e)
-	reply(w, 200, publicEventView(e))
 }

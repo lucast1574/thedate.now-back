@@ -21,6 +21,9 @@ func (s Couples) change(ctx context.Context, id string, decide func(core.Event) 
 		if err != nil {
 			return err
 		}
+		if core.EventClosed(e, s.Now()) {
+			return core.ErrEventClosed
+		}
 		ids, invites, err := decide(e)
 		if err != nil {
 			return err

@@ -82,6 +82,9 @@ func (s Responses) UpdateEvent(ctx context.Context, id string, in core.EventInpu
 		if err != nil {
 			return err
 		}
+		if core.EventClosed(e, s.Now()) {
+			return core.ErrEventClosed
+		}
 		if !in.CapacityUnlimited && (core.Occupied(e, s.Now()) > in.Capacity || (e.Seating != nil && len(e.Seating.Assignments) > in.Capacity)) {
 			return core.ErrCapacity
 		}

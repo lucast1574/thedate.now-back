@@ -111,14 +111,14 @@ func (s *server) invitationWorker(ctx context.Context) {
 func (s *server) invitationStep(parent context.Context) {
 	ctx, cancel := context.WithTimeout(parent, 110*time.Second)
 	defer cancel()
-	cur, err := s.db.Collection("events").Find(ctx, bson.M{"invitationsEnabled": true, "paymentStatus": "paid", "isDemo": bson.M{"$ne": true}, "publishedAt": bson.M{"$ne": nil}, "startAt": bson.M{"$gt": time.Now().UTC()}}, options.Find().SetSort(bson.D{{Key: "invitationCheckedAt", Value: 1}}).SetLimit(20))
+	cur, err := s.db.Collection("events").Find(ctx, bson.M{"invitationsEnabled": true, "paymentStatus": "paid", "isDemo": bson.M{"$ne": true}, "publishedAt": bson.M{"$ne": nil}, "startAt": bson.M{"$gt": time.Now().UTC().Add(-48 * time.Hour)}}, options.Find().SetSort(bson.D{{Key: "invitationCheckedAt", Value: 1}}).SetLimit(20))
 	if err != nil {
 		return
 	}
 	defer cur.Close(ctx)
 	for cur.Next(ctx) {
 		var e core.Event
-		if cur.Decode(&e) == nil {
+		if cur.Decode(&e) == nil && !core.EventClosed(e, time.Now().UTC()) {
 			_, _ = s.db.Collection("events").UpdateByID(ctx, e.ID, bson.M{"$set": bson.M{"invitationCheckedAt": time.Now().UTC()}})
 			s.dispatchInvitations(ctx, e)
 		}
