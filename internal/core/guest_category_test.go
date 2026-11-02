@@ -13,3 +13,20 @@ func TestGuestCategoryUsesOnlyKnownGroups(t *testing.T) {
 		t.Fatal("created arbitrary category")
 	}
 }
+
+func TestGuestCategoriesFollowTheProduct(t *testing.T) {
+	for _, value := range []string{"Familia", "Amigos", "Compañeros de trabajo", "Compañeros de estudios", "Vecinos", "Equipo o club", "Invitados especiales", "Otros"} {
+		if got, ok := GuestCategory(value, "general"); !ok || got != value {
+			t.Fatal(value, got, ok)
+		}
+	}
+	if _, ok := GuestCategory("Familia del novio", "general"); ok {
+		t.Fatal("wedding group accepted for celebration")
+	}
+	if _, ok := GuestCategory("Vecinos", "wedding"); ok {
+		t.Fatal("celebration group accepted for wedding")
+	}
+	if got, ok := GuestCategory(" COMPANEROS  DE ESTUDIOS ", "general"); !ok || got != "Compañeros de estudios" {
+		t.Fatal(got, ok)
+	}
+}

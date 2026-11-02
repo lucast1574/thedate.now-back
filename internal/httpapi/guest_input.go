@@ -15,11 +15,11 @@ type guestInput struct {
 	Companions []core.Person `json:"companions"`
 }
 
-func validGuest(in guestInput) bool {
-	_, categoryValid := core.GuestCategory(in.Family)
+func validGuest(in guestInput, kinds ...string) bool {
+	_, categoryValid := core.GuestCategory(in.Family, kinds...)
 	return categoryValid && in.Seats <= 2 && core.ValidPerson(core.Person{Name: in.Name, LastName: in.LastName, Gender: in.Gender}) && phonePattern.MatchString(in.Phone) && core.ValidParty(in.Companions, in.Seats)
 }
-func guestFromInput(in guestInput, id, eventID, token string) core.Guest {
-	in.Family, _ = core.GuestCategory(in.Family)
+func guestFromInput(in guestInput, id, eventID, token string, kinds ...string) core.Guest {
+	in.Family, _ = core.GuestCategory(in.Family, kinds...)
 	return core.Guest{ID: id, EventID: eventID, Name: strings.TrimSpace(in.Name), LastName: strings.TrimSpace(in.LastName), Family: strings.TrimSpace(in.Family), Gender: in.Gender, Phone: in.Phone, Seats: in.Seats, Companions: in.Companions, Response: "pending", InviteToken: token}
 }

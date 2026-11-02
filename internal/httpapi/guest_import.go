@@ -25,7 +25,7 @@ func (s *server) importGuests(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	for _, row := range in.Guests {
-		if !validGuest(row) {
+		if !validGuest(row, e.Kind) {
 			bad(w, 400, "Revisa nombre, WhatsApp, máximo un acompañante y categoría de cada fila.")
 			return
 		}
@@ -50,7 +50,7 @@ func (s *server) importGuests(w http.ResponseWriter, r *http.Request) {
 			bad(w, 500, "Import interrupted; retry the file safely")
 			return
 		}
-		g := guestFromInput(row, core.GuestPhoneID(e.ID, row.Phone), e.ID, token)
+		g := guestFromInput(row, core.GuestPhoneID(e.ID, row.Phone), e.ID, token, e.Kind)
 		g.CreatedAt = time.Now().UTC()
 		g.QueuePosition = position + int64(index)
 		result, err := (mongostore.GuestImports{DB: s.db}).Apply(r.Context(), g)

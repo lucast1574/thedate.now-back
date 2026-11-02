@@ -33,7 +33,7 @@ func (s *server) addGuest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var in guestInput
-	if decode(r, &in) != nil || !validGuest(in) {
+	if decode(r, &in) != nil || !validGuest(in, e.Kind) {
 		bad(w, 400, "Revisa nombre, WhatsApp, máximo un acompañante y una categoría de la lista.")
 		return
 	}
@@ -42,7 +42,7 @@ func (s *server) addGuest(w http.ResponseWriter, r *http.Request) {
 		bad(w, 500, "Could not create invitation")
 		return
 	}
-	g := guestFromInput(in, core.GuestPhoneID(e.ID, in.Phone), e.ID, token)
+	g := guestFromInput(in, core.GuestPhoneID(e.ID, in.Phone), e.ID, token, e.Kind)
 	g.CreatedAt = time.Now().UTC()
 	g.QueuePosition, err = (mongostore.InvitationQueue{DB: s.db}).Allocate(r.Context(), e.ID, 1)
 	if err != nil {
