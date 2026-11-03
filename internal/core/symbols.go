@@ -21,7 +21,7 @@ var lucideSymbols = func() map[string]bool {
 }()
 
 func validFlyerIcon(name string) bool {
-	return sectionIcons[name] || (strings.HasPrefix(name, "lucide:") && lucideSymbols[strings.TrimPrefix(name, "lucide:")])
+	return studioOrnaments[name] || sectionIcons[name] || (strings.HasPrefix(name, "lucide:") && lucideSymbols[strings.TrimPrefix(name, "lucide:")])
 }
 func validElementBinding(el FlyerElement) bool {
 	switch el.Binding {
@@ -54,4 +54,19 @@ func validLocationStyle(style string) bool {
 		return true
 	}
 	return false
+}
+
+var studioOrnaments = map[string]bool{
+	"art:olive":      true,
+	"art:wildflower": true,
+	"art:ribbon":     true,
+	"art:cameo":      true,
+	"art:deco":       true,
+	"art:crest":      true,
+	"art:orbit":      true,
+	"art:ticket":     true,
+	"art:burst":      true,
+	"art:streamer":   true,
+	"art:shell":      true,
+	"art:tides":      true,
 }

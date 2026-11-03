@@ -3,6 +3,7 @@ package core
 import "math"
 
 type FlyerCanvas struct {
+	ArtEditable        bool             `bson:"artEditable,omitempty" json:"artEditable,omitempty"`
 	Font               string           `bson:"font,omitempty" json:"font,omitempty"`
 	Art                string           `bson:"art,omitempty" json:"art,omitempty"`
 	BackgroundImage    *ImageBackground `bson:"backgroundImage,omitempty" json:"backgroundImage,omitempty"`
@@ -13,6 +14,13 @@ type FlyerCanvas struct {
 	Elements           []FlyerElement   `bson:"elements" json:"elements"`
 }
 type FlyerElement struct {
+	Typeface            string               `bson:"typeface,omitempty" json:"typeface,omitempty"`
+	Italic              bool                 `bson:"italic,omitempty" json:"italic,omitempty"`
+	LineHeight          *float64             `bson:"lineHeight,omitempty" json:"lineHeight,omitempty"`
+	LetterSpacing       *float64             `bson:"letterSpacing,omitempty" json:"letterSpacing,omitempty"`
+	PhotoPositionX      *float64             `bson:"photoPositionX,omitempty" json:"photoPositionX,omitempty"`
+	PhotoPositionY      *float64             `bson:"photoPositionY,omitempty" json:"photoPositionY,omitempty"`
+	Opacity             *float64             `bson:"opacity,omitempty" json:"opacity,omitempty"`
 	DressPaletteStyle   string               `bson:"dressPaletteStyle,omitempty" json:"dressPaletteStyle,omitempty"`
 	PhotoTreatment      string               `bson:"photoTreatment,omitempty" json:"photoTreatment,omitempty"`
 	PhotoFit            string               `bson:"photoFit,omitempty" json:"photoFit,omitempty"`
@@ -80,6 +88,9 @@ func ValidCanvas(c *FlyerCanvas, photos []string) bool {
 	}
 	seen := map[string]bool{}
 	for _, el := range c.Elements {
+		if !validStudioPresentation(el) {
+			return false
+		}
 		if !validPhotoPresentation(el) || len(el.GroupID) > 64 || el.ID == "" || len(el.ID) > 64 || seen[el.ID] || !bounded(el.X, 0, c.Width) || !bounded(el.Y, 0, c.Height) || !bounded(el.Width, 16, c.Width) || !bounded(el.Height, 16, c.Height) || el.X+el.Width > c.Width+0.01 || el.Y+el.Height > c.Height+0.01 || !bounded(el.Rotation, -180, 180) || !bounded(el.FontSize, 8, 160) || !validColor(el.Color) {
 			return false
 		}
