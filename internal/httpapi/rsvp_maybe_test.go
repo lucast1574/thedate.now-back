@@ -82,6 +82,13 @@ func TestMaybeCanBecomeFinalWithoutReenteringCompanions(t *testing.T) {
 				if err := db.Collection("events").FindOne(ctx, bson.M{"_id": e.ID}).Decode(&saved); err != nil {
 					t.Fatal(err)
 				}
+				wantGift := ""
+				if choice == "going" {
+					wantGift = "pending"
+				}
+				if saved.GiftFollowups[g.ID] != wantGift {
+					t.Fatal("wrong gift followup for", channel, choice)
+				}
 				response := saved.Responses[g.ID]
 				if response.Choice != choice || !core.ResponseCompleted(response) || len(response.Companions) != 1 || response.Companions[0].Name != "Ana" {
 					t.Fatal("final confirmation lost its party")

@@ -11,3 +11,7 @@ New personal paths use /para/{name}-{32-character-base64url-token}. All original
 ## Rollout
 
 Deploy the backend with PERSONAL_INVITATION_LINKS unset/false first; outgoing invitation and followup URLs keep the legacy working path. Deploy both studios and release the dedicated invitation renderer. Wait until published events reconcile to the new image, then enable PERSONAL_INVITATION_LINKS=true and redeploy the API to issue personal named links. Existing WhatsApp messages, tokens, answers and gift claims are not rewritten.
+
+## Gift link after attendance confirmation
+
+Public RSVP (web and WhatsApp) atomically queues a personal gift-list message only on `going`. `maybe` and `not_going` do not enqueue it; a later `maybe` → `going` does. Existing confirmations are not backfilled. The shared worker checks the current answer, paid/published state, event closure and token revocation before claiming the message. The claim is conditional across replicas; sent, rejected or unknown outcomes are retained and never automatically retried. This uses `/para/{guest-token}/regalos`, with no login, for both products. When companion details are missing, the same confirmation message also includes the response-page link.

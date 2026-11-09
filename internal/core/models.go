@@ -53,6 +53,7 @@ type Event struct {
 	CoupleInvites              map[string]CoupleInvite  `bson:"coupleInvites" json:"-"`
 	ResponseVersion            int64                    `bson:"responseVersion" json:"-"`
 	Responses                  map[string]Response      `bson:"responses" json:"-"`
+	GiftFollowups              map[string]string        `bson:"giftFollowups,omitempty" json:"-"`
 	ResponseReceipts           map[string]bool          `bson:"responseReceipts" json:"-"`
 	ID                         string                   `bson:"_id" json:"id"`
 	Kind                       string                   `bson:"kind" json:"kind"` // wedding or general

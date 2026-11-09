@@ -114,9 +114,7 @@ func (s *server) wazendWebhook(w http.ResponseWriter, r *http.Request) {
 	if response == "maybe" && (e.Responses[g.ID].Reason == "" || !e.Responses[g.ID].PartyRegistered) {
 		go requestRSVPFollowup(e, g, "Reservamos tus cupos temporalmente. Cuéntanos por qué estás en espera y registra tus acompañantes desde tu enlace: ")
 	}
-	if response == "going" && g.Seats > 1 && !e.Responses[g.ID].PartyRegistered {
-		go requestRSVPFollowup(e, g, "Gracias por confirmar. Registra los nombres de tus acompañantes y cuántas personas asistirán desde tu enlace: ")
-	}
+
 	reply(w, 200, map[string]string{"status": "processed"})
 }
 
