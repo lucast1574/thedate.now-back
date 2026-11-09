@@ -2,7 +2,6 @@ package core
 
 import (
 	"encoding/json"
-	"strings"
 )
 
 // The snapshot contains visual content and its media library, never RSVP or payment state.
@@ -37,7 +36,8 @@ func EditedDesign(e Event, in DesignInput) Event {
 	if in.Celebration == nil {
 		in.Celebration = e.Celebration
 	}
-	in.Title = strings.TrimSpace(in.Title)
+	in.Title = InvitationTitle(e.Kind, in.Title, in.Celebration)
+	in.Celebration = CelebrationNames(in.Celebration)
 	in.TemplateID = TemplateID(e.Kind, in.Template, in.DesignMode, in.TemplateID)
 	return ApplyDesign(e, in)
 }

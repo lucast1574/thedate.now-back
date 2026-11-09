@@ -9,6 +9,8 @@ import (
 )
 
 func (s *server) completeLegacyEvent(ctx context.Context, event *core.Event) {
+	event.Title = core.InvitationTitle(event.Kind, event.Title, event.Celebration)
+	event.Celebration = core.CelebrationNames(event.Celebration)
 	if strings.TrimSpace(event.Organizer) == "" {
 		var owner struct {
 			Name string `bson:"name"`

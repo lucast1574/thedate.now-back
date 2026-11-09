@@ -64,6 +64,7 @@ func (s *server) wishlistAccess(w http.ResponseWriter, r *http.Request) {
 	reply(w, 202, map[string]string{"status": "requested"})
 }
 func sendGiftAccess(r *http.Request, e core.Event, g core.Guest, giftID string) {
+	e.Title = core.InvitationTitle(e.Kind, e.Title, e.Celebration)
 	if core.EventClosed(e, time.Now().UTC()) {
 		return
 	}

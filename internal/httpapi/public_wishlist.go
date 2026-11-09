@@ -27,6 +27,9 @@ func (s *server) giftInvitation(r *http.Request) (core.Event, core.Guest, error)
 	if err == nil && e.RevokedGuestTokens[g.InviteToken] {
 		err = core.ErrGiftDisabled
 	}
+	if err == nil && core.WithResponse(e, g).Response == "not_going" {
+		err = core.ErrGiftDisabled
+	}
 	return e, g, err
 }
 func publicWishlist(e core.Event, g core.Guest) map[string]any {

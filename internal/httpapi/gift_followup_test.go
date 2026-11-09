@@ -16,6 +16,15 @@ import (
 	"time"
 )
 
+func TestGiftConfirmationRepairsStoredWeddingNames(t *testing.T) {
+	e := core.Event{Kind: "wedding", Slug: "lucasyelizabeth", Title: "lucasyelizabeth", Celebration: &core.Celebration{PartnerOne: "lucas", PartnerTwo: "ELIZABETH"}}
+	g := core.Guest{Name: "Lucas", InviteToken: strings.Repeat("a", 48)}
+	text := giftConfirmationMessage(e, g, "test")["text"].(string)
+	if !strings.Contains(text, "asistencia a Lucas y Elizabeth.") || !strings.Contains(text, "https://lucasyelizabeth.save.thedate.now/") {
+		t.Fatalf("incorrect title or changed existing URL: %s", text)
+	}
+}
+
 func TestGiftFollowupOnlyAfterYesAndOnceAcrossWorkers(t *testing.T) {
 	for _, kind := range []string{"wedding", "general"} {
 		t.Run(kind, func(t *testing.T) {

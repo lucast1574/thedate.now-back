@@ -87,7 +87,7 @@ func (s *server) coupleInviteDetails(w http.ResponseWriter, r *http.Request) {
 		bad(w, 404, "Invitation not found")
 		return
 	}
-	reply(w, 200, map[string]string{"email": invite.Email, "eventTitle": e.Title, "kind": e.Kind, "studioUrl": studioFor(e.Kind)})
+	reply(w, 200, map[string]string{"email": invite.Email, "eventTitle": core.InvitationTitle(e.Kind, e.Title, e.Celebration), "kind": e.Kind, "studioUrl": studioFor(e.Kind)})
 }
 
 func (s *server) acceptCouple(w http.ResponseWriter, r *http.Request) {

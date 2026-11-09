@@ -52,6 +52,7 @@ func (s *server) giftFollowupStep(parent context.Context) {
 }
 
 func giftConfirmationMessage(e core.Event, g core.Guest, session string) map[string]any {
+	e.Title = core.InvitationTitle(e.Kind, e.Title, e.Celebration)
 	host, _ := core.InvitationHost(e.Kind, e.Slug)
 	link := "https://" + host + core.GuestInvitationPath(g) + "/regalos"
 	text := invitationBrand(e.Kind) + " · Gracias por confirmar tu asistencia a " + e.Title + ". Si deseas elegir un regalo, aquí tienes tu acceso personal a la lista, sin iniciar sesión: " + link

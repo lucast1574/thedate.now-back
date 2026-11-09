@@ -31,6 +31,11 @@ func (s *server) rsvpDetails(w http.ResponseWriter, r *http.Request) {
 	}
 	g = core.WithResponse(e, g)
 	e = core.PublishedEvent(e)
+	w.Header().Set("Cache-Control", "private, no-store")
+	if g.Response == "not_going" {
+		reply(w, 200, map[string]any{"event": map[string]any{"id": e.ID, "kind": e.Kind, "slug": e.Slug}, "finalized": true, "guestName": core.GuestFullName(g), "response": g.Response, "eventTitle": e.Title, "kind": e.Kind, "slug": e.Slug})
+		return
+	}
 	s.completeLegacyEvent(r.Context(), &e)
 	reply(w, 200, map[string]any{"event": publicEventView(e), "finalized": core.ResponseCompleted(e.Responses[g.ID]), "guestName": core.GuestFullName(g), "seats": g.Seats, "companions": g.Companions, "attendingSeats": g.AttendingSeats, "partyRegistered": g.PartyRegistered, "response": g.Response, "maybeReason": g.MaybeReason, "maybeExpiresAt": g.MaybeExpiresAt, "eventTitle": e.Title, "kind": e.Kind, "slug": e.Slug, "startAt": e.StartAt, "timeZone": e.TimeZone, "organizer": e.Organizer, "location": e.Location, "isVirtual": e.IsVirtual, "mapUrl": e.MapURL, "virtualUrl": e.VirtualURL})
 }

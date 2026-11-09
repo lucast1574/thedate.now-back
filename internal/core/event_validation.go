@@ -49,7 +49,8 @@ func NormalizeEvent(in EventInput) EventInput {
 	if in.CapacityUnlimited {
 		in.Capacity = 0
 	}
-	in.Title = strings.TrimSpace(in.Title)
+	in.Title = InvitationTitle(in.Kind, in.Title, in.Celebration)
+	in.Celebration = CelebrationNames(in.Celebration)
 	in.Organizer = strings.TrimSpace(in.Organizer)
 	in.Location = EventLocation(in)
 	in.MapURL = PhysicalMapURL(in)

@@ -1,5 +1,7 @@
 # Trabajo en The Date API
 
+- Lucas pide llevar siempre los cambios autorizados hasta producción: validar, hacer commit y push a `main`, esperar el despliegue y verificar la API de ambos productos. Coordinar con frontend/renderizador cuando el cambio abarque esas capas. No dar por terminada la tarea solo con archivos locales o un push; informar cualquier bloqueo real.
+
 - Empieza por `docs/backend-map.md` y abre solo los módulos del cambio.
 - Go funcional: decisiones puras en `internal/core`; orquestación con puertos pequeños en `internal/application`; efectos en adaptadores. Evita crear interfaces que simplemente repliquen toda la API de MongoDB.
 - No añadas MongoDB, HTTP, variables de entorno o servicios externos al núcleo. Tiempo e identidad deben ser argumentos explícitos.
