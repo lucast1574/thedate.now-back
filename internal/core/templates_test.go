@@ -2,6 +2,21 @@ package core
 
 import "testing"
 
+func TestBlankCanvasIdentityIsScopedToProductAndFlyerMode(t *testing.T) {
+	for _, kind := range []string{"general", "wedding"} {
+		if TemplateID(kind, "classic", "flyer", kind+"-blank") != kind+"-blank" {
+			t.Fatal("blank canvas rejected")
+		}
+		other := "general"
+		if kind == other {
+			other = "wedding"
+		}
+		if TemplateID(other, "classic", "flyer", kind+"-blank") != "" || TemplateID(kind, "classic", "sections", kind+"-blank") != "" {
+			t.Fatal("blank canvas crossed product or mode")
+		}
+	}
+}
+
 func TestTemplateProductAndModeAreAuthoritative(t *testing.T) {
 	seen := map[string]bool{}
 	for _, item := range TemplateCatalog() {

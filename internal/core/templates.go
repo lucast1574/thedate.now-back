@@ -31,6 +31,9 @@ func TemplateCatalog() []InvitationTemplate {
 	return list
 }
 func TemplateID(kind, style, mode, id string) string {
+	if (kind == "general" || kind == "wedding") && mode == "flyer" && style == "classic" && id == kind+"-blank" {
+		return id
+	}
 	if mode == "" {
 		mode = "sections"
 	}
