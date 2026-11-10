@@ -7,6 +7,7 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -31,7 +32,7 @@ func (s *server) adminUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	filter := bson.M{}
-	email := r.URL.Query().Get("email")
+	email := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("email")))
 	if email != "" {
 		filter["email"] = email
 	}
@@ -100,7 +101,12 @@ func (s *server) adminCourtesy(w http.ResponseWriter, r *http.Request) {
 	var in struct {
 		Reason string `json:"reason"`
 	}
-	if decode(r, &in) != nil || len(in.Reason) < 3 || len(in.Reason) > 300 {
+	if decode(r, &in) != nil {
+		bad(w, 400, "Provide a courtesy reason")
+		return
+	}
+	in.Reason = strings.TrimSpace(in.Reason)
+	if len(in.Reason) < 3 || len(in.Reason) > 300 {
 		bad(w, 400, "Provide a courtesy reason")
 		return
 	}
@@ -109,9 +115,9 @@ func (s *server) adminCourtesy(w http.ResponseWriter, r *http.Request) {
 		bad(w, 500, "Could not audit courtesy")
 		return
 	}
-	result, err := s.db.Collection("events").UpdateOne(r.Context(), bson.M{"_id": id, "isDemo": bson.M{"$ne": true}, "paymentStatus": bson.M{"$ne": "paid"}, "checkoutId": bson.M{"$in": bson.A{nil, ""}}}, bson.M{"$set": bson.M{"paymentStatus": "paid", "paymentSource": "courtesy", "courtesy": bson.M{"actorId": actor.ID, "reason": in.Reason, "at": time.Now().UTC()}, "updatedAt": time.Now().UTC()}})
+	result, err := s.db.Collection("events").UpdateOne(r.Context(), bson.M{"_id": id, "deletionRequested": bson.M{"$ne": true}, "paymentStatus": bson.M{"$in": bson.A{"demo", "unpaid", "pending"}}, "checkoutId": bson.M{"$in": bson.A{nil, ""}}, "payment": bson.M{"$in": bson.A{nil}}}, bson.M{"$set": bson.M{"paymentStatus": "paid", "paymentSource": "courtesy", "courtesy": bson.M{"actorId": actor.ID, "reason": in.Reason, "at": time.Now().UTC()}, "updatedAt": time.Now().UTC()}})
 	if err != nil || result.MatchedCount != 1 {
-		bad(w, 409, "Only unpaid events without active checkout can receive a courtesy")
+		bad(w, 409, "Solo las demos o eventos pendientes sin un checkout iniciado pueden recibir una cortesía.")
 		return
 	}
 	if s.audit(r, actor, "courtesy-granted", id, in.Reason) != nil {

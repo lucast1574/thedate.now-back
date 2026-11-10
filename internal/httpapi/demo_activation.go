@@ -43,19 +43,24 @@ func (s *server) activateDemo(w http.ResponseWriter, r *http.Request) {
 		in.MaybeHoldHours = 48
 	}
 	status := "unpaid"
+	source := ""
+	if e.PaymentStatus == "paid" && e.PaymentSource == "courtesy" {
+		status, source = "paid", "courtesy"
+	}
 	if u.Role == "admin" {
-		status = "paid"
+		status, source = "paid", "courtesy"
 		if s.audit(r, u, "courtesy-activate", e.ID, "Administrator demo activation") != nil {
 			bad(w, 500, "Could not audit courtesy")
 			return
 		}
 	}
 	set := bson.M{"isDemo": false, "paymentStatus": status, "slug": in.Slug, "title": in.Title, "startAt": in.StartAt, "timeZone": in.TimeZone, "organizer": in.Organizer, "location": in.Location, "isVirtual": in.IsVirtual, "mapUrl": in.MapURL, "virtualUrl": in.VirtualURL, "capacity": in.Capacity, "capacityUnlimited": in.CapacityUnlimited, "maybeHoldHours": in.MaybeHoldHours, "invitationMessage": in.InvitationMessage, "updatedAt": time.Now().UTC()}
+	set["paymentSource"] = source
 	if in.Celebration != nil {
 		set["celebration"] = in.Celebration
 	}
 	var activated core.Event
-	err = s.db.Collection("events").FindOneAndUpdate(r.Context(), bson.M{"_id": e.ID, "ownerId": u.ID, "isDemo": true}, bson.M{"$set": set}, options.FindOneAndUpdate().SetReturnDocument(options.After)).Decode(&activated)
+	err = s.db.Collection("events").FindOneAndUpdate(r.Context(), bson.M{"_id": e.ID, "ownerId": u.ID, "isDemo": true, "paymentStatus": e.PaymentStatus, "designVersion": e.DesignVersion}, bson.M{"$set": set}, options.FindOneAndUpdate().SetReturnDocument(options.After)).Decode(&activated)
 	if err != nil {
 		if mongo.IsDuplicateKeyError(err) {
 			bad(w, 409, "That invitation address is already taken")

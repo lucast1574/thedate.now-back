@@ -25,6 +25,7 @@ func (s *server) routes() http.Handler {
 	handle("GET /profile/avatar", s.profileAvatar)
 	handle("GET /admin/overview", s.adminOverview)
 	handle("GET /admin/users", s.adminUsers)
+	handle("GET /admin/users/{user}/events", s.adminUserEvents)
 	handle("PATCH /admin/users/{user}/role", s.adminRole)
 	handle("POST /admin/events/{id}/courtesy", s.adminCourtesy)
 	handle("GET /admin/withdrawals", s.adminWithdrawals)

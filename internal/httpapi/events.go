@@ -61,6 +61,9 @@ func (s *server) createEvent(w http.ResponseWriter, r *http.Request) {
 		e.Opening = in.InitialDesign.Opening
 		e.Sections = in.InitialDesign.Sections
 	}
+	if u.Role != "admin" && s.createCourtesyEvent(w, r, e) {
+		return
+	}
 	if u.Role == "admin" && s.audit(r, u, "courtesy-create", e.ID, "Administrator own event") != nil {
 		bad(w, 500, "Could not audit courtesy")
 		return
