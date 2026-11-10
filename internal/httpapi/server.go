@@ -74,7 +74,8 @@ func Run() {
 		if err := s.configureMobile(runCtx); err != nil {
 			log.Fatal("Invalid mobile notification configuration")
 		}
-		workers.Add(4)
+		workers.Add(5)
+		go func(s *server) { defer workers.Done(); s.accountDeletionWorker(runCtx) }(s)
 		go func(s *server) { defer workers.Done(); s.deploymentWorker(runCtx) }(s)
 		go func(s *server) { defer workers.Done(); s.emailWorker(runCtx) }(s)
 		go func(s *server) { defer workers.Done(); s.mobileWorker(runCtx) }(s)

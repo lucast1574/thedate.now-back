@@ -23,7 +23,7 @@ func (s *server) giftInvitation(r *http.Request) (core.Event, core.Guest, error)
 	if err != nil {
 		return e, g, err
 	}
-	err = s.db.Collection("events").FindOne(r.Context(), bson.M{"_id": g.EventID, "paymentStatus": "paid", "isDemo": bson.M{"$ne": true}, "publishedAt": bson.M{"$ne": nil}}).Decode(&e)
+	err = s.db.Collection("events").FindOne(r.Context(), bson.M{"_id": g.EventID, "paymentStatus": "paid", "deletionRequested": bson.M{"$ne": true}, "isDemo": bson.M{"$ne": true}, "publishedAt": bson.M{"$ne": nil}}).Decode(&e)
 	if err == nil && e.RevokedGuestTokens[g.InviteToken] {
 		err = core.ErrGiftDisabled
 	}

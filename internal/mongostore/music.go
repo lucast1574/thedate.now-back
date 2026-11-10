@@ -8,7 +8,7 @@ import (
 )
 
 func AttachAudio(ctx context.Context, db *mongo.Database, eventID, key string, now time.Time) (bool, error) {
-	result, err := db.Collection("events").UpdateOne(ctx, bson.M{"_id": eventID, "audioKeys.19": bson.M{"$exists": false}}, bson.M{"$addToSet": bson.M{"audioKeys": key}, "$set": bson.M{"updatedAt": now}})
+	result, err := db.Collection("events").UpdateOne(ctx, bson.M{"_id": eventID, "deletionRequested": bson.M{"$ne": true}, "audioKeys.19": bson.M{"$exists": false}}, bson.M{"$addToSet": bson.M{"audioKeys": key}, "$set": bson.M{"updatedAt": now}})
 	if err != nil {
 		return false, err
 	}

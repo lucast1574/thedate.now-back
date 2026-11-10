@@ -22,6 +22,9 @@ func EventClosingAt(e Event) time.Time {
 }
 
 func EventClosed(e Event, now time.Time) bool {
+	if e.DeletionRequested {
+		return true
+	}
 	end := EventClosingAt(e)
 	return !end.IsZero() && !now.Before(end)
 }

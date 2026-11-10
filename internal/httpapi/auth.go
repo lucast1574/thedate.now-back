@@ -113,6 +113,9 @@ func validEmail(email string) bool {
 }
 func adminEmail() string { return strings.ToLower(strings.TrimSpace(os.Getenv("ADMIN_EMAIL"))) }
 func (s *server) sign(u core.User, method string) (string, error) {
+	if u.DeletionRequested {
+		return "", errors.New("account deletion in progress")
+	}
 	now := time.Now()
 	return jwt.NewWithClaims(jwt.SigningMethodHS256, sessionClaims{
 		RegisteredClaims: jwt.RegisteredClaims{Subject: u.ID, Issuer: "thedate-api", Audience: jwt.ClaimStrings{"thedate-studio"}, ExpiresAt: jwt.NewNumericDate(now.Add(24 * time.Hour)), IssuedAt: jwt.NewNumericDate(now)},
@@ -120,6 +123,9 @@ func (s *server) sign(u core.User, method string) (string, error) {
 	}).SignedString(s.secret)
 }
 func validSession(u core.User, claims *sessionClaims) bool {
+	if u.DeletionRequested {
+		return false
+	}
 	if claims.Format != 1 || claims.Subject != u.ID || claims.Version != u.TokenVersion {
 		return false
 	}

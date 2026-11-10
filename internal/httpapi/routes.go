@@ -18,6 +18,7 @@ func (s *server) routes() http.Handler {
 	handle("GET /admin/support/tickets", s.adminSupportTickets)
 	handle("PATCH /admin/support/tickets/{id}", s.updateSupportTicket)
 	handle("PATCH /profile", s.updateProfile)
+	handle("DELETE /profile", s.deleteAccount)
 	handle("POST /profile/professional", s.becomeProfessional)
 	handle("POST /events/{id}/activate", s.activateDemo)
 	handle("POST /profile/avatar", s.uploadAvatar)

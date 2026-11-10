@@ -21,7 +21,7 @@ func (s *server) rsvpDetails(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var e core.Event
-	if err := s.db.Collection("events").FindOne(r.Context(), bson.M{"_id": g.EventID, "paymentStatus": "paid", "publishedAt": bson.M{"$ne": nil}}).Decode(&e); err != nil {
+	if err := s.db.Collection("events").FindOne(r.Context(), bson.M{"_id": g.EventID, "paymentStatus": "paid", "deletionRequested": bson.M{"$ne": true}, "publishedAt": bson.M{"$ne": nil}}).Decode(&e); err != nil {
 		bad(w, 404, "Invitation not found")
 		return
 	}
@@ -52,7 +52,7 @@ func (s *server) rsvp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var e core.Event
-	if err := s.db.Collection("events").FindOne(r.Context(), bson.M{"_id": g.EventID, "paymentStatus": "paid"}).Decode(&e); err != nil {
+	if err := s.db.Collection("events").FindOne(r.Context(), bson.M{"_id": g.EventID, "paymentStatus": "paid", "deletionRequested": bson.M{"$ne": true}}).Decode(&e); err != nil {
 		bad(w, 404, "Event not found")
 		return
 	}

@@ -3,6 +3,7 @@ package core
 import "time"
 
 type User struct {
+	DeletionRequested   bool                     `bson:"deletionRequested,omitempty" json:"-"`
 	Mail                map[string]EmailDelivery `bson:"mail,omitempty" json:"-"`
 	Product             string                   `bson:"product,omitempty" json:"product,omitempty"`
 	GooglePhotoURL      string                   `bson:"googlePhotoUrl,omitempty" json:"googlePhotoUrl,omitempty"`
@@ -25,6 +26,7 @@ type User struct {
 }
 
 type Event struct {
+	DeletionRequested          bool                     `bson:"deletionRequested,omitempty" json:"-"`
 	PublishedDesign            *DesignSnapshot          `bson:"publishedDesign,omitempty" json:"-"`
 	DesignVersion              int64                    `bson:"designVersion" json:"designVersion"`
 	PublishedDesignVersion     int64                    `bson:"publishedDesignVersion" json:"publishedDesignVersion"`

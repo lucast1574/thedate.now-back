@@ -124,6 +124,9 @@ func (s *server) ownedEvent(r *http.Request) (core.Event, error) {
 		filter = bson.M{"_id": r.PathValue("id")}
 	}
 	err = s.db.Collection("events").FindOne(r.Context(), filter).Decode(&e)
+	if e.DeletionRequested {
+		return core.Event{}, mongo.ErrNoDocuments
+	}
 	return e, err
 }
 
