@@ -69,10 +69,12 @@ func (s AccountDeletion) Finish(ctx context.Context, u core.User, claim string) 
 	// Remove memberships and pending email invitations, preserving other owners' events.
 	pipeline := mongo.Pipeline{bson.D{{Key: "$set", Value: bson.M{
 		"coupleUserIds": bson.M{"$filter": bson.M{"input": bson.M{"$ifNull": bson.A{"$coupleUserIds", bson.A{}}}, "as": "id", "cond": bson.M{"$ne": bson.A{"$$id", u.ID}}}},
-		"coupleInvites": bson.M{"$arrayToObject": bson.M{"$filter": bson.M{"input": bson.M{"$objectToArray": bson.M{"$ifNull": bson.A{"$coupleInvites", bson.M{}}}}, "as": "invite", "cond": bson.M{"$ne": bson.A{"$$invite.v.email", u.Email}}}}},
+		"coupleInvites": bson.M{"$arrayToObject": bson.M{"$filter": bson.M{"input": bson.M{"$objectToArray": bson.M{"$ifNull": bson.A{"$coupleInvites", bson.M{}}}}, "as": "invite", "cond": bson.M{"$ne": bson.A{"$$invite.v.email", bson.M{"$literal": u.Email}}}}}},
 		"coupleVersion": bson.M{"$add": bson.A{bson.M{"$ifNull": bson.A{"$coupleVersion", 0}}, 1}},
 	}}}}
-	if _, err := s.DB.Collection("events").UpdateMany(ctx, bson.M{"$or": bson.A{bson.M{"coupleUserIds": u.ID}, bson.M{"coupleInvites": bson.M{"$exists": true}}}}, pipeline); err != nil {
+	invitedEmails := bson.M{"$map": bson.M{"input": bson.M{"$objectToArray": bson.M{"$ifNull": bson.A{"$coupleInvites", bson.M{}}}}, "as": "invite", "in": "$$invite.v.email"}}
+	filter := bson.M{"$or": bson.A{bson.M{"coupleUserIds": u.ID}, bson.M{"$expr": bson.M{"$in": bson.A{bson.M{"$literal": u.Email}, invitedEmails}}}}}
+	if _, err := s.DB.Collection("events").UpdateMany(ctx, filter, pipeline); err != nil {
 		return err
 	}
 	devices := []string{}

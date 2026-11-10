@@ -27,6 +27,7 @@ func TestAccountDeletionErasesOwnDataAndPreservesOtherOwners(t *testing.T) {
 	for _, e := range []core.Event{
 		{ID: "owned", OwnerID: owner.ID, Kind: "general", Slug: "owned", PaymentStatus: "paid", PublishedAt: &now},
 		{ID: "shared", OwnerID: other.ID, CoupleUserIDs: []string{owner.ID, other.ID}, CoupleInvites: map[string]core.CoupleInvite{"mine": {Email: owner.Email}, "theirs": {Email: other.Email}}},
+		{ID: "unrelated", OwnerID: other.ID, CoupleVersion: 7, CoupleInvites: map[string]core.CoupleInvite{"theirs": {Email: other.Email}}},
 	} {
 		if _, err := db.Collection("events").InsertOne(ctx, e); err != nil {
 			t.Fatal(err)
@@ -93,6 +94,10 @@ func TestAccountDeletionErasesOwnDataAndPreservesOtherOwners(t *testing.T) {
 	}
 	if len(shared.CoupleUserIDs) != 1 || shared.CoupleUserIDs[0] != other.ID || len(shared.CoupleInvites) != 1 || shared.CoupleInvites["theirs"].Email != other.Email {
 		t.Fatal("membership cleanup", shared)
+	}
+	var unrelated core.Event
+	if err := db.Collection("events").FindOne(ctx, bson.M{"_id": "unrelated"}).Decode(&unrelated); err != nil || unrelated.CoupleVersion != 7 {
+		t.Fatal("unrelated event changed", err, unrelated.CoupleVersion)
 	}
 }
 
