@@ -28,6 +28,7 @@ type Celebration struct {
 	WhatsAppNotice      bool                 `bson:"whatsappNotice" json:"whatsappNotice"`
 	DressCode           string               `bson:"dressCode" json:"dressCode"`
 	DressNote           string               `bson:"dressNote" json:"dressNote"`
+	GiftsEnabled        *bool                `bson:"giftsEnabled,omitempty" json:"giftsEnabled,omitempty"`
 }
 
 func ValidCelebration(c *Celebration) bool {
