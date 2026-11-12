@@ -77,7 +77,7 @@ func EditWishlist(old Wishlist, in Wishlist) (Wishlist, error) {
 	return next, nil
 }
 func DecideGift(e Event, g Guest, id string, release bool, now time.Time) (Wishlist, error) {
-	if EventClosed(e, now) {
+	if EventClosed(e, now) || !GiftListAvailable(e) {
 		return Wishlist{}, ErrGiftDisabled
 	}
 	old := e.Wishlist

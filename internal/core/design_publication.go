@@ -39,7 +39,7 @@ func EditedDesign(e Event, in DesignInput) Event {
 	in.Title = InvitationTitle(e.Kind, in.Title, in.Celebration)
 	in.Celebration = CelebrationNames(in.Celebration)
 	in.TemplateID = TemplateID(e.Kind, in.Template, in.DesignMode, in.TemplateID)
-	return ApplyDesign(e, in)
+	return preserveGiftSetting(ApplyDesign(e, in), e.Celebration)
 }
 
 func PublishedEvent(e Event) Event {
@@ -47,7 +47,9 @@ func PublishedEvent(e Event) Event {
 		return e
 	}
 	d := e.PublishedDesign
+	currentCelebration := e.Celebration
 	e = ApplyDesign(e, d.DesignInput)
+	e = preserveGiftSetting(e, currentCelebration)
 	e.PhotoKeys, e.AudioKeys = d.PhotoKeys, d.AudioKeys
 	return e
 }

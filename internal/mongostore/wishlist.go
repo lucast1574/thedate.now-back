@@ -22,6 +22,7 @@ func (s Wishlists) Commit(ctx context.Context, id string, version int64, next co
 		filter["$or"] = []bson.M{{"wishlist.version": 0}, {"wishlist.version": bson.M{"$exists": false}}}
 	}
 	if public {
+		filter["celebration.giftsEnabled"] = bson.M{"$ne": false}
 		filter["paymentStatus"] = "paid"
 		filter["isDemo"] = bson.M{"$ne": true}
 		filter["publishedAt"] = bson.M{"$ne": nil}

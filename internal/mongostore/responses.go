@@ -56,7 +56,7 @@ func (s Responses) commitResponse(ctx context.Context, e core.Event, id string, 
 	increments := bson.M{"responseVersion": 1}
 	// Queue only new public confirmations, atomically with the response. Existing
 	// confirmations are not backfilled and a claimed message is never requeued.
-	if public && r.Choice == "going" && e.GiftFollowups[id] == "" {
+	if public && r.Choice == "going" && (core.GiftListAvailable(e) || (r.Seats > 1 && !r.PartyRegistered)) && e.GiftFollowups[id] == "" {
 		set["giftFollowups."+id] = "pending"
 	}
 	cur, err := s.DB.Collection("guests").Find(ctx, bson.M{"eventId": e.ID})
@@ -97,6 +97,9 @@ func (s Responses) CommitEvent(ctx context.Context, e core.Event, in core.EventI
 	set := bson.M{"invitationMessage": in.InvitationMessage, "title": in.Title, "description": in.Description, "startAt": in.StartAt, "timeZone": in.TimeZone, "organizer": in.Organizer, "location": in.Location, "isVirtual": in.IsVirtual, "mapUrl": in.MapURL, "virtualUrl": in.VirtualURL, "capacity": in.Capacity, "capacityUnlimited": in.CapacityUnlimited, "maybeHoldHours": in.MaybeHoldHours, "template": in.Template, "templateId": in.TemplateID, "designMode": in.DesignMode, "accentColor": in.AccentColor, "updatedAt": now}
 	if in.Celebration != nil {
 		set["celebration"] = in.Celebration
+	}
+	if in.MaybeEnabled != nil {
+		set["maybeEnabled"] = *in.MaybeEnabled
 	}
 	preservePublishedDesign(e, set)
 	next := e

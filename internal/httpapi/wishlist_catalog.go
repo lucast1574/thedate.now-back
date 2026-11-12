@@ -13,6 +13,9 @@ func (s *server) catalogEvent(r *http.Request) (core.Event, error) {
 		return e, core.ErrGiftDisabled
 	}
 	err := s.db.Collection("events").FindOne(r.Context(), bson.M{"kind": r.PathValue("kind"), "slug": r.PathValue("slug"), "paymentStatus": "paid", "deletionRequested": bson.M{"$ne": true}, "publishedAt": bson.M{"$ne": nil}, "isDemo": bson.M{"$ne": true}}).Decode(&e)
+	if err == nil && !core.GiftListAvailable(e) {
+		err = core.ErrGiftDisabled
+	}
 	return e, err
 }
 func (s *server) wishlistCatalog(w http.ResponseWriter, r *http.Request) {

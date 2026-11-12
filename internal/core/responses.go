@@ -56,6 +56,9 @@ func DecideResponse(e Event, g Guest, choice, reason string, now time.Time) (Res
 	if choice != "going" && choice != "maybe" && choice != "not_going" {
 		return Response{}, errors.New("invalid response")
 	}
+	if choice == "maybe" && !MaybeAllowed(e) {
+		return Response{}, ErrMaybeDisabled
+	}
 	if e.InvitationsEnabled && g.SentAt == nil && e.InvitationHolds[g.ID] == 0 {
 		return Response{}, ErrUnavailable
 	}

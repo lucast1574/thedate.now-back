@@ -70,6 +70,7 @@ type Event struct {
 	MapURL                     string                   `bson:"mapUrl" json:"mapUrl"`
 	VirtualURL                 string                   `bson:"virtualUrl" json:"virtualUrl"`
 	Capacity                   int                      `bson:"capacity" json:"capacity"`
+	MaybeEnabled               *bool                    `bson:"maybeEnabled,omitempty" json:"maybeEnabled,omitempty"`
 	MaybeHoldHours             int                      `bson:"maybeHoldHours" json:"maybeHoldHours"`
 	Template                   string                   `bson:"template" json:"template"`
 	AccentColor                string                   `bson:"accentColor" json:"accentColor"`

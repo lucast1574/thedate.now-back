@@ -17,7 +17,7 @@ import (
 )
 
 func TestGiftConfirmationRepairsStoredWeddingNames(t *testing.T) {
-	e := core.Event{Kind: "wedding", Slug: "lucasyelizabeth", Title: "lucasyelizabeth", Celebration: &core.Celebration{PartnerOne: "lucas", PartnerTwo: "ELIZABETH"}}
+	e := core.Event{Kind: "wedding", Slug: "lucasyelizabeth", Title: "lucasyelizabeth", Wishlist: core.Wishlist{Items: []core.Gift{{ID: "gift"}}}, Celebration: &core.Celebration{PartnerOne: "lucas", PartnerTwo: "ELIZABETH"}}
 	g := core.Guest{Name: "Lucas", InviteToken: strings.Repeat("a", 48)}
 	text := giftConfirmationMessage(e, g, "test")["text"].(string)
 	if !strings.Contains(text, "asistencia a Lucas y Elizabeth.") || !strings.Contains(text, "https://lucasyelizabeth.save.thedate.now/") {
@@ -31,7 +31,7 @@ func TestGiftFollowupOnlyAfterYesAndOnceAcrossWorkers(t *testing.T) {
 			db := testutil.Mongo(t)
 			ctx := context.Background()
 			now := time.Now().UTC()
-			e := core.Event{ID: "event", Kind: kind, Title: "Celebración", Slug: "celebracion", Capacity: 10, PaymentStatus: "paid", PublishedAt: &now, StartAt: now.Add(24 * time.Hour), MaybeHoldHours: 48, ResponseVersion: 1, Responses: map[string]core.Response{}}
+			e := core.Event{ID: "event", Kind: kind, Title: "Celebración", Slug: "celebracion", Capacity: 10, PaymentStatus: "paid", PublishedAt: &now, Wishlist: core.Wishlist{Items: []core.Gift{{ID: "gift", Title: "Gift", URL: "https://example.com/gift"}}}, StartAt: now.Add(24 * time.Hour), MaybeHoldHours: 48, ResponseVersion: 1, Responses: map[string]core.Response{}}
 			g := core.Guest{ID: "guest", EventID: e.ID, Name: "Ana", Phone: "+51999111222", Seats: 1, InviteToken: strings.Repeat("a", 48)}
 			if _, err := db.Collection("events").InsertOne(ctx, e); err != nil {
 				t.Fatal(err)
@@ -119,7 +119,7 @@ func TestGiftFollowupWebConfirmationQueuesWithoutLogin(t *testing.T) {
 	db := testutil.Mongo(t)
 	ctx := context.Background()
 	now := time.Now().UTC()
-	e := core.Event{ID: "web", Kind: "general", Capacity: 3, PaymentStatus: "paid", PublishedAt: &now, StartAt: now.Add(24 * time.Hour), MaybeHoldHours: 48}
+	e := core.Event{ID: "web", Kind: "general", Capacity: 3, PaymentStatus: "paid", PublishedAt: &now, Wishlist: core.Wishlist{Items: []core.Gift{{ID: "gift", Title: "Gift", URL: "https://example.com/gift"}}}, StartAt: now.Add(24 * time.Hour), MaybeHoldHours: 48}
 	g := core.Guest{ID: "guest", EventID: e.ID, Name: "Ana", Seats: 1, InviteToken: strings.Repeat("b", 48)}
 	_, _ = db.Collection("events").InsertOne(ctx, e)
 	_, _ = db.Collection("guests").InsertOne(ctx, g)

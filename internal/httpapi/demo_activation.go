@@ -56,6 +56,7 @@ func (s *server) activateDemo(w http.ResponseWriter, r *http.Request) {
 	}
 	set := bson.M{"isDemo": false, "paymentStatus": status, "slug": in.Slug, "title": in.Title, "startAt": in.StartAt, "timeZone": in.TimeZone, "organizer": in.Organizer, "location": in.Location, "isVirtual": in.IsVirtual, "mapUrl": in.MapURL, "virtualUrl": in.VirtualURL, "capacity": in.Capacity, "capacityUnlimited": in.CapacityUnlimited, "maybeHoldHours": in.MaybeHoldHours, "invitationMessage": in.InvitationMessage, "updatedAt": time.Now().UTC()}
 	set["paymentSource"] = source
+	set["maybeEnabled"] = in.MaybeEnabled != nil && *in.MaybeEnabled
 	if in.Celebration != nil {
 		set["celebration"] = in.Celebration
 	}

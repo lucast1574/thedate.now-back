@@ -38,12 +38,24 @@ func (s *server) giftFollowupStep(parent context.Context) {
 			if s.db.Collection("guests").FindOne(ctx, bson.M{"_id": id, "eventId": e.ID}).Decode(&g) != nil || g.Phone == "" {
 				continue
 			}
+			if !core.ConfirmationFollowupNeeded(e, g) {
+				continue
+			}
 			repo := mongostore.Responses{DB: s.db}
 			claimed, err := repo.ClaimGiftFollowup(ctx, e, g, time.Now().UTC())
 			if err != nil || !claimed {
 				continue
 			}
-			_, outcome := postInvitationMessage(ctx, strings.TrimSuffix(config.Base, "/")+"/api/sendText", config.Key, giftConfirmationMessage(e, g, config.Session))
+			latest, loadErr := repo.Snapshot(ctx, e.ID)
+			if loadErr != nil {
+				_ = repo.FinishGiftFollowup(ctx, e.ID, id, "pending")
+				continue
+			}
+			if !core.ConfirmationFollowupNeeded(latest, g) || latest.Responses[id].Choice != "going" || latest.RevokedGuestTokens[g.InviteToken] {
+				_ = repo.FinishGiftFollowup(ctx, e.ID, id, "skipped")
+				continue
+			}
+			_, outcome := postInvitationMessage(ctx, strings.TrimSuffix(config.Base, "/")+"/api/sendText", config.Key, giftConfirmationMessage(latest, g, config.Session))
 			finish, done := context.WithTimeout(context.Background(), 5*time.Second)
 			_ = repo.FinishGiftFollowup(finish, e.ID, id, outcome)
 			done()
@@ -55,7 +67,10 @@ func giftConfirmationMessage(e core.Event, g core.Guest, session string) map[str
 	e.Title = core.InvitationTitle(e.Kind, e.Title, e.Celebration)
 	host, _ := core.InvitationHost(e.Kind, e.Slug)
 	link := "https://" + host + core.GuestInvitationPath(g) + "/regalos"
-	text := invitationBrand(e.Kind) + " · Gracias por confirmar tu asistencia a " + e.Title + ". Si deseas elegir un regalo, aquí tienes tu acceso personal a la lista, sin iniciar sesión: " + link
+	text := invitationBrand(e.Kind) + " · Gracias por confirmar tu asistencia a " + e.Title + "."
+	if core.GiftListAvailable(e) {
+		text += " Si deseas elegir un regalo, aquí tienes tu acceso personal a la lista, sin iniciar sesión: " + link
+	}
 	if g.Seats > 1 && !e.Responses[g.ID].PartyRegistered {
 		text += "\n\nRegistra también los nombres de tus acompañantes y cuántas personas asistirán: https://" + host + guestInvitationPath(g) + "/respuesta"
 	}

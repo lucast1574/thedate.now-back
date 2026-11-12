@@ -65,7 +65,7 @@ func (s *server) wishlistAccess(w http.ResponseWriter, r *http.Request) {
 }
 func sendGiftAccess(r *http.Request, e core.Event, g core.Guest, giftID string) {
 	e.Title = core.InvitationTitle(e.Kind, e.Title, e.Celebration)
-	if core.EventClosed(e, time.Now().UTC()) {
+	if core.EventClosed(e, time.Now().UTC()) || !core.GiftListAvailable(e) {
 		return
 	}
 	config := wazendFor(e.Kind)

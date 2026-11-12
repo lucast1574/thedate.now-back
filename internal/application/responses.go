@@ -43,6 +43,9 @@ func (s Responses) applyParty(ctx context.Context, eventID string, g core.Guest,
 		if receipt != "" && e.ResponseReceipts[receipt] {
 			return core.ErrDuplicate
 		}
+		if choice == "maybe" && !core.MaybeAllowed(e) {
+			return core.ErrMaybeDisabled
+		}
 		if (finalize || receipt != "") && core.ResponseCompleted(e.Responses[g.ID]) {
 			return core.ErrResponseFinalized
 		}

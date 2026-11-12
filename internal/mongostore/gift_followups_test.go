@@ -15,7 +15,7 @@ func TestGiftFollowupClaimGuardsAndUnknownOutcome(t *testing.T) {
 			db := testutil.Mongo(t)
 			ctx := context.Background()
 			now := time.Now().UTC()
-			e := core.Event{ID: "e", PaymentStatus: "paid", PublishedAt: &now, StartAt: now.Add(time.Hour), ResponseVersion: 1, Responses: map[string]core.Response{"g": {Choice: choice}}, GiftFollowups: map[string]string{"g": "pending"}}
+			e := core.Event{ID: "e", PaymentStatus: "paid", PublishedAt: &now, Wishlist: core.Wishlist{Items: []core.Gift{{ID: "gift", Title: "Gift", URL: "https://example.com/gift"}}}, StartAt: now.Add(time.Hour), ResponseVersion: 1, Responses: map[string]core.Response{"g": {Choice: choice}}, GiftFollowups: map[string]string{"g": "pending"}}
 			g := core.Guest{ID: "g", EventID: e.ID, InviteToken: "token"}
 			if _, err := db.Collection("events").InsertOne(ctx, e); err != nil {
 				t.Fatal(err)

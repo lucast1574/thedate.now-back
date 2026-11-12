@@ -17,7 +17,11 @@ func eventMessage(e core.Event, g core.Guest) map[string]any {
 	return map[string]any{"session": wazendFor(e.Kind).Session, "chatId": strings.TrimPrefix(g.Phone, "+") + "@c.us", "text": core.InvitationMessage(e.InvitationMessage, "https://"+host+guestInvitationPath(g)), "linkPreview": false}
 }
 func invitationPoll(e core.Event, g core.Guest) map[string]any {
-	return map[string]any{"session": wazendFor(e.Kind).Session, "chatId": strings.TrimPrefix(g.Phone, "+") + "@c.us", "poll": map[string]any{"name": "¿Nos acompañas?", "options": []string{"Sí", "No", "Tal vez"}, "multipleAnswers": false}}
+	options := []string{"Sí", "No"}
+	if core.MaybeAllowed(e) {
+		options = append(options, "Tal vez")
+	}
+	return map[string]any{"session": wazendFor(e.Kind).Session, "chatId": strings.TrimPrefix(g.Phone, "+") + "@c.us", "poll": map[string]any{"name": "¿Nos acompañas?", "options": options, "multipleAnswers": false}}
 }
 
 func extractMessageID(raw []byte) string {

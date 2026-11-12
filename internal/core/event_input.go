@@ -22,6 +22,7 @@ type EventInput struct {
 	VirtualURL        string       `json:"virtualUrl"`
 	Capacity          int          `json:"capacity"`
 	MaybeHoldHours    int          `json:"maybeHoldHours"`
+	MaybeEnabled      *bool        `json:"maybeEnabled"`
 	Template          string       `json:"template"`
 	AccentColor       string       `json:"accentColor"`
 }

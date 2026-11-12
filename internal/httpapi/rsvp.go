@@ -37,12 +37,12 @@ func (s *server) rsvpDetails(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.completeLegacyEvent(r.Context(), &e)
-	reply(w, 200, map[string]any{"event": publicEventView(e), "finalized": core.ResponseCompleted(e.Responses[g.ID]), "guestName": core.GuestFullName(g), "seats": g.Seats, "companions": g.Companions, "attendingSeats": g.AttendingSeats, "partyRegistered": g.PartyRegistered, "response": g.Response, "maybeReason": g.MaybeReason, "maybeExpiresAt": g.MaybeExpiresAt, "eventTitle": e.Title, "kind": e.Kind, "slug": e.Slug, "startAt": e.StartAt, "timeZone": e.TimeZone, "organizer": e.Organizer, "location": e.Location, "isVirtual": e.IsVirtual, "mapUrl": e.MapURL, "virtualUrl": e.VirtualURL})
+	reply(w, 200, map[string]any{"maybeEnabled": core.MaybeAllowed(e), "event": publicEventView(e), "finalized": core.ResponseCompleted(e.Responses[g.ID]), "guestName": core.GuestFullName(g), "seats": g.Seats, "companions": g.Companions, "attendingSeats": g.AttendingSeats, "partyRegistered": g.PartyRegistered, "response": g.Response, "maybeReason": g.MaybeReason, "maybeExpiresAt": g.MaybeExpiresAt, "eventTitle": e.Title, "kind": e.Kind, "slug": e.Slug, "startAt": e.StartAt, "timeZone": e.TimeZone, "organizer": e.Organizer, "location": e.Location, "isVirtual": e.IsVirtual, "mapUrl": e.MapURL, "virtualUrl": e.VirtualURL})
 }
 
 func (s *server) rsvp(w http.ResponseWriter, r *http.Request) {
 	var in rsvpInput
-	if decode(r, &in) != nil || (in.Response != "going" && in.Response != "not_going" && in.Response != "maybe") || (in.Response == "maybe" && len(strings.TrimSpace(in.Reason)) < 3) || len(in.Reason) > 2000 {
+	if decode(r, &in) != nil || (in.Response != "going" && in.Response != "not_going" && in.Response != "maybe") || len(in.Reason) > 2000 {
 		bad(w, 400, "Choose going, not going, or maybe with a reason")
 		return
 	}
@@ -64,8 +64,18 @@ func (s *server) rsvp(w http.ResponseWriter, r *http.Request) {
 		bad(w, 403, "Invitation is not published")
 		return
 	}
+	if in.Response == "maybe" && !core.MaybeAllowed(e) {
+		reply(w, 409, map[string]string{"error": core.ErrMaybeDisabled.Error(), "code": "maybe_disabled"})
+		return
+	}
+	if in.Response == "maybe" && len(strings.TrimSpace(in.Reason)) < 3 {
+		bad(w, 400, "Cuéntanos por qué estás en espera.")
+		return
+	}
 	if err := s.responses().FinalizeParty(r.Context(), e.ID, g, in.Response, in.Reason, in.Companions); err != nil {
-		if errors.Is(err, core.ErrResponseFinalized) {
+		if errors.Is(err, core.ErrMaybeDisabled) {
+			reply(w, 409, map[string]string{"error": err.Error(), "code": "maybe_disabled"})
+		} else if errors.Is(err, core.ErrResponseFinalized) {
 			bad(w, 409, "Response already completed")
 		} else if errors.Is(err, errCapacity) {
 			bad(w, 409, "There are not enough seats available")

@@ -27,7 +27,7 @@ func TestPublicCatalogNeverRequiresActivationOrLeaksGuestClaims(t *testing.T) {
 		return w
 	}
 	w := call("/public/events/wedding/boda/wishlist")
-	if w.Code != 200 || !strings.Contains(w.Body.String(), `"items":[]`) {
+	if w.Code != 404 {
 		t.Fatal(w.Code, w.Body.String())
 	}
 	e.Wishlist.Items = []core.Gift{{ID: "gift", Title: "Cafetera", URL: "https://shop.example/p", GuestID: "private-id"}}

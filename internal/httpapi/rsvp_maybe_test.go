@@ -20,7 +20,7 @@ func TestMaybeCanBecomeFinalWithoutReenteringCompanions(t *testing.T) {
 				ctx := context.Background()
 				now := time.Now()
 				token := strings.Repeat("b", 48)
-				e := core.Event{ID: "event", Kind: "wedding", PaymentStatus: "paid", PublishedAt: &now, Capacity: 2, MaybeHoldHours: 48, StartAt: now.Add(24 * time.Hour)}
+				e := core.Event{ID: "event", Kind: "wedding", PaymentStatus: "paid", PublishedAt: &now, Capacity: 2, MaybeHoldHours: 48, StartAt: now.Add(24 * time.Hour), Wishlist: core.Wishlist{Items: []core.Gift{{ID: "gift"}}}}
 				g := core.Guest{ID: "guest", EventID: e.ID, Name: "Guest", Seats: 2, InviteToken: token}
 				if _, err := db.Collection("events").InsertOne(ctx, e); err != nil {
 					t.Fatal(err)

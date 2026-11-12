@@ -46,12 +46,13 @@ func (s *server) createEvent(w http.ResponseWriter, r *http.Request) {
 		bad(w, 400, "Maybe hold must be between 1 and 168 hours")
 		return
 	}
+	maybeEnabled := in.MaybeEnabled != nil && *in.MaybeEnabled
 	now := time.Now().UTC()
 	status := "unpaid"
 	if u.Role == "admin" {
 		status = "paid"
 	}
-	e := core.Event{InvitationMessage: in.InvitationMessage, Celebration: in.Celebration, ID: uuid.NewString(), Kind: in.Kind, Slug: in.Slug, Title: strings.TrimSpace(in.Title), Description: in.Description, StartAt: in.StartAt, TimeZone: in.TimeZone, Organizer: strings.TrimSpace(in.Organizer), Location: eventLocation(in), IsVirtual: in.IsVirtual, MapURL: physicalMapURL(in), VirtualURL: virtualEventURL(in), Capacity: in.Capacity, CapacityUnlimited: in.CapacityUnlimited, MaybeHoldHours: in.MaybeHoldHours, Template: in.Template, TemplateID: in.TemplateID, DesignMode: in.DesignMode, AccentColor: in.AccentColor, OwnerID: u.ID, PaymentStatus: status, PaymentSource: func() string {
+	e := core.Event{InvitationMessage: in.InvitationMessage, Celebration: in.Celebration, ID: uuid.NewString(), Kind: in.Kind, Slug: in.Slug, Title: strings.TrimSpace(in.Title), Description: in.Description, StartAt: in.StartAt, TimeZone: in.TimeZone, Organizer: strings.TrimSpace(in.Organizer), Location: eventLocation(in), IsVirtual: in.IsVirtual, MapURL: physicalMapURL(in), VirtualURL: virtualEventURL(in), Capacity: in.Capacity, CapacityUnlimited: in.CapacityUnlimited, MaybeEnabled: &maybeEnabled, MaybeHoldHours: in.MaybeHoldHours, Template: in.Template, TemplateID: in.TemplateID, DesignMode: in.DesignMode, AccentColor: in.AccentColor, OwnerID: u.ID, PaymentStatus: status, PaymentSource: func() string {
 		if u.Role == "admin" {
 			return "courtesy"
 		}
