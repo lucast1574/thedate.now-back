@@ -13,7 +13,7 @@ func (s *server) publicEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var e core.Event
-	err := s.db.Collection("events").FindOne(r.Context(), bson.M{"kind": kind, "slug": slug, "paymentStatus": "paid", "publishedAt": bson.M{"$ne": nil}}).Decode(&e)
+	err := s.db.Collection("events").FindOne(r.Context(), bson.M{"kind": kind, "slug": slug, "paymentStatus": "paid", "addressReleasedAt": nil, "publishedAt": bson.M{"$ne": nil}}).Decode(&e)
 	if err != nil || e.DeletionRequested {
 		bad(w, 404, "Invitation not found")
 		return

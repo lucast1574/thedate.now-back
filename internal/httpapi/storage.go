@@ -135,7 +135,7 @@ func (s *server) publicPhoto(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var e core.Event
-	filter := bson.M{"kind": kind, "slug": slug, "paymentStatus": "paid", "deletionRequested": bson.M{"$ne": true}, "publishedAt": bson.M{"$ne": nil}, "photoKeys": key}
+	filter := bson.M{"kind": kind, "slug": slug, "paymentStatus": "paid", "addressReleasedAt": nil, "deletionRequested": bson.M{"$ne": true}, "publishedAt": bson.M{"$ne": nil}, "photoKeys": key}
 	if err := s.db.Collection("events").FindOne(r.Context(), filter).Decode(&e); err != nil {
 		bad(w, 404, "Image not found")
 		return

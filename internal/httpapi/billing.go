@@ -41,7 +41,7 @@ func (s *server) checkout(w http.ResponseWriter, r *http.Request) {
 		bad(w, 503, "Payments are not configured yet")
 		return
 	}
-	if s.db.Collection("events").FindOne(r.Context(), bson.M{"kind": e.Kind, "slug": e.Slug, "paymentStatus": "paid", "_id": bson.M{"$ne": e.ID}}).Err() == nil {
+	if s.db.Collection("events").FindOne(r.Context(), bson.M{"kind": e.Kind, "slug": e.Slug, "paymentStatus": "paid", "addressReleasedAt": nil, "_id": bson.M{"$ne": e.ID}}).Err() == nil {
 		bad(w, 409, "Ese enlace acaba de reservarse con otro pago. Cambia el nombre antes de continuar.")
 		return
 	}

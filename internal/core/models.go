@@ -26,6 +26,7 @@ type User struct {
 }
 
 type Event struct {
+	AddressReleasedAt          *time.Time               `bson:"addressReleasedAt,omitempty" json:"addressReleasedAt,omitempty"`
 	DeletionRequested          bool                     `bson:"deletionRequested,omitempty" json:"-"`
 	PublishedDesign            *DesignSnapshot          `bson:"publishedDesign,omitempty" json:"-"`
 	DesignVersion              int64                    `bson:"designVersion" json:"designVersion"`

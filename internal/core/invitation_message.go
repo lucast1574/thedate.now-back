@@ -8,6 +8,14 @@ import (
 
 // InvitationMessage places the personal RSVP link without touching public design copy.
 func InvitationMessage(message, link string) string {
+	text := invitationMessageBody(message, link)
+	if strings.HasPrefix(text, link) {
+		return "Abre tu invitación:\n" + text
+	}
+	return "Abre tu invitación:\n" + link + "\n\n" + text
+}
+
+func invitationMessageBody(message, link string) string {
 	message = strings.TrimSpace(message)
 	if message == "" {
 		return link
@@ -30,5 +38,5 @@ func InvitationMessage(message, link string) string {
 		return before + link + after
 	}
 
-	return message + "\n\n" + link
+	return message
 }

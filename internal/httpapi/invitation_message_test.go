@@ -23,7 +23,7 @@ func TestCustomWhatsAppCopyUsesEachGuestsPersonalLink(t *testing.T) {
 func TestWhatsAppInvitationKeepsDetailsInsideTheWebsite(t *testing.T) {
 	e := core.Event{Kind: "wedding", Slug: "boda", Location: "Private venue"}
 	data := eventMessage(e, core.Guest{})
-	if data["event"] != nil || data["startTime"] != nil || data["location"] != nil || data["linkPreview"] != false {
+	if data["event"] != nil || data["startTime"] != nil || data["location"] != nil || data["linkPreview"] != true || data["linkPreviewHighQuality"] != true {
 		t.Fatal("invitation leaked event-card metadata")
 	}
 	poll := invitationPoll(e, core.Guest{})["poll"].(map[string]any)

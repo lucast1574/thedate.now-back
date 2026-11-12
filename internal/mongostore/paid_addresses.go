@@ -12,7 +12,7 @@ import (
 
 func EnsurePaidAddressIndex(ctx context.Context, db *mongo.Database) error {
 	indexes := db.Collection("events").Indexes()
-	_, err := indexes.CreateOne(ctx, mongo.IndexModel{Keys: bson.D{{Key: "kind", Value: 1}, {Key: "slug", Value: 1}}, Options: options.Index().SetName("paid_invitation_address").SetUnique(true).SetPartialFilterExpression(bson.M{"paymentStatus": "paid"})})
+	_, err := indexes.CreateOne(ctx, mongo.IndexModel{Keys: bson.D{{Key: "kind", Value: 1}, {Key: "slug", Value: 1}}, Options: options.Index().SetName("reserved_invitation_address").SetUnique(true).SetPartialFilterExpression(bson.M{"paymentStatus": "paid", "addressReleasedAt": nil})})
 	if err != nil {
 		return err
 	}
@@ -31,7 +31,8 @@ func EnsurePaidAddressIndex(ctx context.Context, db *mongo.Database) error {
 		if err = cursor.Decode(&spec); err != nil {
 			return err
 		}
-		if spec.Name == "kind_1_slug_1" && spec.Unique && len(spec.Partial) == 0 && len(spec.Key) == 2 && spec.Key[0].Key == "kind" && spec.Key[1].Key == "slug" {
+		legacy := spec.Name == "kind_1_slug_1" && len(spec.Partial) == 0 || spec.Name == "paid_invitation_address" && len(spec.Partial) == 1 && spec.Partial["paymentStatus"] == "paid"
+		if legacy && spec.Unique && len(spec.Key) == 2 && spec.Key[0].Key == "kind" && spec.Key[1].Key == "slug" {
 			err = indexes.DropOne(ctx, spec.Name)
 			if err != nil {
 				var command mongo.CommandError
