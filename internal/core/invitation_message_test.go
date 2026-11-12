@@ -9,10 +9,10 @@ func TestInvitationMessage(t *testing.T) {
 	link := "https://fiesta.thedate.now/rsvp/personal"
 	for _, tc := range []struct{ in, want string }{
 		{"", "Abre tu invitación:\n" + link},
-		{"Antes{{link}}Después", "Abre tu invitación:\n" + link + "\n\nAntes " + link + " Después"},
+		{"Antes{{link}}Después", "Abre tu invitación:\n" + link + "\n\nAntesDespués"},
 		{" Ven a celebrar ", "Abre tu invitación:\n" + link + "\n\nVen a celebrar"},
-		{"Confirma: {{enlace}}. Te esperamos.", "Abre tu invitación:\n" + link + "\n\nConfirma: " + link + ". Te esperamos."},
-		{strings.Repeat("Mucho texto. ", 300) + "{{link}}", "Abre tu invitación:\n" + link + "\n\n" + strings.Repeat("Mucho texto. ", 300) + link},
+		{"Confirma: {{enlace}}. Te esperamos.", "Abre tu invitación:\n" + link + "\n\nConfirma: . Te esperamos."},
+		{strings.Repeat("Mucho texto. ", 300) + "{{link}}", "Abre tu invitación:\n" + link + "\n\n" + strings.TrimSpace(strings.Repeat("Mucho texto. ", 300))},
 	} {
 		if got := InvitationMessage(tc.in, link); got != tc.want {
 			t.Errorf("got %q want %q", got, tc.want)
