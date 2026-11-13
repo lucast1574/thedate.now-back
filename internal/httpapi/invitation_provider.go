@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"strings"
 )
 
 func postInvitationMessage(ctx context.Context, endpoint, key string, payload map[string]any) (string, string) {
@@ -24,14 +25,18 @@ func postInvitationMessage(ctx context.Context, endpoint, key string, payload ma
 		return "", "unknown"
 	}
 	defer resp.Body.Close()
+	data, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
+	if err != nil {
+		return "", "unknown"
+	}
 	if resp.StatusCode >= 400 && resp.StatusCode < 500 {
 		return "", "failed"
 	}
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return "", "unknown"
-	}
-	data, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
-	if err != nil {
+		lower := strings.ToLower(string(data))
+		if strings.Contains(lower, "not on whatsapp") || strings.Contains(lower, "no lid found") {
+			return "", "failed"
+		}
 		return "", "unknown"
 	}
 	id := extractMessageID(data)

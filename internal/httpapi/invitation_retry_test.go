@@ -16,10 +16,12 @@ func TestRetryOnlyReleasesRejectedUnsentMessages(t *testing.T) {
 	db := testutil.Mongo(t)
 	ctx := context.Background()
 	now := time.Now().UTC()
+	old := now.Add(-5 * time.Minute)
 	rows := []any{
 		bson.M{"_id": "failed", "eventId": "event", "sendState": "failed", "sendClaim": "rejected", "sendStartedAt": now},
-		bson.M{"_id": "unknown", "eventId": "event", "sendState": "unknown", "sendClaim": "uncertain"},
-		bson.M{"_id": "sending", "eventId": "event", "sendState": "sending", "sendClaim": "inflight"},
+		bson.M{"_id": "unknown-old-unsent", "eventId": "event", "sendState": "unknown", "sendClaim": "uncertain", "sendStartedAt": old, "invitationTextMessageId": "", "invitationMessageId": ""},
+		bson.M{"_id": "unknown-with-id", "eventId": "event", "sendState": "unknown", "sendClaim": "uncertain", "sendStartedAt": old, "invitationTextMessageId": "3EB123"},
+		bson.M{"_id": "sending", "eventId": "event", "sendState": "sending", "sendClaim": "inflight", "sendStartedAt": now},
 		bson.M{"_id": "sent", "eventId": "event", "sendState": "failed", "sentAt": now, "sendClaim": "delivered"},
 		bson.M{"_id": "other", "eventId": "other", "sendState": "failed", "sendClaim": "other"},
 	}
@@ -32,17 +34,18 @@ func TestRetryOnlyReleasesRejectedUnsentMessages(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	for _, id := range []string{"failed", "unknown", "sending", "sent", "other"} {
+	for _, id := range []string{"failed", "unknown-old-unsent", "unknown-with-id", "sending", "sent", "other"} {
 		var g bson.M
 		if err := db.Collection("guests").FindOne(ctx, bson.M{"_id": id}).Decode(&g); err != nil {
 			t.Fatal(err)
 		}
 		_, claimed := g["sendClaim"]
-		if claimed != (id != "failed") {
-			t.Fatalf("unexpected claim for %s", id)
+		shouldBeReleased := id == "failed" || id == "unknown-old-unsent"
+		if claimed == shouldBeReleased {
+			t.Fatalf("unexpected claim state for %s: claimed=%v, shouldBeReleased=%v", id, claimed, shouldBeReleased)
 		}
-		if id == "failed" && (g["sendState"] != nil || g["sendStartedAt"] != nil) {
-			t.Fatal("rejected send was not reset")
+		if shouldBeReleased && (g["sendState"] != nil || g["sendStartedAt"] != nil) {
+			t.Fatalf("send was not reset for %s", id)
 		}
 	}
 }

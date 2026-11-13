@@ -7,12 +7,13 @@ import (
 
 func TestInvitationMessage(t *testing.T) {
 	link := "https://fiesta.thedate.now/rsvp/personal"
+	prompt := PollInstruction
 	for _, tc := range []struct{ in, want string }{
-		{"", "Abre tu invitación:\n" + link},
-		{"Antes{{link}}Después", "Abre tu invitación:\n" + link + "\n\nAntesDespués"},
-		{" Ven a celebrar ", "Abre tu invitación:\n" + link + "\n\nVen a celebrar"},
-		{"Confirma: {{enlace}}. Te esperamos.", "Abre tu invitación:\n" + link + "\n\nConfirma: . Te esperamos."},
-		{strings.Repeat("Mucho texto. ", 300) + "{{link}}", "Abre tu invitación:\n" + link + "\n\n" + strings.TrimSpace(strings.Repeat("Mucho texto. ", 300))},
+		{"", "Abre tu invitación:\n" + link + "\n\n" + prompt},
+		{"Antes{{link}}Después", "Abre tu invitación:\n" + link + "\n\nAntesDespués\n\n" + prompt},
+		{" Ven a celebrar ", "Abre tu invitación:\n" + link + "\n\nVen a celebrar\n\n" + prompt},
+		{"Confirma en la encuesta aquí: {{enlace}}. Te esperamos.", "Abre tu invitación:\n" + link + "\n\nConfirma en la encuesta aquí: . Te esperamos."},
+		{strings.Repeat("Mucho texto. ", 300) + "{{link}}", "Abre tu invitación:\n" + link + "\n\n" + strings.TrimSpace(strings.Repeat("Mucho texto. ", 300)) + "\n\n" + prompt},
 	} {
 		if got := InvitationMessage(tc.in, link); got != tc.want {
 			t.Errorf("got %q want %q", got, tc.want)
