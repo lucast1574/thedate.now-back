@@ -26,6 +26,9 @@ type User struct {
 }
 
 type Event struct {
+	GuestPaymentCount          int                      `bson:"-" json:"guestPaymentCount"`
+	Admission                  *Admission               `bson:"admission,omitempty" json:"admission,omitempty"`
+	GuestPayments              map[string]GuestPayment  `bson:"guestPayments,omitempty" json:"-"`
 	AddressReleasedAt          *time.Time               `bson:"addressReleasedAt,omitempty" json:"addressReleasedAt,omitempty"`
 	DeletionRequested          bool                     `bson:"deletionRequested,omitempty" json:"-"`
 	PublishedDesign            *DesignSnapshot          `bson:"publishedDesign,omitempty" json:"-"`

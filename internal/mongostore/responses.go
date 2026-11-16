@@ -98,6 +98,9 @@ func (s Responses) CommitEvent(ctx context.Context, e core.Event, in core.EventI
 	if in.Celebration != nil {
 		set["celebration"] = in.Celebration
 	}
+	if in.Admission != nil {
+		set["admission"] = in.Admission
+	}
 	if in.MaybeEnabled != nil {
 		set["maybeEnabled"] = *in.MaybeEnabled
 	}

@@ -91,6 +91,9 @@ func (s Responses) UpdateEvent(ctx context.Context, id string, in core.EventInpu
 		if !in.CapacityUnlimited && (core.Occupied(e, s.Now()) > in.Capacity || (e.Seating != nil && len(e.Seating.Assignments) > in.Capacity)) {
 			return core.ErrCapacity
 		}
+		if len(e.GuestPayments) > 0 && !core.SameAdmissionCost(e.Admission, in.Admission) {
+			return core.ErrAdmissionLocked
+		}
 		if in.Slug != e.Slug && (e.PublishedAt != nil || e.InvitationsEnabled || core.ValidateSlug(in.Slug) != nil) {
 			return core.ErrPublishedAddress
 		}

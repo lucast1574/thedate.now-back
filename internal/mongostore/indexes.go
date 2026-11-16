@@ -8,6 +8,9 @@ import (
 )
 
 func EnsureIndexes(ctx context.Context, db *mongo.Database) error {
+	if err := EnsureInboxIndexes(ctx, db); err != nil {
+		return err
+	}
 	_, err := db.Collection("users").Indexes().CreateOne(ctx, mongo.IndexModel{Keys: bson.D{{Key: "email", Value: 1}}, Options: options.Index().SetUnique(true)})
 	if err != nil {
 		return err

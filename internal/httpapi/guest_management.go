@@ -40,7 +40,7 @@ func (s *server) manageGuest(w http.ResponseWriter, r *http.Request) {
 			bad(w, 409, "No hay cupos disponibles para confirmar este grupo.")
 			return
 		}
-		if errors.Is(err, mongostore.ErrGuestSending) || errors.Is(err, mongostore.ErrReceivedGift) {
+		if errors.Is(err, mongostore.ErrGuestSending) || errors.Is(err, mongostore.ErrReceivedGift) || errors.Is(err, mongostore.ErrPaidGuest) {
 			bad(w, 409, err.Error())
 			return
 		}

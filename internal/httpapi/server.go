@@ -17,6 +17,7 @@ import (
 )
 
 type server struct {
+	messagePeers    []*server
 	mobileSender    mobileSender
 	invitationReady func(context.Context, core.Event) bool
 	product         string
@@ -74,7 +75,8 @@ func Run() {
 		if err := s.configureMobile(runCtx); err != nil {
 			log.Fatal("Invalid mobile notification configuration")
 		}
-		workers.Add(5)
+		workers.Add(6)
+		go func(s *server) {defer workers.Done();s.inboxMediaWorker(runCtx)}(s)
 		go func(s *server) { defer workers.Done(); s.accountDeletionWorker(runCtx) }(s)
 		go func(s *server) { defer workers.Done(); s.deploymentWorker(runCtx) }(s)
 		go func(s *server) { defer workers.Done(); s.emailWorker(runCtx) }(s)

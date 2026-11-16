@@ -50,7 +50,7 @@ func (s AccountDeletion) Events(ctx context.Context, id string) ([]core.Event, e
 }
 
 func (s AccountDeletion) RemoveEvent(ctx context.Context, e core.Event) error {
-	for _, name := range []string{"guests", "coupleInvites", "deletedGuestBackups", "deletedEventBackups", "responseNotices", "mobileDeliveries"} {
+	for _, name := range []string{"guests", "coupleInvites", "deletedGuestBackups", "deletedEventBackups", "responseNotices", "mobileDeliveries", "inboxMessages", "conversationStates"} {
 		if _, err := s.DB.Collection(name).DeleteMany(ctx, bson.M{"eventId": e.ID}); err != nil {
 			return err
 		}

@@ -14,7 +14,8 @@ import (
 // never an incoming date: a completed event cannot be reopened by editing it.
 func (s *server) eventWriteGuard(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodGet && r.Method != http.MethodHead && strings.HasPrefix(r.URL.Path, "/events/") {
+		inboxWrite := strings.Contains(r.URL.Path, "/conversations/") || strings.HasSuffix(r.URL.Path, "/guest-payments")
+		if !inboxWrite && r.Method != http.MethodGet && r.Method != http.MethodHead && strings.HasPrefix(r.URL.Path, "/events/") {
 			if e, err := s.ownedEvent(r); err == nil && core.EventClosed(e, time.Now().UTC()) {
 				bad(w, http.StatusConflict, "Esta acción no está disponible.")
 				return

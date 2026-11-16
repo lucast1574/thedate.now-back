@@ -46,6 +46,9 @@ func securityHeaders(next http.Handler) http.Handler {
 }
 
 func productHandler(servers []*server) http.Handler {
+	for _, s := range servers {
+		s.messagePeers = servers
+	}
 	if len(servers) == 1 && servers[0].product == "" {
 		return servers[0].routes()
 	}

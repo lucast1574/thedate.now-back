@@ -7,6 +7,9 @@ import (
 )
 
 func ValidateEvent(in EventInput, creating bool) error {
+	if !ValidAdmission(in.Kind, in.Admission) {
+		return errors.New("Revisa el costo, la moneda y las instrucciones de pago del evento.")
+	}
 	var sections []Section
 	if in.InitialDesign != nil {
 		sections = in.InitialDesign.Sections

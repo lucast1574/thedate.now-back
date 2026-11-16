@@ -30,6 +30,15 @@ func sharedWebhook(servers []*server, provider string) http.Handler {
 			return
 		}
 		var handled, failure *webhookResult
+		var incoming struct {
+			Event string `json:"event"`
+		}
+		if provider == "wazend" && json.Unmarshal(body, &incoming) == nil && (incoming.Event == "message" || incoming.Event == "message.any") {
+			request := r.Clone(r.Context())
+			request.Body = io.NopCloser(bytes.NewReader(body))
+			servers[0].wazendWebhook(w, request)
+			return
+		}
 		for _, s := range servers {
 			request := r.Clone(r.Context())
 			request.Body = io.NopCloser(bytes.NewReader(body))

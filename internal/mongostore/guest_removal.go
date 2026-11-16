@@ -10,6 +10,7 @@ import (
 )
 
 var ErrReceivedGift = errors.New("Este invitado tiene un regalo recibido. Revisa ese regalo antes de eliminarlo.")
+var ErrPaidGuest = errors.New("Este invitado tiene pagos registrados. Conserva su ficha para mantener el historial.")
 
 var ErrGuestSending = errors.New("El envío está en curso. Espera a que termine antes de eliminar al invitado.")
 
@@ -45,6 +46,11 @@ func (s GuestManagement) Remove(ctx context.Context, eventID, guestID string, no
 		for _, gift := range e.Wishlist.Items {
 			if gift.GuestID == guestID && gift.Delivered {
 				return ErrReceivedGift
+			}
+		}
+		for _, payment := range e.GuestPayments {
+			if payment.GuestID == guestID {
+				return ErrPaidGuest
 			}
 		}
 		_, err = s.DB.Collection("deletedGuestBackups").UpdateOne(ctx, bson.M{"_id": g.InviteToken}, bson.M{"$setOnInsert": bson.M{"guest": g, "eventId": eventID, "response": e.Responses[guestID], "seating": e.Seating, "wishlist": e.Wishlist, "deletedAt": now}}, options.UpdateOne().SetUpsert(true))

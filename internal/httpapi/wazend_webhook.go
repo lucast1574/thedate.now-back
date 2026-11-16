@@ -61,6 +61,10 @@ func (s *server) wazendWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if event.Event != "event.response" && event.Event != "poll.vote" {
+		if event.Event == "message" || event.Event == "message.any" {
+			s.receiveWazendMessage(w, r, body)
+			return
+		}
 		reply(w, 200, map[string]string{"status": "ignored"})
 		return
 	}

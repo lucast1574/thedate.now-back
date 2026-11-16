@@ -62,6 +62,9 @@ func (s *server) processAccountDeletion(ctx context.Context, id string) error {
 }
 
 func (s *server) eraseAccountEvent(ctx context.Context, e core.Event) error {
+	if err := s.eraseInboxMedia(ctx, e); err != nil {
+		return err
+	}
 	repo := mongostore.Deployments{DB: s.db}
 	d, err := repo.Get(ctx, e.ID)
 	if err != nil && !errors.Is(err, mongo.ErrNoDocuments) {
