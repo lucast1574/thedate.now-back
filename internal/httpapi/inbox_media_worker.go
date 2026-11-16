@@ -61,7 +61,7 @@ func (s *server) inboxMediaWorker(ctx context.Context) {
 				continue
 			}
 			attempt, cancel := context.WithTimeout(ctx, 45*time.Second)
-			cur, err := s.db.Collection("inboxMessages").Find(attempt, bson.M{"media.available": false, "createdAt": bson.M{"$gte": time.Now().Add(-7 * 24 * time.Hour)}}, options.Find().SetLimit(5).SetSort(bson.D{{Key: "mediaCheckedAt", Value: 1}}))
+			cur, err := s.db.Collection("inboxMessages").Find(attempt, bson.M{"media.available": false, "receivedAt": bson.M{"$gte": time.Now().Add(-7 * 24 * time.Hour)}}, options.Find().SetLimit(5).SetSort(bson.D{{Key: "mediaCheckedAt", Value: 1}}))
 			if err == nil {
 				for cur.Next(attempt) {
 					var m core.InboxMessage

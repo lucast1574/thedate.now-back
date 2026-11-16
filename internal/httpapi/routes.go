@@ -58,6 +58,7 @@ func (s *server) routes() http.Handler {
 	handle("GET /events/{id}/conversations/{guestId}", s.conversation)
 	handle("PATCH /events/{id}/conversations/{guestId}", s.conversation)
 	handle("POST /events/{id}/conversations/{guestId}", s.replyConversation)
+	handle("POST /events/{id}/conversations/{guestId}/history", s.conversationHistory)
 	handle("GET /events/{id}/messages/{messageId}/media", s.inboxMedia)
 	handle("GET /events/{id}/guest-payments", s.guestPayments)
 	handle("POST /events/{id}/guest-payments", s.guestPayments)

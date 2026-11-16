@@ -12,6 +12,8 @@ Los IDs normalizados de sesión y mensaje deduplican webhooks. Cada conversació
 
 ## Adjuntos y respuestas
 
+Desde una conversación se pueden recuperar explícitamente los últimos 50 mensajes de Wazend posteriores al envío de su invitación. Se omiten los mensajes ambiguos, propios, de otro evento y anteriores a la invitación. La recuperación es idempotente y no envía aclaraciones ni otros mensajes automáticos sobre el historial. Los adjuntos recuperados se descargan en segundo plano.
+
 Los adjuntos se descargan con la credencial de Wazend solo desde `/api/files/` de su origen configurado, sin redirecciones. Se conservan en el bucket privado de la marca y se sirven tras comprobar acceso al evento. Límite de 10 MiB; imágenes de hasta 40 millones de píxeles. Un worker intenta recuperar archivos pendientes durante siete días. Eliminar una cuenta elimina sus adjuntos asociados, mensajes y estados de conversación.
 
 Los envíos del creador/colaborador tienen `requestId` y un registro persistido antes de enviar. Un timeout se muestra como envío por verificar; el mismo identificador no vuelve a enviar a ciegas. La respuesta incluye marca y evento y puede citar el mensaje del invitado. Enviar una respuesta no marca automáticamente la conversación atendida.
@@ -30,6 +32,7 @@ Los mensajes y el registro de pagos siguen disponibles después de cerrar el eve
 - `GET /events/{id}/conversations/{guestId}?before={messageId}`
 - `PATCH /events/{id}/conversations/{guestId}` con `through` y `attended` opcional.
 - `POST /events/{id}/conversations/{guestId}` con `requestId`, `text` y `replyTo` opcional.
+- `POST /events/{id}/conversations/{guestId}/history`
 - `GET /events/{id}/messages/{messageId}/media`
 - `GET|POST /events/{id}/guest-payments`
 
