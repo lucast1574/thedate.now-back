@@ -4,7 +4,7 @@ Wazend recibe mensajes nuevos de WhatsApp mediante el evento `message`, además 
 
 ## Asociación y privacidad
 
-El endpoint compartido verifica firma, timestamp y sesión antes de procesar el mensaje una sola vez. Consulta los candidatos en las bases de ambas marcas cuando comparten la sesión. Una invitación citada, un mensaje de esa conversación citado o el código `TD-…` identifican el evento; el teléfono basta únicamente si existe un solo candidato y no hay una cita incompatible. Los grupos, estados y mensajes propios se ignoran. Los remitentes `@lid` se resuelven consultando la sesión autenticada de Wazend.
+El endpoint compartido verifica firma, timestamp y sesión antes de procesar el mensaje una sola vez. Consulta los candidatos en las bases de ambas marcas cuando comparten la sesión. Una invitación citada, un mensaje de esa conversación citado o el código `TD-…` identifican el evento; el teléfono basta únicamente si existe un solo candidato activo, conserva su dirección y no hay una cita incompatible. Los grupos, estados y mensajes propios se ignoran. Los remitentes `@lid` se resuelven consultando la sesión autenticada de Wazend.
 
 Un mensaje ambiguo queda privado, sin `eventId`/`guestId`, y recibe una aclaración citando el mensaje original. El claim de envío se persiste antes de contactar Wazend. La aclaración no enumera eventos de otros organizadores. Una respuesta explícita puede asociar un único mensaje pendiente de las últimas 24 horas; con varios pendientes debe citar la aclaración concreta e indicar el código. Nunca se traslada todo el historial del teléfono. La copia entre bases reclama primero un destino único y conserva checkpoints para reintentos.
 
@@ -24,7 +24,7 @@ Los envíos del creador/colaborador tienen `requestId` y un registro persistido 
 
 Solo propietario/admin accede a `guest-payments`. Para registrar un abono se exige importe, moneda coincidente, fecha válida, medio y confirmación explícita de ingreso verificado. Puede vincularse un adjunto recibido del mismo invitado y evento; también se admite efectivo o transferencia manual sin adjunto. El ID de operación permite reintentos y un adjunto no genera dos abonos. El registro y los cambios de costo compiten con `responseVersion`: después de un pago no se permite cambiar importe, modalidad, moneda ni desactivar el costo. Los invitados con pagos registrados no se eliminan.
 
-Los mensajes y el registro de pagos siguen disponibles después de cerrar el evento; las demás operaciones de cierre conservan sus restricciones. Los pagos de invitados son distintos del pago de activación de la plataforma y no usan Stripe.
+Los mensajes y el registro de pagos siguen disponibles después de cerrar el evento; las demás operaciones de cierre conservan sus restricciones. Retirar la web pública y liberar su dirección no elimina la asociación WhatsApp: citar la invitación, un mensaje de esa conversación o el código del evento sigue enviando textos y comprobantes al evento finalizado. Los eventos finalizados participan en la detección de ambigüedad del mismo teléfono; sin contexto explícito no se elige un evento finalizado ni se desvía su mensaje a otro activo. Los pagos de invitados son distintos del pago de activación de la plataforma y no usan Stripe.
 
 ## Rutas privadas
 

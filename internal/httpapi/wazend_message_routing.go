@@ -32,7 +32,7 @@ func messageCandidates(ctx context.Context, peers []*server, m core.InboxMessage
 		}
 		for _, g := range guests {
 			var e core.Event
-			err = peer.db.Collection("events").FindOne(ctx, bson.M{"_id": g.EventID, "isDemo": bson.M{"$ne": true}, "deletionRequested": bson.M{"$ne": true}, "paymentStatus": "paid", "publishedAt": bson.M{"$ne": nil}, "addressReleasedAt": nil}).Decode(&e)
+			err = peer.db.Collection("events").FindOne(ctx, bson.M{"_id": g.EventID, "isDemo": bson.M{"$ne": true}, "deletionRequested": bson.M{"$ne": true}, "paymentStatus": "paid", "publishedAt": bson.M{"$ne": nil}}).Decode(&e)
 			if err != nil {
 				if errors.Is(err, mongo.ErrNoDocuments) {
 					continue
@@ -97,7 +97,9 @@ func routeIncoming(ctx context.Context, peers []*server, m core.InboxMessage, hi
 			matches = append(matches, c)
 		}
 	}
-	if len(matches) == 0 && m.ReplyTo == "" && len(candidates) == 1 {
+	// Retiring the public invitation must not retire its conversation. A closed
+	// event still requires explicit context rather than a phone-only guess.
+	if len(matches) == 0 && m.ReplyTo == "" && len(candidates) == 1 && !core.EventClosed(candidates[0].Event, m.ReceivedAt) && candidates[0].Event.AddressReleasedAt == nil {
 		matches = candidates
 	}
 	coordinator := peers[0]
