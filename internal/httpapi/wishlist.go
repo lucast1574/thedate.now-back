@@ -6,6 +6,7 @@ import (
 	"github.com/lucast1574/thedate.now-back/internal/mongostore"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"net/http"
+	"time"
 )
 
 func (s *server) getWishlist(w http.ResponseWriter, r *http.Request) {
@@ -68,6 +69,10 @@ func (s *server) saveWishlist(w http.ResponseWriter, r *http.Request) {
 	}
 	if !saved {
 		bad(w, 409, "Hay nuevas reservas. Recarga antes de guardar.")
+		return
+	}
+	if err = (mongostore.Responses{DB: s.db}).QueueMissingGiftFollowups(r.Context(), e.ID, time.Now().UTC()); err != nil {
+		bad(w, 500, "La lista se guardó, pero no pudimos preparar los avisos de confirmación.")
 		return
 	}
 	reply(w, 200, next)

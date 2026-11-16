@@ -12,7 +12,7 @@ Los IDs normalizados de sesión y mensaje deduplican webhooks. Cada conversació
 
 ## Adjuntos y respuestas
 
-Desde una conversación se pueden recuperar explícitamente los últimos 50 mensajes de Wazend posteriores al envío de su invitación. Se omiten los mensajes ambiguos, propios, de otro evento y anteriores a la invitación. La recuperación es idempotente y no envía aclaraciones ni otros mensajes automáticos sobre el historial. Los adjuntos recuperados se descargan en segundo plano.
+Al abrir una conversación se sincronizan automáticamente los últimos 50 mensajes de Wazend posteriores al envío de su invitación, con actualización periódica y al volver a la ventana. Se omiten los mensajes ambiguos, propios, de otro evento y anteriores a la invitación. La recuperación es idempotente y no envía aclaraciones ni otros mensajes automáticos sobre el historial. Los adjuntos recuperados se descargan en segundo plano.
 
 Los adjuntos se descargan con la credencial de Wazend solo desde `/api/files/` de su origen configurado, sin redirecciones. Si Wazend almacena los archivos en S3, `WAZEND_MEDIA_BASE_URL` debe indicar explícitamente el origen HTTPS y prefijo del bucket permitido; esas descargas nunca reciben la clave de la API. Se conservan en el bucket privado de la marca y se sirven tras comprobar acceso al evento. Límite de 10 MiB; imágenes de hasta 40 millones de píxeles. Un worker intenta recuperar archivos pendientes durante siete días. Eliminar una cuenta elimina sus adjuntos asociados, mensajes y estados de conversación.
 
@@ -40,3 +40,5 @@ Contrato base de Wazend/WAHA: [recepción y medios](https://waha.devlike.pro/doc
 
 
 Confirmar Sí mantiene el envío personal de la lista de regalos cuando está habilitada. El webhook procesa su cola al confirmar, además del worker de respaldo. Eliminar al invitado limpia la marca de seguimiento anterior para que una nueva invitación y confirmación puedan generar su propio envío. Un envío de regalos en curso bloquea temporalmente la eliminación.
+
+Las confirmaciones Sí conservan el envío de regalos pendiente aunque la lista habilitada todavía esté vacía. Al guardar una lista disponible se preparan las confirmaciones anteriores sin envío registrado, sin reiniciar estados enviados o inciertos. Tal vez no envía regalos hasta convertirse en Sí.

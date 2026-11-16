@@ -84,5 +84,8 @@ func (s *server) rsvp(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
+	if in.Response == "going" {
+		s.giftFollowupStep(r.Context(), e.ID)
+	}
 	reply(w, 200, map[string]string{"status": "saved"})
 }
