@@ -31,14 +31,14 @@ func (s *server) ensureMessageMedia(ctx context.Context, m core.InboxMessage) er
 		return nil
 	}
 	config := wazendFor(m.Media.BucketKind)
-	if !safeMessageMediaURL(config.Base, m.Media.URL) {
+	if !trustedMessageMediaURL(config.Base, m.Media.URL) {
 		return nil
 	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, m.Media.URL, nil)
 	if err != nil {
 		return err
 	}
-	req.Header.Set("X-Api-Key", config.Key)
+	req.Header = messageMediaRequestHeader(config.Base, m.Media.URL, config.Key)
 	client := *wazendClient
 	client.CheckRedirect = func(_ *http.Request, _ []*http.Request) error { return http.ErrUseLastResponse }
 	response, err := client.Do(req)

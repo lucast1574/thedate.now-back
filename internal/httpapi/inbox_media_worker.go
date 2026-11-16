@@ -44,7 +44,7 @@ func (s *server) refreshMessageMedia(ctx context.Context, m core.InboxMessage) {
 			URL string `json:"url"`
 		} `json:"media"`
 	}
-	if json.NewDecoder(io.LimitReader(res.Body, 1<<20)).Decode(&message) != nil || message.Media == nil || !safeMessageMediaURL(config.Base, message.Media.URL) {
+	if json.NewDecoder(io.LimitReader(res.Body, 1<<20)).Decode(&message) != nil || message.Media == nil || !trustedMessageMediaURL(config.Base, message.Media.URL) {
 		return
 	}
 	s.db.Collection("inboxMessages").UpdateOne(ctx, bson.M{"_id": m.ID, "media.available": false}, bson.M{"$set": bson.M{"media.url": message.Media.URL}})
