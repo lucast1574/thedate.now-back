@@ -91,7 +91,7 @@ func TestRetiredEventKeepsExplicitMessageContextAcrossProducts(t *testing.T) {
 			t.Fatal("ambiguous message attached to an event", err)
 		}
 	}
-	// Once the other guest records are gone, a retired event still needs context.
+	// A single remaining invitation needs no extra question, even when retired.
 	for i, s := range peers {
 		filter := bson.M{}
 		if i == 0 {
@@ -102,8 +102,5 @@ func TestRetiredEventKeepsExplicitMessageContextAcrossProducts(t *testing.T) {
 		}
 	}
 	route("retired-no-context", "Hola", "", false)
-	var pending core.InboxMessage
-	if err := peers[0].db.Collection("inboxMessages").FindOne(ctx, bson.M{"_id": "retired-no-context"}).Decode(&pending); err != nil || pending.EventID != "" {
-		t.Fatal("retired phone-only message was guessed", err)
-	}
+	assertOnly("retired-no-context", 0, "0-true")
 }

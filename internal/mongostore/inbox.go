@@ -118,6 +118,7 @@ func EnsureInboxIndexes(ctx context.Context, db *mongo.Database) error {
 		{Keys: bson.D{{Key: "eventId", Value: 1}, {Key: "direction", Value: 1}, {Key: "sequence", Value: -1}}},
 		{Keys: bson.D{{Key: "session", Value: 1}, {Key: "phone", Value: 1}, {Key: "eventId", Value: 1}}},
 		{Keys: bson.D{{Key: "session", Value: 1}, {Key: "providerId", Value: 1}}},
+		{Keys: bson.D{{Key: "session", Value: 1}, {Key: "contextPolls.id", Value: 1}}},
 	})
 	return err
 }

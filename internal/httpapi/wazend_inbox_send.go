@@ -47,19 +47,6 @@ func sendInboxText(ctx context.Context, config wazendSettings, phone, text, repl
 	}
 	return id, nil
 }
-func (s *server) requestMessageContext(ctx context.Context, m core.InboxMessage, kind string) error {
-	// Persist the send claim before contacting Wazend; a timeout never re-sends.
-	result, err := s.db.Collection("inboxMessages").UpdateOne(ctx, bson.M{"_id": m.ID, "eventId": "", "clarification": bson.M{"$in": bson.A{"", nil}}}, bson.M{"$set": bson.M{"clarification": "sending"}})
-	if err != nil || result.MatchedCount == 0 {
-		return err
-	}
-	id, sendErr := sendInboxText(ctx, wazendFor(kind), m.Phone, "¿Para qué evento es este mensaje o imagen? Responde citando la invitación correspondiente o escribe el código TD que aparece en ella. Si enviaste varias imágenes para eventos distintos, responde a cada solicitud con su código.", m.ProviderID)
-	if sendErr != nil {
-		id = "uncertain"
-	}
-	_, err = s.db.Collection("inboxMessages").UpdateOne(ctx, bson.M{"_id": m.ID, "clarification": "sending"}, bson.M{"$set": bson.M{"clarification": id}})
-	return err
-}
 func (s *server) replyConversation(w http.ResponseWriter, r *http.Request) {
 	e, err := s.inboxEvent(r)
 	if err != nil || e.IsDemo || e.PaymentStatus != "paid" {

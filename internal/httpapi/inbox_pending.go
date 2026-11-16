@@ -35,6 +35,10 @@ func resolvePendingMessage(ctx context.Context, coordinator *server, c messageCa
 		return nil
 	}
 	p := pending[0]
+	return associatePendingMessage(ctx, coordinator, c, p)
+}
+
+func associatePendingMessage(ctx context.Context, coordinator *server, c messageCandidate, p core.InboxMessage) error {
 	p.EventID, p.GuestID = c.Event.ID, c.Guest.ID
 	if coordinator.db.Name() == c.Server.db.Name() {
 		seq, err := (mongostore.Inbox{DB: coordinator.db}).NextSequence(ctx, p.EventID, p.GuestID)

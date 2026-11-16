@@ -15,7 +15,7 @@ var wazendClient = &http.Client{Timeout: 20 * time.Second}
 func eventMessage(e core.Event, g core.Guest) map[string]any {
 	e = core.PublishedEvent(e)
 	host, _ := core.InvitationHost(e.Kind, e.Slug)
-	text := core.InvitationMessage(e.InvitationMessage, "https://"+host+guestInvitationPath(g)) + "\n\n" + invitationBrand(e.Kind) + " · " + e.Title + "\nCódigo: " + core.EventMessageCode(e.ID) + "\nPuedes escribirnos por este mismo WhatsApp."
+	text := core.InvitationMessage(e.InvitationMessage, "https://"+host+guestInvitationPath(g)) + "\n\n" + invitationBrand(e.Kind) + " · " + e.Title + "\nPuedes escribirnos por este mismo WhatsApp."
 	if e.Kind == "general" && e.Admission != nil && e.Admission.Enabled {
 		a := e.Admission
 		basis := "por persona"

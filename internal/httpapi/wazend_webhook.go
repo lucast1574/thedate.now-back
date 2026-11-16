@@ -68,6 +68,9 @@ func (s *server) wazendWebhook(w http.ResponseWriter, r *http.Request) {
 		reply(w, 200, map[string]string{"status": "ignored"})
 		return
 	}
+	if s.receiveContextVote(w, r, event, body) {
+		return
+	}
 	response, rawID, timestamp := event.choice()
 	if response == "" {
 		reply(w, 200, map[string]string{"status": "ignored"})
@@ -121,6 +124,9 @@ func (s *server) wazendWebhook(w http.ResponseWriter, r *http.Request) {
 	}
 	if response == "maybe" && (e.Responses[g.ID].Reason == "" || !e.Responses[g.ID].PartyRegistered) {
 		go requestRSVPFollowup(e, g, "Reservamos tus cupos temporalmente. Cuéntanos por qué estás en espera y registra tus acompañantes desde tu enlace: ")
+	}
+	if response == "going" {
+		s.giftFollowupStep(r.Context(), e.ID)
 	}
 
 	reply(w, 200, map[string]string{"status": "processed"})

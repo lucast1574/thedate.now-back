@@ -6,6 +6,8 @@ type wazendEvent struct {
 	Event   string `json:"event"`
 	Payload struct {
 		Vote struct {
+			From            string   `json:"from"`
+			FromMe          bool     `json:"fromMe"`
 			SelectedOptions []string `json:"selectedOptions"`
 			Timestamp       int64    `json:"timestamp"`
 		} `json:"vote"`

@@ -81,7 +81,7 @@ func routeIncoming(ctx context.Context, peers []*server, m core.InboxMessage, hi
 				return err
 			}
 			if old.EventID == "" {
-				return peer.requestMessageContext(ctx, old, candidates[0].Event.Kind)
+				return peer.requestMessageContext(ctx, old, candidates)
 			}
 			for _, c := range candidates {
 				if old.EventID == c.Event.ID && old.GuestID == c.Guest.ID && (old.ReplyTo != "" || strings.Contains(strings.ToUpper(old.Text), core.EventMessageCode(c.Event.ID))) {
@@ -97,9 +97,16 @@ func routeIncoming(ctx context.Context, peers []*server, m core.InboxMessage, hi
 			matches = append(matches, c)
 		}
 	}
-	// Retiring the public invitation must not retire its conversation. A closed
-	// event still requires explicit context rather than a phone-only guess.
-	if len(matches) == 0 && m.ReplyTo == "" && len(candidates) == 1 && !core.EventClosed(candidates[0].Event, m.ReceivedAt) && candidates[0].Event.AddressReleasedAt == nil {
+	contextMessage, textMatches := contextTextReply(ctx, peers[0], m, candidates)
+	if contextMessage != nil && len(matches) == 0 {
+		matches = textMatches
+		if len(matches) != 1 {
+			m.EventID, m.GuestID = "", ""
+			return peers[0].saveIncoming(ctx, &m, true)
+		}
+	}
+	// One invitation needs no extra step, even after its public page is retired.
+	if len(matches) == 0 && m.ReplyTo == "" && len(candidates) == 1 {
 		matches = candidates
 	}
 	coordinator := peers[0]
@@ -111,7 +118,7 @@ func routeIncoming(ctx context.Context, peers []*server, m core.InboxMessage, hi
 		if err = coordinator.saveIncoming(ctx, &m); err != nil {
 			return err
 		}
-		return coordinator.requestMessageContext(ctx, m, candidates[0].Event.Kind)
+		return coordinator.requestMessageContext(ctx, m, candidates)
 	}
 	c := matches[0]
 	m.EventID, m.GuestID = c.Event.ID, c.Guest.ID
@@ -120,6 +127,9 @@ func routeIncoming(ctx context.Context, peers []*server, m core.InboxMessage, hi
 	}
 	if quiet {
 		return nil
+	}
+	if contextMessage != nil {
+		return associatePendingMessage(ctx, coordinator, c, *contextMessage)
 	}
 	if m.ReplyTo != "" || strings.Contains(strings.ToUpper(m.Text), core.EventMessageCode(c.Event.ID)) {
 		return resolvePendingMessage(ctx, coordinator, c, m)

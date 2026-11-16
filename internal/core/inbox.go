@@ -13,23 +13,37 @@ type MessageMedia struct {
 }
 
 type InboxMessage struct {
-	PaymentRecorded bool          `bson:"-" json:"paymentRecorded,omitempty"`
-	Sequence        int64         `bson:"sequence" json:"-"`
-	ID              string        `bson:"_id" json:"id"`
-	ProviderID      string        `bson:"providerId" json:"-"`
-	Session         string        `bson:"session" json:"-"`
-	Phone           string        `bson:"phone" json:"-"`
-	EventID         string        `bson:"eventId" json:"eventId"`
-	GuestID         string        `bson:"guestId" json:"guestId"`
-	Direction       string        `bson:"direction" json:"direction"`
-	Text            string        `bson:"text" json:"text"`
-	Media           *MessageMedia `bson:"media,omitempty" json:"media,omitempty"`
-	CreatedAt       time.Time     `bson:"createdAt" json:"createdAt"`
-	ReceivedAt      time.Time     `bson:"receivedAt" json:"-"`
-	SentBy          string        `bson:"sentBy,omitempty" json:"sentBy,omitempty"`
-	Delivery        string        `bson:"delivery" json:"delivery"`
-	ReplyTo         string        `bson:"replyTo,omitempty" json:"-"`
-	Clarification   string        `bson:"clarification,omitempty" json:"-"`
+	ContextChoices  []MessageContextChoice `bson:"contextChoices,omitempty" json:"-"`
+	ContextPolls    []MessageContextPoll   `bson:"contextPolls,omitempty" json:"-"`
+	PaymentRecorded bool                   `bson:"-" json:"paymentRecorded,omitempty"`
+	Sequence        int64                  `bson:"sequence" json:"-"`
+	ID              string                 `bson:"_id" json:"id"`
+	ProviderID      string                 `bson:"providerId" json:"-"`
+	Session         string                 `bson:"session" json:"-"`
+	Phone           string                 `bson:"phone" json:"-"`
+	EventID         string                 `bson:"eventId" json:"eventId"`
+	GuestID         string                 `bson:"guestId" json:"guestId"`
+	Direction       string                 `bson:"direction" json:"direction"`
+	Text            string                 `bson:"text" json:"text"`
+	Media           *MessageMedia          `bson:"media,omitempty" json:"media,omitempty"`
+	CreatedAt       time.Time              `bson:"createdAt" json:"createdAt"`
+	ReceivedAt      time.Time              `bson:"receivedAt" json:"-"`
+	SentBy          string                 `bson:"sentBy,omitempty" json:"sentBy,omitempty"`
+	Delivery        string                 `bson:"delivery" json:"delivery"`
+	ReplyTo         string                 `bson:"replyTo,omitempty" json:"-"`
+	Clarification   string                 `bson:"clarification,omitempty" json:"-"`
+}
+
+type MessageContextChoice struct {
+	Label   string `bson:"label"`
+	EventID string `bson:"eventId"`
+	GuestID string `bson:"guestId"`
+	Kind    string `bson:"kind"`
+}
+
+type MessageContextPoll struct {
+	ID   string `bson:"id"`
+	Page int    `bson:"page"`
 }
 
 type ConversationState struct {

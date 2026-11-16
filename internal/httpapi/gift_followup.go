@@ -12,10 +12,14 @@ import (
 
 // The durable queue is written with RSVP. Claim before the provider call, and
 // retain uncertain outcomes rather than risk sending a duplicate personal link.
-func (s *server) giftFollowupStep(parent context.Context) {
+func (s *server) giftFollowupStep(parent context.Context, eventID ...string) {
 	ctx, cancel := context.WithTimeout(parent, 30*time.Second)
 	defer cancel()
-	cur, err := s.db.Collection("events").Find(ctx, bson.M{"paymentStatus": "paid", "publishedAt": bson.M{"$ne": nil}, "isDemo": bson.M{"$ne": true}, "giftFollowups": bson.M{"$exists": true}})
+	filter := bson.M{"paymentStatus": "paid", "publishedAt": bson.M{"$ne": nil}, "isDemo": bson.M{"$ne": true}, "giftFollowups": bson.M{"$exists": true}}
+	if len(eventID) > 0 {
+		filter["_id"] = eventID[0]
+	}
+	cur, err := s.db.Collection("events").Find(ctx, filter)
 	if err != nil {
 		return
 	}
