@@ -14,7 +14,7 @@ type MobileDevices struct{ DB *mongo.Database }
 
 func (s MobileDevices) Register(ctx context.Context, d core.MobileDevice, now time.Time) error {
 	// Pipeline update binds installation changes atomically, including account switches.
-	same := bson.M{"$and": bson.A{bson.M{"$eq": bson.A{"$userId", d.UserID}}, bson.M{"$eq": bson.A{"$fid", d.FID}}, bson.M{"$eq": bson.A{"$tokenVersion", d.TokenVersion}}}}
+	same := bson.M{"$and": bson.A{bson.M{"$eq": bson.A{"$userId", d.UserID}}, bson.M{"$eq": bson.A{"$fid", d.FID}}, bson.M{"$eq": bson.A{"$tokenVersion", d.TokenVersion}}, bson.M{"$eq": bson.A{"$platform", d.Platform}}}}
 	literal := func(v any) bson.M { return bson.M{"$literal": v} }
 	set := bson.M{"userId": literal(d.UserID), "fid": literal(d.FID), "platform": literal(d.Platform), "tokenVersion": d.TokenVersion, "seenAt": now,
 		"registeredAt": bson.M{"$cond": bson.A{same, "$registeredAt", now}}, "binding": bson.M{"$cond": bson.A{same, "$binding", uuid.NewString()}}}

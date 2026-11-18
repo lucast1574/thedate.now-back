@@ -65,7 +65,11 @@ func (s *server) deliverMobile(ctx context.Context, d core.MobileDevice) error {
 		since = cutoff
 	}
 	for _, e := range events {
-		for _, change := range core.MobileChanges(e, since) {
+		changes, err := s.notificationChanges(ctx, d, e, since)
+		if err != nil {
+			return err
+		}
+		for _, change := range changes {
 			current, err := repo.Current(ctx, d, e.ID)
 			if err != nil {
 				return err
@@ -103,4 +107,21 @@ func (s *server) deliverMobile(ctx context.Context, d core.MobileDevice) error {
 		}
 	}
 	return nil
+}
+
+func (s *server) notificationChanges(ctx context.Context, d core.MobileDevice, e core.Event, since time.Time) ([]core.MobileChange, error) {
+	if d.Platform != "web" {
+		return core.MobileChanges(e, since), nil
+	}
+	conversations, err := (mongostore.Inbox{DB: s.db}).Conversations(ctx, e.ID)
+	if err != nil {
+		return nil, err
+	}
+	var changes []core.MobileChange
+	for _, c := range conversations {
+		if c.Unread && c.Last.ReceivedAt.After(since) {
+			changes = append(changes, core.MobileChange{ID: c.Last.ID, EventID: e.ID, Screen: "messages", At: c.Last.ReceivedAt})
+		}
+	}
+	return changes, nil
 }

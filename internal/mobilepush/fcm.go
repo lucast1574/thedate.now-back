@@ -10,6 +10,7 @@ import (
 	"golang.org/x/oauth2/google"
 	"io"
 	"net/http"
+	"net/url"
 	"time"
 )
 
@@ -42,8 +43,33 @@ func (c *Client) Send(ctx context.Context, fid string, change core.MobileChange)
 		title = "Nuevo regalo reservado"
 		body = "Hay una nueva reserva en tu lista de regalos."
 	}
-	payload := map[string]any{"message": map[string]any{"fid": fid, "notification": map[string]string{"title": title, "body": body}, "data": map[string]string{"eventId": change.EventID, "screen": change.Screen}, "android": map[string]any{"priority": "HIGH", "ttl": "86400s", "notification": map[string]string{"channel_id": "celebration_updates", "tag": change.ID}}, "apns": map[string]any{"headers": map[string]string{"apns-collapse-id": change.ID}, "payload": map[string]any{"aps": map[string]any{"sound": "default"}}}}}
-	raw, _ := json.Marshal(payload)
+	message := map[string]any{"fid": fid, "data": map[string]string{"eventId": change.EventID, "screen": change.Screen}}
+	if change.Screen == "messages" {
+		host := "https://crea.thedate.now"
+		icon := "/event-icon.png"
+		if c.Project == "save-the-date-b7670" {
+			host = "https://studio.save.thedate.now"
+			icon = "/wedding-icon.png"
+		}
+		link := host + "/manager/" + url.PathEscape(change.EventID) + "?tab=messages"
+		message["notification"] = map[string]string{
+			"title": "Nuevo mensaje",
+			"body":  "Un invitado te escribió. Abre Mensajes para verlo.",
+		}
+		message["webpush"] = map[string]any{
+			"headers": map[string]string{"TTL": "86400"},
+			"notification": map[string]string{
+				"tag":  "messages-" + change.EventID,
+				"icon": host + icon,
+			},
+			"fcm_options": map[string]string{"link": link},
+		}
+	} else {
+		message["notification"] = map[string]string{"title": title, "body": body}
+		message["android"] = map[string]any{"priority": "HIGH", "ttl": "86400s", "notification": map[string]string{"channel_id": "celebration_updates", "tag": change.ID}}
+		message["apns"] = map[string]any{"headers": map[string]string{"apns-collapse-id": change.ID}, "payload": map[string]any{"aps": map[string]any{"sound": "default"}}}
+	}
+	raw, _ := json.Marshal(map[string]any{"message": message})
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, "https://fcm.googleapis.com/v1/projects/"+c.Project+"/messages:send", bytes.NewReader(raw))
 	if err != nil {
 		return false, err

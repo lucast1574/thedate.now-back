@@ -26,9 +26,14 @@ func (s *server) registerMobileDevice(w http.ResponseWriter, r *http.Request) {
 		InstallationID string `json:"installationId"`
 		FID            string `json:"fid"`
 		Platform       string `json:"platform"`
+		UserID         string `json:"userId"`
 	}
-	if decode(r, &in) != nil || !validInstallation(in.InstallationID) || !fidPattern.MatchString(in.FID) || (in.Platform != "android" && in.Platform != "ios") {
+	if decode(r, &in) != nil || !validInstallation(in.InstallationID) || !fidPattern.MatchString(in.FID) || (in.Platform != "android" && in.Platform != "ios" && in.Platform != "web") {
 		bad(w, 400, "Invalid device")
+		return
+	}
+	if in.Platform == "web" && in.UserID != u.ID {
+		bad(w, 403, "Notification account changed")
 		return
 	}
 	if s.mobileSender == nil {

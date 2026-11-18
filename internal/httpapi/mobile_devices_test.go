@@ -134,3 +134,59 @@ func TestMobileRegistrationIsolationRevocationAndConcurrentDelivery(t *testing.T
 		t.Fatal("device retained")
 	}
 }
+
+func TestBrowserNotificationsFollowNewUnreadMessages(t *testing.T) {
+	db := testutil.Mongo(t)
+	ctx := context.Background()
+	now := time.Now().UTC().Truncate(time.Millisecond)
+	s := &server{db: db, product: "general", secret: []byte(strings.Repeat("s", 32))}
+	user := core.User{ID: "owner", Email: "test@example.test", Role: "user"}
+	event := core.Event{ID: "event", Kind: s.product, OwnerID: user.ID, PaymentStatus: "paid"}
+	if _, err := db.Collection("users").InsertOne(ctx, user); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := db.Collection("events").InsertOne(ctx, event); err != nil {
+		t.Fatal(err)
+	}
+	inbox := mongostore.Inbox{DB: db}
+	for id, at := range map[string]time.Time{"old": now.Add(-time.Minute), "new": now, "read": now} {
+		if _, err := inbox.Put(ctx, core.InboxMessage{
+			ID: id, EventID: event.ID, GuestID: id, Direction: "in", CreatedAt: at, ReceivedAt: at,
+		}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := inbox.Mark(ctx, event.ID, "read", "read", nil); err != nil {
+		t.Fatal(err)
+	}
+	changes, err := s.notificationChanges(ctx, core.MobileDevice{Platform: "web"}, event, now.Add(-time.Second))
+	if err != nil || len(changes) != 1 || changes[0].ID != "new" || changes[0].Screen != "messages" {
+		t.Fatalf("unexpected browser changes: %+v, error %v", changes, err)
+	}
+	if err := inbox.Mark(ctx, event.ID, "new", "new", nil); err != nil {
+		t.Fatal(err)
+	}
+	changes, err = s.notificationChanges(ctx, core.MobileDevice{Platform: "web"}, event, now.Add(-time.Second))
+	if err != nil || len(changes) != 0 {
+		t.Fatalf("read messages were included: %+v, error %v", changes, err)
+	}
+	token, err := s.sign(user, "password")
+	if err != nil {
+		t.Fatal(err)
+	}
+	checkSummary := func(expected string) {
+		t.Helper()
+		r := httptest.NewRequest("GET", "/events/event/conversations?summary=unread", nil)
+		r.Header.Set("Authorization", "Bearer "+token)
+		w := httptest.NewRecorder()
+		s.routes().ServeHTTP(w, r)
+		if w.Code != 200 || strings.TrimSpace(w.Body.String()) != expected {
+			t.Fatalf("unexpected unread summary: %d %s", w.Code, w.Body.String())
+		}
+	}
+	checkSummary(`{"unread":true}`)
+	if err := inbox.Mark(ctx, event.ID, "old", "old", nil); err != nil {
+		t.Fatal(err)
+	}
+	checkSummary(`{"unread":false}`)
+}

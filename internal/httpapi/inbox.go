@@ -19,6 +19,17 @@ func (s *server) listConversations(w http.ResponseWriter, r *http.Request) {
 		bad(w, 500, "No pudimos cargar los mensajes.")
 		return
 	}
+	if r.URL.Query().Get("summary") == "unread" {
+		unread := false
+		for _, conversation := range list {
+			if conversation.Unread {
+				unread = true
+				break
+			}
+		}
+		reply(w, 200, map[string]bool{"unread": unread})
+		return
+	}
 	reply(w, 200, list)
 }
 func (s *server) conversation(w http.ResponseWriter, r *http.Request) {
