@@ -13,6 +13,8 @@ type MessageMedia struct {
 }
 
 type InboxMessage struct {
+	Automation      string                 `bson:"automation,omitempty" json:"automation,omitempty"`
+	ReceiptReview   string                 `bson:"-" json:"receiptReview,omitempty"`
 	ContextChoices  []MessageContextChoice `bson:"contextChoices,omitempty" json:"-"`
 	ContextPolls    []MessageContextPoll   `bson:"contextPolls,omitempty" json:"-"`
 	PaymentRecorded bool                   `bson:"-" json:"paymentRecorded,omitempty"`

@@ -46,6 +46,20 @@ func AdmissionTotal(a *Admission, seats int) int64 {
 	return a.AmountCents * int64(max(1, seats))
 }
 
+func GuestPaymentBalance(e Event, g Guest) int64 {
+	paid := int64(0)
+	for _, payment := range e.GuestPayments {
+		if payment.GuestID == g.ID {
+			paid += payment.AmountCents
+		}
+	}
+	seats := g.Seats
+	if response := e.Responses[g.ID]; response.PartyRegistered {
+		seats = response.Seats
+	}
+	return max(0, AdmissionTotal(e.Admission, seats)-paid)
+}
+
 type GuestPayment struct {
 	ReceiptDigest string    `bson:"receiptDigest,omitempty" json:"-"`
 	ID            string    `bson:"id" json:"id"`

@@ -5,6 +5,7 @@ import (
 	"github.com/lucast1574/thedate.now-back/internal/core"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
+	"slices"
 	"time"
 )
 
@@ -54,13 +55,6 @@ func (s Responses) CommitManagedResponse(ctx context.Context, e core.Event, id s
 func (s Responses) commitResponse(ctx context.Context, e core.Event, id string, r core.Response, receipt string, public bool) (bool, error) {
 	set := bson.M{"responses." + id: r}
 	increments := bson.M{"responseVersion": 1}
-	if public && r.Choice == "going" && (core.GiftsEnabled(e) || (r.Seats > 1 && !r.PartyRegistered)) && e.GiftFollowups[id] == "" {
-		state := "pending"
-		if core.GiftsEnabled(e) && len(e.Wishlist.Items) == 0 {
-			state = "pending_empty"
-		}
-		set["giftFollowups."+id] = state
-	}
 	cur, err := s.DB.Collection("guests").Find(ctx, bson.M{"eventId": e.ID})
 	if err != nil {
 		return false, err
@@ -69,6 +63,11 @@ func (s Responses) commitResponse(ctx context.Context, e core.Event, id string, 
 	var guests []core.Guest
 	if err = cur.All(ctx, &guests); err != nil {
 		return false, err
+	}
+	if r.Choice == "going" && e.Responses[id].Choice != "going" && e.PublishedAt != nil {
+		if public || slices.ContainsFunc(guests, func(g core.Guest) bool { return g.ID == id && g.SentAt != nil }) {
+			queueConfirmationFollowups(set, e, id, r)
+		}
 	}
 	if len(guests) > 0 || e.Seating != nil {
 		plan := core.SeatResponse(e, guests, id, r)

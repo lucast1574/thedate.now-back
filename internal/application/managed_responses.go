@@ -16,13 +16,19 @@ type ManagedResponses struct {
 	Now        func() time.Time
 }
 
-func (s ManagedResponses) Correct(ctx context.Context, eventID string, g core.Guest, choice, reason string) error {
+func (s ManagedResponses) Correct(ctx context.Context, eventID string, g core.Guest, choice, reason string, companions *[]core.Person) error {
 	for attempt := 0; attempt < 32; attempt++ {
 		e, err := s.Repository.Snapshot(ctx, eventID)
 		if err != nil {
 			return err
 		}
 		if e.RevokedGuestTokens[g.InviteToken] {
+			return core.ErrUnavailable
+		}
+		if choice == "maybe" && !core.MaybeAllowed(e) {
+			return core.ErrMaybeDisabled
+		}
+		if companions != nil && !core.ValidParty(*companions, g.Seats) {
 			return core.ErrUnavailable
 		}
 		// Organizers can correct a closed response, while keeping party and capacity rules.
@@ -37,7 +43,7 @@ func (s ManagedResponses) Correct(ctx context.Context, eventID string, g core.Gu
 		now := s.Now()
 		editable.PublishedAt = &now
 		editable.InvitationsEnabled = false
-		next, err := core.DecidePartyResponse(editable, g, choice, reason, nil, now)
+		next, err := core.DecidePartyResponse(editable, g, choice, reason, companions, now)
 		if err != nil {
 			return err
 		}

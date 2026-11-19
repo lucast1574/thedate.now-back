@@ -103,7 +103,7 @@ func (s *server) invitationWorker(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			s.giftFollowupStep(ctx)
+			s.confirmationFollowupStep(ctx)
 			s.expireUnansweredInvitations(ctx)
 			s.invitationStep(ctx)
 		}

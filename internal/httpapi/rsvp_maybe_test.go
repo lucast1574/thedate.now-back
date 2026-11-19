@@ -84,7 +84,7 @@ func TestMaybeCanBecomeFinalWithoutReenteringCompanions(t *testing.T) {
 				}
 				wantGift := ""
 				if choice == "going" {
-					wantGift = "pending"
+					wantGift = "pending_link"
 				}
 				if saved.GiftFollowups[g.ID] != wantGift {
 					t.Fatal("wrong gift followup for", channel, choice)

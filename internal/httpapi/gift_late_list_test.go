@@ -42,7 +42,7 @@ func TestConfirmedGuestReceivesEmptyListAndOneFirstGiftNotice(t *testing.T) {
 				}
 				var confirmed core.Event
 				db.Collection("events").FindOne(ctx, bson.M{"_id": e.ID}).Decode(&confirmed)
-				if confirmed.GiftFollowups[g.ID] != "pending_empty" {
+				if confirmed.GiftFollowups[g.ID] != "pending_link" {
 					t.Fatal("confirmation discarded before list was ready")
 				}
 				var sends atomic.Int32

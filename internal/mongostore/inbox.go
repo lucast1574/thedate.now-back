@@ -58,8 +58,8 @@ func (s Inbox) Messages(ctx context.Context, event, guest, before string) ([]cor
 }
 func (s Inbox) Conversations(ctx context.Context, event string) ([]core.Conversation, error) {
 	cur, err := s.DB.Collection("inboxMessages").Aggregate(ctx, mongo.Pipeline{
-		{{Key: "$match", Value: bson.M{"eventId": event, "direction": "in"}}},
-		{{Key: "$sort", Value: bson.D{{Key: "sequence", Value: -1}}}},
+		{{Key: "$match", Value: bson.M{"eventId": event, "$or": bson.A{bson.M{"direction": "in"}, bson.M{"automation": bson.M{"$exists": true}}}}}},
+		{{Key: "$sort", Value: bson.D{{Key: "direction", Value: 1}, {Key: "sequence", Value: -1}}}},
 		{{Key: "$group", Value: bson.M{"_id": "$guestId", "last": bson.M{"$first": "$$ROOT"}}}},
 		{{Key: "$sort", Value: bson.M{"last.receivedAt": -1}}},
 	})
@@ -90,7 +90,8 @@ func (s Inbox) Conversations(ctx context.Context, event string) ([]core.Conversa
 	for _, row := range rows {
 		m := row.Last
 		st := byGuest[m.GuestID]
-		result = append(result, core.Conversation{GuestID: m.GuestID, Last: m, Unread: m.Sequence > st.ReadSequence, Pending: m.Sequence > st.AttendedSequence})
+		incoming := m.Direction == "in"
+		result = append(result, core.Conversation{GuestID: m.GuestID, Last: m, Unread: incoming && m.Sequence > st.ReadSequence, Pending: incoming && m.Sequence > st.AttendedSequence})
 	}
 	return result, nil
 }

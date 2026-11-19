@@ -50,7 +50,7 @@ func (s *server) giftFollowupStep(parent context.Context, eventID ...string) {
 			if err != nil || !claimed {
 				continue
 			}
-			sendGiftFollowup(ctx, repo, e.ID, g, state, config)
+			s.sendGiftFollowup(ctx, repo, e.ID, g, state, config)
 		}
 	}
 }
@@ -59,10 +59,10 @@ func giftFollowupEligible(e core.Event, id, state string) bool {
 	if e.Responses[id].Choice != "going" {
 		return false
 	}
-	return state == "pending" || state == "pending_empty" || (state == "sent_empty" && core.GiftListAvailable(e))
+	return state == "pending" || state == "pending_empty" || state == "pending_link" || (state == "sent_empty" && core.GiftListAvailable(e))
 }
 
-func sendGiftFollowup(ctx context.Context, repo mongostore.Responses, eventID string, g core.Guest, state string, config wazendSettings) {
+func (s *server) sendGiftFollowup(ctx context.Context, repo mongostore.Responses, eventID string, g core.Guest, state string, config wazendSettings) {
 	finish := repo.FinishGiftFollowup
 	if state == "sent_empty" {
 		finish = repo.FinishGiftReadyNotice
@@ -72,18 +72,20 @@ func sendGiftFollowup(ctx context.Context, repo mongostore.Responses, eventID st
 		_ = finish(ctx, eventID, g.ID, state)
 		return
 	}
-	allowEmpty := state == "pending_empty"
+	allowEmpty := state == "pending_empty" || state == "pending_link"
 	includeGifts := core.GiftListAvailable(latest) || (allowEmpty && core.GiftsEnabled(latest))
-	includeCompanions := g.Seats > 1 && !latest.Responses[g.ID].PartyRegistered
+	includeCompanions := state != "pending_link" && latest.ConfirmationFollowups["companions"][g.ID] == "" && g.Seats > 1 && !latest.Responses[g.ID].PartyRegistered
 	if !includeGifts && !includeCompanions {
 		_ = finish(ctx, eventID, g.ID, state)
 		return
 	}
-	message := giftConfirmationMessage(latest, g, config.Session, includeGifts)
+	message := giftConfirmationMessage(latest, g, config.Session, includeGifts, includeCompanions)
+	kind := "gifts"
 	if state == "sent_empty" {
 		message = giftReadyMessage(latest, g, config.Session)
+		kind = "gifts_ready"
 	}
-	_, outcome := postInvitationMessage(ctx, strings.TrimSuffix(config.Base, "/")+"/api/sendText", config.Key, message)
+	outcome := s.sendAutomaticMessage(ctx, latest, g, config, kind, message)
 	if state == "sent_empty" {
 		outcome = "ready_" + outcome
 	} else if outcome == "sent" && includeGifts && len(latest.Wishlist.Items) == 0 && !latest.Wishlist.WasPopulated {
@@ -94,7 +96,7 @@ func sendGiftFollowup(ctx context.Context, repo mongostore.Responses, eventID st
 	_ = finish(finalCtx, eventID, g.ID, outcome)
 }
 
-func giftConfirmationMessage(e core.Event, g core.Guest, session string, includeGifts bool) map[string]any {
+func giftConfirmationMessage(e core.Event, g core.Guest, session string, includeGifts, includeCompanions bool) map[string]any {
 	e.Title = core.InvitationTitle(e.Kind, e.Title, e.Celebration)
 	host, _ := core.InvitationHost(e.Kind, e.Slug)
 	link := "https://" + host + core.GuestInvitationPath(g) + "/regalos"
@@ -102,7 +104,7 @@ func giftConfirmationMessage(e core.Event, g core.Guest, session string, include
 	if includeGifts {
 		text += " Si deseas elegir un regalo, aquí tienes tu acceso personal a la lista, sin iniciar sesión: " + link
 	}
-	if g.Seats > 1 && !e.Responses[g.ID].PartyRegistered {
+	if includeCompanions {
 		text += "\n\nRegistra también los nombres de tus acompañantes y cuántas personas asistirán: https://" + host + guestInvitationPath(g) + "/respuesta"
 	}
 	return map[string]any{"session": session, "chatId": strings.TrimPrefix(g.Phone, "+") + "@c.us", "text": text, "linkPreview": false}

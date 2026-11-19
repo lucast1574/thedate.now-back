@@ -126,7 +126,7 @@ func (s *server) wazendWebhook(w http.ResponseWriter, r *http.Request) {
 		go requestRSVPFollowup(e, g, "Reservamos tus cupos temporalmente. Cuéntanos por qué estás en espera y registra tus acompañantes desde tu enlace: ")
 	}
 	if response == "going" {
-		s.giftFollowupStep(r.Context(), e.ID)
+		s.confirmationFollowupStep(r.Context(), e.ID)
 	}
 
 	reply(w, 200, map[string]string{"status": "processed"})

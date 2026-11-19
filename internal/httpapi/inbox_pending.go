@@ -35,6 +35,9 @@ func resolvePendingMessage(ctx context.Context, coordinator *server, c messageCa
 		return nil
 	}
 	p := pending[0]
+	if p.Media != nil && (m.ReplyTo == "" || wazendMessageID(p.Clarification) != m.ReplyTo) {
+		return nil
+	}
 	return associatePendingMessage(ctx, coordinator, c, p)
 }
 

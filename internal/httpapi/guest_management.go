@@ -26,16 +26,25 @@ func (s *server) manageGuest(w http.ResponseWriter, r *http.Request) {
 		err = (mongostore.GuestManagement{Responses: mongostore.Responses{DB: s.db}}).Remove(r.Context(), e.ID, g.ID, time.Now().UTC())
 	} else {
 		var in struct {
-			Response string `json:"response"`
-			Reason   string `json:"reason"`
+			Response   string         `json:"response"`
+			Reason     string         `json:"reason"`
+			Companions *[]core.Person `json:"companions"`
 		}
 		if decode(r, &in) != nil || (in.Response != "going" && in.Response != "not_going" && in.Response != "maybe") || len(in.Reason) > 2000 || (in.Response == "maybe" && len(strings.TrimSpace(in.Reason)) < 3) {
 			bad(w, 400, "Elige una respuesta y añade un motivo si es Tal vez.")
 			return
 		}
-		err = (application.ManagedResponses{Repository: mongostore.Responses{DB: s.db}, Now: time.Now}).Correct(r.Context(), e.ID, g, in.Response, in.Reason)
+		if in.Companions != nil && (in.Response == "not_going" || !core.ValidParty(*in.Companions, g.Seats)) {
+			bad(w, 400, "Revisa los nombres de los acompañantes y los cupos de la invitación.")
+			return
+		}
+		err = (application.ManagedResponses{Repository: mongostore.Responses{DB: s.db}, Now: time.Now}).Correct(r.Context(), e.ID, g, in.Response, in.Reason, in.Companions)
 	}
 	if err != nil {
+		if errors.Is(err, core.ErrMaybeDisabled) {
+			bad(w, 409, err.Error())
+			return
+		}
 		if errors.Is(err, core.ErrCapacity) {
 			bad(w, 409, "No hay cupos disponibles para confirmar este grupo.")
 			return

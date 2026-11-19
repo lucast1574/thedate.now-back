@@ -85,6 +85,8 @@ func TestRetiredEventKeepsExplicitMessageContextAcrossProducts(t *testing.T) {
 	}
 	// Without explicit context, neither the active nor the retired events get it.
 	route("ambiguous", "Te mando el comprobante", "", true)
+	route("new-receipt", "", "invitation-0-true", true)
+	assertOnly("new-receipt", 0, "0-true")
 	for _, s := range peers {
 		n, err := s.db.Collection("inboxMessages").CountDocuments(ctx, bson.M{"_id": "ambiguous", "eventId": bson.M{"$nin": bson.A{"", nil}}})
 		if err != nil || n != 0 {

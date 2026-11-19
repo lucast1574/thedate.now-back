@@ -39,7 +39,8 @@ func (s *server) conversation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	guest := r.PathValue("guestId")
-	if s.db.Collection("guests").FindOne(r.Context(), bson.M{"_id": guest, "eventId": e.ID}).Err() != nil {
+	var g core.Guest
+	if s.db.Collection("guests").FindOne(r.Context(), bson.M{"_id": guest, "eventId": e.ID}).Decode(&g) != nil {
 		bad(w, 404, "Invitado no encontrado")
 		return
 	}
@@ -62,14 +63,10 @@ func (s *server) conversation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	u, _ := s.user(r)
-	if u.ID == e.OwnerID || u.Role == "admin" {
-		for i, m := range list {
-			for _, payment := range e.GuestPayments {
-				if payment.MessageID == m.ID || (m.Media != nil && m.Media.Digest != "" && payment.ReceiptDigest == m.Media.Digest) {
-					list[i].PaymentRecorded = true
-					break
-				}
-			}
+	if e.Kind == "general" && e.Admission != nil && e.Admission.Enabled && (u.ID == e.OwnerID || u.Role == "admin") {
+		if err := s.annotateReceipts(r.Context(), e, g, list); err != nil {
+			bad(w, 500, "No pudimos cargar esta conversación.")
+			return
 		}
 	}
 	reply(w, 200, map[string]any{"messages": list, "hasMore": len(list) == 100})

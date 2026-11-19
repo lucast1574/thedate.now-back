@@ -23,7 +23,7 @@ func (s Responses) QueueMissingGiftFollowups(ctx context.Context, eventID string
 			continue
 		}
 		filter := bson.M{"_id": eventID, "paymentStatus": "paid", "publishedAt": bson.M{"$ne": nil}, "deletionRequested": bson.M{"$ne": true}, "celebration.giftsEnabled": bson.M{"$ne": false}, "wishlist.items.0": bson.M{"$exists": true}, "responses." + id + ".choice": "going", "giftFollowups." + id: bson.M{"$in": bson.A{nil, ""}}}
-		if _, err = s.DB.Collection("events").UpdateOne(ctx, filter, bson.M{"$set": bson.M{"giftFollowups." + id: "pending"}, "$inc": bson.M{"responseVersion": 1}}); err != nil {
+		if _, err = s.DB.Collection("events").UpdateOne(ctx, filter, bson.M{"$set": bson.M{"giftFollowups." + id: "pending_link"}, "$inc": bson.M{"responseVersion": 1}}); err != nil {
 			return err
 		}
 	}

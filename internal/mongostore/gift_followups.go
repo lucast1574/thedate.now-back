@@ -14,7 +14,7 @@ func (s Responses) ClaimGiftFollowup(ctx context.Context, e core.Event, g core.G
 	state := e.GiftFollowups[g.ID]
 	filter := bson.M{"_id": e.ID, "paymentStatus": "paid", "isDemo": bson.M{"$ne": true}, "deletionRequested": bson.M{"$ne": true}, "publishedAt": bson.M{"$ne": nil}, "giftFollowups." + g.ID: state, "responses." + g.ID + ".choice": "going", "revokedGuestTokens." + g.InviteToken: bson.M{"$ne": true}}
 	giftEligible := bson.M{"celebration.giftsEnabled": bson.M{"$ne": false}}
-	if state != "pending_empty" {
+	if state != "pending_empty" && state != "pending_link" {
 		giftEligible["wishlist.items.0"] = bson.M{"$exists": true}
 	}
 	eligible := bson.A{giftEligible}
@@ -22,8 +22,8 @@ func (s Responses) ClaimGiftFollowup(ctx context.Context, e core.Event, g core.G
 	switch state {
 	case "sent_empty":
 		sending = "ready_sending"
-	case "pending", "pending_empty":
-		if g.Seats > 1 {
+	case "pending", "pending_empty", "pending_link":
+		if state != "pending_link" && g.Seats > 1 {
 			eligible = append(eligible, bson.M{"responses." + g.ID + ".partyRegistered": bson.M{"$ne": true}})
 		}
 	default:

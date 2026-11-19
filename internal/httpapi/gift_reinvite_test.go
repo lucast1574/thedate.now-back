@@ -39,7 +39,7 @@ func TestReinvitedGuestReceivesGiftListAgainAfterYesDespiteMessages(t *testing.T
 	}
 	var queued core.Event
 	db.Collection("events").FindOne(ctx, bson.M{"_id": e.ID}).Decode(&queued)
-	if queued.GiftFollowups[g.ID] != "pending" {
+	if queued.GiftFollowups[g.ID] != "pending_link" {
 		t.Fatal("old guest send suppressed the new gift list", queued.GiftFollowups)
 	}
 	sends := 0

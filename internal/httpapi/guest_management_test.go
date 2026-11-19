@@ -85,7 +85,7 @@ func TestOrganizerCorrectsClosedResponseAndRemovesGuest(t *testing.T) {
 		t.Fatal("Could not re-add guest", err)
 	}
 	service := application.ManagedResponses{Repository: mongostore.Responses{DB: db}, Now: func() time.Time { return now }}
-	if err = service.Correct(ctx, e.ID, g, "going", ""); err != nil {
+	if err = service.Correct(ctx, e.ID, g, "going", "", nil); err != nil {
 		t.Fatal("New token incorrectly revoked", err)
 	}
 }
@@ -99,7 +99,7 @@ func TestGuestCorrectionRespectsCapacityAndRemovalKeepsReceivedGifts(t *testing.
 	db.Collection("events").InsertOne(ctx, e)
 	db.Collection("guests").InsertOne(ctx, g)
 	service := application.ManagedResponses{Repository: mongostore.Responses{DB: db}, Now: func() time.Time { return now }}
-	if err := service.Correct(ctx, e.ID, g, "going", ""); !errors.Is(err, core.ErrCapacity) {
+	if err := service.Correct(ctx, e.ID, g, "going", "", nil); !errors.Is(err, core.ErrCapacity) {
 		t.Fatalf("Overbooking allowed: %v", err)
 	}
 	store := mongostore.GuestManagement{Responses: mongostore.Responses{DB: db}}

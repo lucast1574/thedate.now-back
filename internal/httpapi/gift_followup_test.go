@@ -19,7 +19,7 @@ import (
 func TestGiftConfirmationRepairsStoredWeddingNames(t *testing.T) {
 	e := core.Event{Kind: "wedding", Slug: "lucasyelizabeth", Title: "lucasyelizabeth", Wishlist: core.Wishlist{Items: []core.Gift{{ID: "gift"}}}, Celebration: &core.Celebration{PartnerOne: "lucas", PartnerTwo: "ELIZABETH"}}
 	g := core.Guest{Name: "Lucas", InviteToken: strings.Repeat("a", 48)}
-	text := giftConfirmationMessage(e, g, "test", true)["text"].(string)
+	text := giftConfirmationMessage(e, g, "test", true, false)["text"].(string)
 	if !strings.Contains(text, "asistencia a Lucas y Elizabeth.") || !strings.Contains(text, "https://lucasyelizabeth.save.thedate.now/") {
 		t.Fatalf("incorrect title or changed existing URL: %s", text)
 	}
@@ -138,7 +138,7 @@ func TestGiftFollowupWebConfirmationQueuesWithoutLogin(t *testing.T) {
 		}
 		want := ""
 		if choice == "going" {
-			want = "pending"
+			want = "pending_link"
 		}
 		if saved.GiftFollowups[g.ID] != want {
 			t.Fatal(saved.GiftFollowups)

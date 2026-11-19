@@ -56,6 +56,9 @@ func (s GuestManagement) Remove(ctx context.Context, eventID, guestID string, no
 		if state := e.GiftFollowups[guestID]; state == "sending" || state == "ready_sending" {
 			return ErrGuestSending
 		}
+		if e.ConfirmationFollowups["companions"][guestID] == "sending" || e.ConfirmationFollowups["payment"][guestID] == "sending" {
+			return ErrGuestSending
+		}
 		_, err = s.DB.Collection("deletedGuestBackups").UpdateOne(ctx, bson.M{"_id": g.InviteToken}, bson.M{"$setOnInsert": bson.M{"guest": g, "eventId": eventID, "response": e.Responses[guestID], "seating": e.Seating, "wishlist": e.Wishlist, "deletedAt": now}}, options.UpdateOne().SetUpsert(true))
 		if err != nil {
 			return err
@@ -85,7 +88,8 @@ func (s GuestManagement) Remove(ctx context.Context, eventID, guestID string, no
 		if e.Wishlist.Version == 0 {
 			filter["wishlist.version"] = bson.M{"$in": bson.A{nil, 0}}
 		}
-		result, err := s.DB.Collection("events").UpdateOne(ctx, filter, bson.M{"$set": bson.M{"revokedGuestTokens." + g.InviteToken: true, "seating": plan, "wishlist": list}, "$unset": bson.M{"responses." + guestID: "", "invitationHolds." + guestID: "", "giftFollowups." + guestID: ""}, "$inc": bson.M{"responseVersion": 1}})
+		unset := bson.M{"responses." + guestID: "", "invitationHolds." + guestID: "", "giftFollowups." + guestID: "", "confirmationFollowups.companions." + guestID: "", "confirmationFollowups.payment." + guestID: ""}
+		result, err := s.DB.Collection("events").UpdateOne(ctx, filter, bson.M{"$set": bson.M{"revokedGuestTokens." + g.InviteToken: true, "seating": plan, "wishlist": list}, "$unset": unset, "$inc": bson.M{"responseVersion": 1}})
 		if err != nil {
 			return err
 		}
