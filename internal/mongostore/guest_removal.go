@@ -53,7 +53,7 @@ func (s GuestManagement) Remove(ctx context.Context, eventID, guestID string, no
 				return ErrPaidGuest
 			}
 		}
-		if e.GiftFollowups[guestID] == "sending" {
+		if state := e.GiftFollowups[guestID]; state == "sending" || state == "ready_sending" {
 			return ErrGuestSending
 		}
 		_, err = s.DB.Collection("deletedGuestBackups").UpdateOne(ctx, bson.M{"_id": g.InviteToken}, bson.M{"$setOnInsert": bson.M{"guest": g, "eventId": eventID, "response": e.Responses[guestID], "seating": e.Seating, "wishlist": e.Wishlist, "deletedAt": now}}, options.UpdateOne().SetUpsert(true))

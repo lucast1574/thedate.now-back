@@ -54,10 +54,12 @@ func (s Responses) CommitManagedResponse(ctx context.Context, e core.Event, id s
 func (s Responses) commitResponse(ctx context.Context, e core.Event, id string, r core.Response, receipt string, public bool) (bool, error) {
 	set := bson.M{"responses." + id: r}
 	increments := bson.M{"responseVersion": 1}
-	// Keep the confirmation pending even if its enabled list is still empty.
-	// The worker waits for the list; a claimed message is never requeued.
 	if public && r.Choice == "going" && (core.GiftsEnabled(e) || (r.Seats > 1 && !r.PartyRegistered)) && e.GiftFollowups[id] == "" {
-		set["giftFollowups."+id] = "pending"
+		state := "pending"
+		if core.GiftsEnabled(e) && len(e.Wishlist.Items) == 0 {
+			state = "pending_empty"
+		}
+		set["giftFollowups."+id] = state
 	}
 	cur, err := s.DB.Collection("guests").Find(ctx, bson.M{"eventId": e.ID})
 	if err != nil {

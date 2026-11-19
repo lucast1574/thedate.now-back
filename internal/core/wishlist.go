@@ -18,9 +18,10 @@ type Gift struct {
 	Delivered   bool       `bson:"delivered" json:"delivered"`
 }
 type Wishlist struct {
-	Version int64  `bson:"version" json:"version"`
-	Enabled bool   `bson:"enabled" json:"enabled"`
-	Items   []Gift `bson:"items" json:"items"`
+	Version      int64  `bson:"version" json:"version"`
+	Enabled      bool   `bson:"enabled" json:"enabled"`
+	Items        []Gift `bson:"items" json:"items"`
+	WasPopulated bool   `bson:"wasPopulated,omitempty" json:"-"`
 }
 
 var (
@@ -55,7 +56,7 @@ func EditWishlist(old Wishlist, in Wishlist) (Wishlist, error) {
 	for _, item := range old.Items {
 		existing[item.ID] = item
 	}
-	next := Wishlist{Version: old.Version + 1, Enabled: len(in.Items) > 0, Items: make([]Gift, 0, len(in.Items))}
+	next := Wishlist{Version: old.Version + 1, Enabled: len(in.Items) > 0, Items: make([]Gift, 0, len(in.Items)), WasPopulated: old.WasPopulated || len(old.Items) > 0 || len(in.Items) > 0}
 	kept := map[string]bool{}
 	for _, item := range in.Items {
 		prior := existing[item.ID]

@@ -15,7 +15,7 @@ func TestConfirmationWithoutGiftsStillRegistersCompanions(t *testing.T) {
 		if !core.ConfirmationFollowupNeeded(e, g) {
 			t.Fatal("companion registration lost without gifts")
 		}
-		text := giftConfirmationMessage(e, g, "test")["text"].(string)
+		text := giftConfirmationMessage(e, g, "test", core.GiftsEnabled(e))["text"].(string)
 		if strings.Contains(text, "/regalos") || strings.Contains(text, "elegir un regalo") || !strings.Contains(text, "/respuesta") {
 			t.Fatal(text)
 		}

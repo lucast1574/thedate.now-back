@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -15,7 +17,7 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
-func TestConfirmedGuestReceivesListSavedAfterYesOrMaybe(t *testing.T) {
+func TestConfirmedGuestReceivesEmptyListAndOneFirstGiftNotice(t *testing.T) {
 	for _, kind := range []string{"general", "wedding"} {
 		for _, maybe := range []bool{false, true} {
 			t.Run(kind+"/"+map[bool]string{false: "yes", true: "maybe-to-yes"}[maybe], func(t *testing.T) {
@@ -40,18 +42,18 @@ func TestConfirmedGuestReceivesListSavedAfterYesOrMaybe(t *testing.T) {
 				}
 				var confirmed core.Event
 				db.Collection("events").FindOne(ctx, bson.M{"_id": e.ID}).Decode(&confirmed)
-				if confirmed.GiftFollowups[g.ID] != "pending" {
+				if confirmed.GiftFollowups[g.ID] != "pending_empty" {
 					t.Fatal("confirmation discarded before list was ready")
 				}
-				sends := 0
+				var sends atomic.Int32
 				provider := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 					var payload map[string]any
 					json.NewDecoder(r.Body).Decode(&payload)
 					text, _ := payload["text"].(string)
-					if !strings.Contains(text, "/regalos") {
-						t.Error("missing gift link")
+					count := sends.Add(1)
+					if !strings.Contains(text, "/regalos") || strings.Contains(text, "ya tiene regalos") != (count == 2) {
+						t.Error("wrong gift message or missing link")
 					}
-					sends++
 					reply(w, 200, map[string]string{"id": "gift-message"})
 				}))
 				defer provider.Close()
@@ -66,26 +68,38 @@ func TestConfirmedGuestReceivesListSavedAfterYesOrMaybe(t *testing.T) {
 				t.Setenv(prefix+"API_KEY", "test")
 				t.Setenv(prefix+"SESSION", "shared")
 				s.giftFollowupStep(ctx, e.ID)
-				if sends != 0 {
-					t.Fatal("empty list sent")
+				if sends.Load() != 1 {
+					t.Fatal("empty list link was not sent")
 				}
-				// Cover confirmations created before this fix as well as new pending ones.
-				if maybe {
-					db.Collection("events").UpdateOne(ctx, bson.M{"_id": e.ID}, bson.M{"$unset": bson.M{"giftFollowups": ""}})
-				}
-				next := core.Wishlist{Version: 2, Items: []core.Gift{{ID: "gift", Title: "Regalo", URL: "https://example.test/regalo"}}}
-				if ok, err := (mongostore.Wishlists{DB: db}).Commit(ctx, e.ID, 1, next, false); err != nil || !ok {
-					t.Fatal(ok, err)
+				w := httptest.NewRecorder()
+				s.routes().ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/public/wishlist/"+g.InviteToken, nil))
+				if w.Code != 200 || !strings.Contains(w.Body.String(), `"items":[]`) {
+					t.Fatal(w.Code, w.Body.String())
 				}
 				repo := mongostore.Responses{DB: db}
-				for range 2 {
+				old := e.Wishlist
+				gift := core.Gift{ID: "gift", Title: "Regalo", URL: "https://example.test/regalo"}
+				other := core.Gift{ID: "other", Title: "Otro regalo", URL: "https://example.test/otro"}
+				for _, items := range [][]core.Gift{{gift}, {gift, other}, {}, {other}} {
+					next, err := core.EditWishlist(old, core.Wishlist{Items: items})
+					if err != nil {
+						t.Fatal(err)
+					}
+					if ok, err := (mongostore.Wishlists{DB: db}).Commit(ctx, e.ID, old.Version, next, false); err != nil || !ok {
+						t.Fatal(ok, err)
+					}
+					old = next
 					if err := repo.QueueMissingGiftFollowups(ctx, e.ID, now); err != nil {
 						t.Fatal(err)
 					}
-					s.giftFollowupStep(ctx, e.ID)
-				}
-				if sends != 1 {
-					t.Fatal("late list lost or duplicated", sends)
+					var workers sync.WaitGroup
+					for range 3 {
+						workers.Go(func() { s.giftFollowupStep(ctx, e.ID) })
+					}
+					workers.Wait()
+					if sends.Load() != 2 {
+						t.Fatal("first gift notice lost or duplicated", sends.Load())
+					}
 				}
 			})
 		}

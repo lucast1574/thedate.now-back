@@ -41,4 +41,4 @@ Contrato base de Wazend/WAHA: [recepción y medios](https://waha.devlike.pro/doc
 
 Confirmar Sí mantiene el envío personal de la lista de regalos cuando está habilitada. El webhook procesa su cola al confirmar, además del worker de respaldo. Eliminar al invitado limpia la marca de seguimiento anterior para que una nueva invitación y confirmación puedan generar su propio envío. Un envío de regalos en curso bloquea temporalmente la eliminación.
 
-Las confirmaciones Sí conservan el envío de regalos pendiente aunque la lista habilitada todavía esté vacía. Al guardar una lista disponible se preparan las confirmaciones anteriores sin envío registrado, sin reiniciar estados enviados o inciertos. Tal vez no envía regalos hasta convertirse en Sí.
+Las nuevas confirmaciones Sí reciben el enlace personal si Regalos está habilitado, incluso con la lista vacía. Quienes recibieron el enlace antes del primer regalo reciben un único aviso cuando hay regalos disponibles. Las confirmaciones anteriores pendientes conservan su política de envío y los estados enviados o inciertos no se reinician. Tal vez no envía regalos hasta convertirse en Sí.
